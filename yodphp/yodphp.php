@@ -9,15 +9,19 @@
 // | Author: Baoqiang Su <zmrnet@qq.com>
 // +----------------------------------------------------------------------
 
-// yodphp config constant
+// yodphp constant
 defined('YOD_RUNTIME') or define('YOD_RUNTIME', microtime(true));
-defined('YOD_VERSION') or define('YOD_VERSION', '1.0.2');
+defined('YOD_VERSION') or define('YOD_VERSION', '1.1.0');
 defined('YOD_FORWARD') or define('YOD_FORWARD', 5);
+defined('YOD_CHARSET') or define('YOD_CHARSET', 'utf-8');
+defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__));
 
-defined('YOD_DEBUG') or define('YOD_DEBUG', false);
-
-defined('YOD_PATH') or define('YOD_PATH', dirname(__FILE__));
-defined('APP_PATH') or define('APP_PATH', dirname(__FILE__));
+// yodphp autorun
+if (defined('YOD_RUNPATH')) {
+	Yod_Application::app();
+} else {
+	define('YOD_RUNPATH', dirname(__FILE__));
+}
 
 /**
  * __autoload
@@ -38,7 +42,7 @@ function __autoload($classname)
 		} else {
 			$directory = '/extends/';
 		}
-		$classpath = YOD_PATH . $directory . substr($classfile, 4) . '.class.php';
+		$classpath = YOD_EXTPATH . $directory . substr($classfile, 4) . '.class.php';
 	} else {
 		if (strncmp(substr($classname, -10), 'Controller', 10) == 0) {
 			$directory = '/controllers/';
@@ -48,7 +52,7 @@ function __autoload($classname)
 			$directory = '/extends/';
 			$classfile = $classfile . '.class';
 		}
-		$classpath = APP_PATH . $directory . $classfile . '.php';
+		$classpath = YOD_RUNPATH . $directory . $classfile . '.php';
 	}
 
 	if (is_file($classpath)) include $classpath;
@@ -85,7 +89,7 @@ final class Yod_Application
 
 		// config
 		if (is_null($config)) {
-			$config = APP_PATH . '/configs/config.php';
+			$config = YOD_RUNPATH . '/configs/config.php';
 		}
 		if (is_string($config)) {
 			if (is_file($config)) {
@@ -93,7 +97,7 @@ final class Yod_Application
 			} else {
 				$this->_config = array();
 				$confdir = dirname($config);
-				if ($handle = opendir($confdir)) {
+				if (is_dir($confdir) && ($handle = opendir($confdir))) {
 					while (($file = readdir($handle)) != false) {
 						if (substr($file, -11) == '.config.php') {
 							$key = substr($file, 0, -11);
@@ -177,7 +181,7 @@ final class Yod_Application
 		if (empty($this->_imports[$alias])) {
 			$classfile = str_replace('.', '/', $alias);
 			$classname = basename($classfile);
-			$classpath = APP_PATH . '/extends/' . $classfile . '.class.php';
+			$classpath = YOD_RUNPATH . '/extends/' . $classfile . '.class.php';
 			if (is_file($classpath)) include $classpath;
 		}
 
@@ -187,12 +191,15 @@ final class Yod_Application
 	/**
 	 * app
 	 * @access public
-	 * @param void
+	 * @param mixed $config
 	 * @return Yod_Application
 	 */
-	public static function app()
+	public static function app($config = null)
 	{
-		return self::$_app;
+		if (self::$_app) {
+			return self::$_app;
+		}
+		return new self($config);
 	}
 
 	/**
@@ -202,7 +209,9 @@ final class Yod_Application
 	 */
 	public function __destruct()
 	{
-
+		if (!$this->_running) {
+			$this->run();
+		}
 	}
 
 }
@@ -213,6 +222,8 @@ final class Yod_Application
  */
 final class Yod_Request
 {
+	protected $_routed = false;
+
 	public $controller;
 	public $action;
 	public $params;
@@ -226,7 +237,6 @@ final class Yod_Request
 	 */
 	public function __construct($route = null)
 	{
-		// method
 		if (isset($_SERVER['REQUEST_METHOD'])) {
 			$this->method = $_SERVER['REQUEST_METHOD'];
 		} else {
@@ -236,7 +246,18 @@ final class Yod_Request
 				$this->method = 'Unknown';
 			}
 		}
-		// route
+
+		empty($route) or $this->route($route);
+	}
+
+	/**
+	 * route
+	 * @access public
+	 * @param void
+	 * @return void
+	 */
+	public function route($route = null)
+	{
 		if (empty($route)) {
 			if (strtoupper($this->method) == 'CLI') {
 				$route = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : '';
@@ -245,16 +266,23 @@ final class Yod_Request
 			}
 		}
 		$route = explode('/', str_replace('//', '/', trim($route, '/')));
-		$count = count($route);
+
+		$controller = basename($_SERVER['SCRIPT_FILENAME'], '.php');
+		$classname = $controller . 'Controller';
+		if (class_exists($classname, false)) {
+			array_unshift($route, $controller);
+		}
 
 		$this->controller = empty($route[0]) ? 'Index' : ucfirst(strtolower($route[0]));
 		$this->action = empty($route[1]) ? 'index' : strtolower($route[1]);
 		$this->params = array();
+		$count = count($route);
 		for ($i=2; $i<$count; $i+=2) {
 			$_GET[$route[$i]] = empty($route[$i+1]) ? '' : $route[$i+1];
 			$this->params[$route[$i]] = $_GET[$route[$i]];
 		}
 
+		$this->_routed = true;
 	}
 
 	/**
@@ -265,26 +293,32 @@ final class Yod_Request
 	 */
 	public function dispatch()
 	{
+		$this->_routed or $this->route();
+
 		$controller = empty($this->controller) ? 'Index' : $this->controller;
-		$classpath = APP_PATH . '/controllers/' . $controller . 'Controller.php';
-		if (is_file($classpath)) {
-			require $classpath;
-			$classname = $controller . 'Controller';
+		$classname = $controller . 'Controller';
+		if (class_exists($classname, false)) {
 			new $classname($this);
 		} else {
-			$action = empty($this->action) ? 'Index' : ucfirst($this->action);
-			$classpath = APP_PATH . '/actions/' . strtolower($controller) . '/' . $action . 'Action.php';
+			$classpath = YOD_RUNPATH . '/controllers/' . $controller . 'Controller.php';
 			if (is_file($classpath)) {
 				require $classpath;
-				$classname = $action . 'Action';
 				new $classname($this);
 			} else {
-				$classpath = APP_PATH . '/controllers/ErrorController.php';
+				$action = empty($this->action) ? 'Index' : ucfirst($this->action);
+				$classpath = YOD_RUNPATH . '/actions/' . strtolower($controller) . '/' . $action . 'Action.php';
 				if (is_file($classpath)) {
 					require $classpath;
-					new ErrorController($this, 'error');
+					$classname = $action . 'Action';
+					new $classname($this);
 				} else {
-					$this->errorAction();
+					$classpath = YOD_RUNPATH . '/controllers/ErrorController.php';
+					if (is_file($classpath)) {
+						require $classpath;
+						new ErrorController($this, 'error');
+					} else {
+						$this->errorAction();
+					}
 				}
 			}
 		}
@@ -298,13 +332,13 @@ final class Yod_Request
 	public function errorAction()
 	{
 		$controller = empty($this->controller) ? 'index' : strtolower($this->controller);
-		$classpath = APP_PATH . '/actions/' . $controller . '/ErrorAction.php';
+		$classpath = YOD_RUNPATH . '/actions/' . $controller . '/ErrorAction.php';
 		if (is_file($classpath)) {
 			require $classpath;
 			new ErrorAction($this);
 		} else {
 			$this->controller = 'Error';
-			$classpath = APP_PATH . '/actions/ErrorAction.php';
+			$classpath = YOD_RUNPATH . '/actions/ErrorAction.php';
 			if (is_file($classpath)) {
 				require $classpath;
 				new ErrorAction($this);
@@ -376,7 +410,7 @@ abstract class Yod_Controller
 		$this->_name = strtolower($request->controller);
 		$this->_action = empty($action) ? $request->action : strtolower($action);
 		$this->_request = $request;
-		$this->_view['tpl_path'] = APP_PATH . '/views/' . $this->_name;
+		$this->_view['tpl_path'] = YOD_RUNPATH . '/views/' . $this->_name;
 
 		$this->init();
 		$this->run();
@@ -403,7 +437,7 @@ abstract class Yod_Controller
 		if (method_exists($this, $method)) {
 			call_user_func_array(array($this, $method), $this->_request->params);
 		} else {
-			$classpath = APP_PATH . '/actions/' . $this->_name . '/' . $method . '.php';
+			$classpath = YOD_RUNPATH . '/actions/' . $this->_name . '/' . $method . '.php';
 			if (is_file($classpath)) {
 				require $classpath;
 				$action = new $method($this->_request);
@@ -506,6 +540,7 @@ abstract class Yod_Controller
 	 */
 	protected function display($view = null, $data = array())
 	{
+		headers_sent() or header('Content-type: text/html; charset=' . YOD_CHARSET);
 		echo $this->render($view, $data);
 	}
 
@@ -539,7 +574,7 @@ abstract class Yod_Controller
 	 */
 	protected function redirect($url, $code = 302)
 	{
-		header('Location:' . $url, true, $code);
+		headers_sent() or header('Location:' . $url, true, $code);
 	}
 
 	/**

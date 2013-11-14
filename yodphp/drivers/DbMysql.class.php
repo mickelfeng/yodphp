@@ -117,7 +117,7 @@ class Yod_DbMysql extends Yod_Database
 		if ($this->_result = mysql_query($sql, $this->_linkid)) {
 			return true;
 		}
-		if (YOD_DEBUG) {
+		if (error_reporting()) {
 			if ($error = mysql_error($this->_linkid)) {
 				trigger_error($error, E_USER_WARNING);
 			}
@@ -142,7 +142,7 @@ class Yod_DbMysql extends Yod_Database
 		if ($this->_result = mysql_query($sql, $this->_linkid)) {
 			return true;
 		}
-		if (YOD_DEBUG) {
+		if (error_reporting()) {
 			if ($error = mysql_error($this->_linkid)) {
 				trigger_error($error, E_USER_WARNING);
 			}

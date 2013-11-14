@@ -50,7 +50,7 @@ class Yod_DbPdo extends Yod_Database
 			return false;
 		}
 		$this->_linkids[$linknum]->exec('SET NAMES '. $config['charset']);
-		if (YOD_DEBUG) {
+		if (error_reporting()) {
 			$this->_linkids[$linknum]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
 		}
 		return $this->_linkids[$linknum];
