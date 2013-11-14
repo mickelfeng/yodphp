@@ -1,6 +1,163 @@
-yodphp
-======
-
-Yod PHP Framework
+# yodphp - Yod PHP Framework
 
 It is a simple PHP framework
+
+## Requirement
+- PHP 5.2 +
+
+## Tutorial
+
+### layout
+- The default Application directory layout:
+
+```
+- index.php	// Application entry
++ public
++ app
+	+ actions	// Other actions
+	+ configs
+		- config.php	// Configure 
+	+ controllers
+		- IndexController.php	// Default controller
+	+ extends	// Extends
+	+ models	// Models
+		- DemoModel.php
+	+ views
+		+ index	// View templates for default controller
+		- index.php
+	+ drivers	// Yodphp Database Drivers
+	- yodphp.php	// Yodphp entry
+
+```
+
+- A classic Application directory layout:
+
+```
+- index.php	// Application entry
++ public
++ yodphp
+	+ drivers	// Database Drivers
+	- yodphp.php	// Yodphp entry
++ app
+	+ actions	// Other actions
+	+ configs
+		- config.php	// Configure 
+	+ controllers
+		- IndexController.php	// Default controller
+	+ extends	// Extends
+	+ models	// Models
+		- DemoModel.php
+	+ views
+		+ index	// View templates for default controller
+			- index.php
+```
+
+- Multiple entry Application directory layout:
+```
+- index.php	// Application index entry
+- hello.php	// Application hello entry
++ public
++ app
+
+```
+
+### index.php
+index.php is the application entry
+
+```php
+<?php
+//set_time_limit(0);
+error_reporting(E_ALL);
+date_default_timezone_set('Asia/Shanghai');
+
+define('YOD_RUNPATH', dirname(__FILE__) . '/app');
+// default
+class_exists('Yod_Application', false) or require YOD_RUNPATH . '/yodphp.php';
+// classic
+//class_exists('Yod_Application', false) or require YOD_RUNPATH . '/../yodphp/yodphp.php';
+```
+
+### hello.php
+hello.php is the application hello entry
+
+```php
+<?php
+//set_time_limit(0);
+error_reporting(E_ALL);
+date_default_timezone_set('Asia/Shanghai');
+
+define('YOD_RUNPATH', dirname(__FILE__) . '/app');
+// default
+class_exists('Yod_Application', false) or require YOD_RUNPATH . '/yodphp.php';
+// classic
+//class_exists('Yod_Application', false) or require YOD_RUNPATH . '/../yodphp/yodphp.php';
+
+class HelloController extends Yod_Controller
+{
+	public function indexAction()
+	{
+		$this->assign($content, 'Hello World');
+		$this->display('/index/index');
+	}
+
+	public function errorAction()
+	{
+		echo '<pre>';
+		print_r($this);
+	}
+}
+
+```
+
+### config.php
+config.php is the application config file
+
+```php
+<?php
+return array(
+	//'db_dsn' => 'pdo_mysql://yodphp:UJSxh48FxYJajpUS@localhost:3306/yodphp#yod_/uft8',
+	'db_dsn' => array(
+		'type'   => 'pdo_mysql',
+		'host'   => 'localhost',
+		'port'   => '3306',
+		'user'   => 'yodphp',
+		'pass'   => 'UJSxh48FxYJajpUS',
+		'dbname' => 'yodphp',
+		'prefix' => 'yod_',
+		'charset' => 'utf8',
+	),
+	'db_slave' => array(
+
+	),
+);
+
+```
+
+### default controller
+In Yodphp, the default controller is named IndexController
+
+```php
+<?php
+class IndexController extends Yod_Controller {
+	// default action name
+	public function indexAction() {
+		$this->assign($content, 'Hello World');
+		$this->display();
+	}
+}
+
+```
+
+###view script
+The view script for default controller and default action is in the app/views/index/index.php
+
+```php
+<html>
+  <head>
+    <title>Hello World</title>
+  </head>
+  <body>
+    <?php echo $content; ?>
+  </body>
+</html>
+```
