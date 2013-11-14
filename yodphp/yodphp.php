@@ -410,7 +410,7 @@ abstract class Yod_Controller
 		$this->_name = strtolower($request->controller);
 		$this->_action = empty($action) ? $request->action : strtolower($action);
 		$this->_request = $request;
-		$this->_view['tpl_path'] = YOD_RUNPATH . '/views/' . $this->_name;
+		$this->_view['tpl_path'] = YOD_RUNPATH . '/views';
 
 		$this->init();
 		$this->run();
@@ -516,8 +516,12 @@ abstract class Yod_Controller
 	{
 		if ($this->_exited) return;
 		// tpl_file
-		$view = empty($view) ? strtolower($this->_request['action']) : $view;
-		$this->_view['tpl_file'] = $this->_view['tpl_path'] . '/' . $view . '.php';
+		$view = str_replace('..', '', $view);
+		$view = empty($view) ? $this->_request->action : $view;
+		if (substr($view, 0, 1) != '/') {
+			$view = '/' . $this->_name . '/' . $view;
+		}
+		$this->_view['tpl_file'] = $this->_view['tpl_path'] . strtolower($view) . '.php';
 		// tpl_data
 		unset($this->_view['tpl_data']['this'], $data['this']);
 		extract($this->_view['tpl_data']);
