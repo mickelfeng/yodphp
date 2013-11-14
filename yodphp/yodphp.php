@@ -11,7 +11,7 @@
 
 // yodphp config constant
 defined('YOD_RUNTIME') or define('YOD_RUNTIME', microtime(true));
-defined('YOD_VERSION') or define('YOD_VERSION', '1.0.1');
+defined('YOD_VERSION') or define('YOD_VERSION', '1.0.2');
 defined('YOD_FORWARD') or define('YOD_FORWARD', 5);
 
 defined('YOD_DEBUG') or define('YOD_DEBUG', false);
@@ -85,7 +85,7 @@ final class Yod_Application
 
 		// config
 		if (is_null($config)) {
-			$config = APP_PATH . '/config/config.php';
+			$config = APP_PATH . '/configs/config.php';
 		}
 		if (is_string($config)) {
 			if (is_file($config)) {
@@ -272,10 +272,42 @@ final class Yod_Request
 			$classname = $controller . 'Controller';
 			new $classname($this);
 		} else {
-			$classpath = APP_PATH . '/controllers/ErrorController.php';
+			$action = empty($this->action) ? 'Index' : ucfirst($this->action);
+			$classpath = APP_PATH . '/actions/' . strtolower($controller) . '/' . $action . 'Action.php';
 			if (is_file($classpath)) {
 				require $classpath;
-				new ErrorController($this, 'error');
+				$classname = $action . 'Action';
+				new $classname($this);
+			} else {
+				$classpath = APP_PATH . '/controllers/ErrorController.php';
+				if (is_file($classpath)) {
+					require $classpath;
+					new ErrorController($this, 'error');
+				} else {
+					$this->errorAction();
+				}
+			}
+		}
+	}
+
+	/**
+	 * errorAction
+	 * @access public
+	 * @return void
+	 */
+	public function errorAction()
+	{
+		$controller = empty($this->controller) ? 'index' : strtolower($this->controller);
+		$classpath = APP_PATH . '/actions/' . $controller . '/ErrorAction.php';
+		if (is_file($classpath)) {
+			require $classpath;
+			new ErrorAction($this);
+		} else {
+			$this->controller = 'Error';
+			$classpath = APP_PATH . '/actions/ErrorAction.php';
+			if (is_file($classpath)) {
+				require $classpath;
+				new ErrorAction($this);
 			} else {
 				$this->error404();
 			}
@@ -320,6 +352,7 @@ abstract class Yod_Controller
 	protected static $_forward = 0;
 
 	protected $_name;
+	protected $_action;
 	protected $_request;
 
 	protected $_view = array(
@@ -341,11 +374,12 @@ abstract class Yod_Controller
 	public function __construct($request, $action = null)
 	{
 		$this->_name = strtolower($request->controller);
+		$this->_action = empty($action) ? $request->action : strtolower($action);
 		$this->_request = $request;
 		$this->_view['tpl_path'] = APP_PATH . '/views/' . $this->_name;
 
 		$this->init();
-		$this->run($action);
+		$this->run();
 	}
 
 	/**
@@ -361,19 +395,24 @@ abstract class Yod_Controller
 	/**
 	 * run
 	 * @access protected
-	 * @param string $action
 	 * @return void
 	 */
-	protected function run($action)
+	protected function run()
 	{
-		$action = empty($action) ? strtolower($this->_request->action) : strtolower($action);
-		$method = ucfirst($action) . 'Action';
+		$method = ucfirst($this->_action) . 'Action';
 		if (method_exists($this, $method)) {
 			call_user_func_array(array($this, $method), $this->_request->params);
-		}elseif (method_exists($this, 'errorAction')) {
-			$this->errorAction();
 		} else {
-			$this->error404();
+			$classpath = APP_PATH . '/actions/' . $this->_name . '/' . $method . '.php';
+			if (is_file($classpath)) {
+				require $classpath;
+				$action = new $method($this->_request);
+				$action->run($this->_request->params);
+			} elseif (method_exists($this, 'errorAction')) {
+				$this->errorAction();
+			} else {
+				$this->_request->errorAction();
+			}
 		}
 	}
 
@@ -521,6 +560,23 @@ abstract class Yod_Controller
 	 * @return void
 	 */
 	public function __destruct() {
+
+	}
+}
+
+/**
+ * Yod_Action
+ * 
+ */
+abstract class Yod_Action extends Yod_Controller
+{
+	/**
+	 * run
+	 * @access protected
+	 * @return void
+	 */
+	protected function run()
+	{
 
 	}
 }

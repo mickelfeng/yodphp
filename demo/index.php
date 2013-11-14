@@ -5,7 +5,7 @@ ini_set('display_errors', 'On');
 date_default_timezone_set('Asia/Shanghai');
 
 define('APP_PATH', dirname(__FILE__) . '/app');
-require APP_PATH . '/../yodphp/yodphp.php';
+require APP_PATH . '/../../yodphp/yodphp.php';
 
 $yodapp = new Yod_Application();
 $yodapp->run();
