@@ -50,6 +50,7 @@ It is a simple PHP framework
 	+ views
 		+ index	// View templates for default controller
 			- index.php
+
 ```
 
 - Multiple entry Application directory layout:
