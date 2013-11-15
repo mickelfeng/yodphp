@@ -760,7 +760,7 @@ class Yod_Model
 			$where = null;
 		}
 		$this->_query['SELECT'] = 'COUNT(*)';
-		empty($where) or ($this->_query['WHERE'] = "({$this->_query['WHERE']}) AND ({$where})");
+		empty($where) or $this->where($where);
 		$this->_query['LIMIT'] = 1;
 		$query = $this->parseQuery();
 		$params = array_merge($this->_params, $params);
