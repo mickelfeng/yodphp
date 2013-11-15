@@ -720,7 +720,7 @@ class Yod_Model
 		$params = array_merge($this->_params, $params);
 		$this->initQuery();
 		if ($result = $this->_db->query($query, $params)) {
-			$data = $this->_db->fetch$result);
+			$data = $this->_db->fetch($result);
 			$this->_db->free($result);
 			return $data;
 		}
