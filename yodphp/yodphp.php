@@ -14,6 +14,7 @@ defined('YOD_RUNTIME') or define('YOD_RUNTIME', microtime(true));
 defined('YOD_VERSION') or define('YOD_VERSION', '1.1.0');
 defined('YOD_FORWARD') or define('YOD_FORWARD', 5);
 defined('YOD_CHARSET') or define('YOD_CHARSET', 'utf-8');
+defined('YOD_PATHVAR') or define('YOD_PATHVAR', '');
 defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__));
 
 // yodphp autorun
@@ -261,8 +262,10 @@ final class Yod_Request
 		if (empty($route)) {
 			if (strtoupper($this->method) == 'CLI') {
 				$route = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : '';
-			} else {
+			} elseif (empty($_GET[YOD_PATHVAR])) {
 				$route = empty($_SERVER['PATH_INFO']) ? '' : $_SERVER['PATH_INFO'];
+			} else {
+				$route = $_GET[YOD_PATHVAR];
 			}
 		}
 		$route = explode('/', str_replace('//', '/', trim($route, '/')));
@@ -686,7 +689,7 @@ class Yod_Model
 		$classname = $name .'Model';
 		if (isset(self::$_model[$name])) {
 			return self::$_model[$name];
-		} elseif(class_exists($classname)) {
+		} elseif (class_exists($classname)) {
 			return new $classname($name, $prefix, $config);
 		} else {
 			return new Yod_Model($name, $prefix, $config);
@@ -982,7 +985,7 @@ class Yod_Model
 			if (is_array($value)) {
 				if ($key == 'UNION') {
 					$value = $this->parseQuery($value);
-				} elseif($key == 'JOIN') {
+				} elseif ($key == 'JOIN') {
 					$value = implode(' ', $value);
 					$key = '';
 				}
@@ -1121,7 +1124,7 @@ class Yod_Database
 		);
 		if (empty($config['type'])) {
 			$classname = __CLASS__;
-		} elseif(substr($config['type'], 0, 4) == 'pdo_') {
+		} elseif (substr($config['type'], 0, 4) == 'pdo_') {
 			$classname = 'Yod_DbPdo';
 		} else {
 			$classname = 'Yod_Db'.ucwords($config['type']);

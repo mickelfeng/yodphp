@@ -238,7 +238,7 @@ class Yod_DbPdo extends Yod_Database
 	{
 		if ($this->_result) {
 			return $this->_result->errorCode();
-		} elseif($this->_linkid) {
+		} elseif ($this->_linkid) {
 			return $this->_linkid->errorCode();
 		} else {
 			return false;
