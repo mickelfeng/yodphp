@@ -8,28 +8,6 @@ It is a simple PHP framework
 ## Tutorial
 
 ### layout
-- The default Application directory layout:
-
-```
-- index.php	// Application entry
-+ public
-+ app
-	+ actions	// Other actions
-	+ configs
-		- config.php	// Configure 
-	+ controllers
-		- IndexController.php	// Default controller
-	+ extends	// Extends
-	+ models	// Models
-		- DemoModel.php
-	+ views
-		+ index	// View templates for default controller
-			- index.php
-	+ drivers	// Yodphp Database Drivers
-	- yodphp.php	// Yodphp entry
-
-```
-
 - A classic Application directory layout:
 
 ```
@@ -73,10 +51,8 @@ error_reporting(E_ALL);
 date_default_timezone_set('Asia/Shanghai');
 
 define('YOD_RUNPATH', dirname(__FILE__) . '/app');
-// default
-class_exists('Yod_Application', false) or require YOD_RUNPATH . '/yodphp.php';
-// classic
-//class_exists('Yod_Application', false) or require YOD_RUNPATH . '/../yodphp/yodphp.php';
+class_exists('Yod_Application', false) or require YOD_RUNPATH . '/../yodphp/yodphp.php';
+
 ```
 
 ### hello.php
@@ -89,10 +65,7 @@ error_reporting(E_ALL);
 date_default_timezone_set('Asia/Shanghai');
 
 define('YOD_RUNPATH', dirname(__FILE__) . '/app');
-// default
-class_exists('Yod_Application', false) or require YOD_RUNPATH . '/yodphp.php';
-// classic
-//class_exists('Yod_Application', false) or require YOD_RUNPATH . '/../yodphp/yodphp.php';
+class_exists('Yod_Application', false) or require YOD_RUNPATH . '/../yodphp/yodphp.php';
 
 class HelloController extends Yod_Controller
 {
