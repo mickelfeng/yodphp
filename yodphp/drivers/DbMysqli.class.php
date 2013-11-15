@@ -96,10 +96,10 @@ class Yod_DbMysqli extends Yod_Database
 				$result = $this->_stmt->result_metadata();
 				$fields = $result->fetch_fields();
 				
-				$this->_result['fields'] = array();
+				$this->_result['data'] = array();
 				$this->_result['stmt'] = $this->_stmt;
 				foreach ($fields as $field) {
-					$this->_result['fields'][$field->name] = null;
+					$this->_result['data'][$field->name] = null;
 				}
 			}
 			return $this->_result;
@@ -174,17 +174,17 @@ class Yod_DbMysqli extends Yod_Database
 			if ($fetch = $result->fetch_assoc()) {
 				return $fetch;
 			}
-		} elseif (isset($result['fields'])) {
+		} elseif (isset($result['data'])) {
 			$fetch = array();
-			foreach ($result['fields'] as $key => $value) {
+			foreach ($result['data'] as $key => $value) {
 				$fetch[$key] = null;
 			}
-			foreach ($result['fields'] as $key => $value) {
-				$result['fields'][$key] = &$fetch[$key];
+			foreach ($result['data'] as $key => $value) {
+				$result['data'][$key] = &$fetch[$key];
 			}
-			call_user_func_array(array($result['stmt'], 'bind_result'), $result['fields']);
+			call_user_func_array(array($result['stmt'], 'bind_result'), $result['data']);
 			if ($result['stmt']->fetch()) {
-				return $result['fields'];
+				return $result['data'];
 			}
 		}
 		return false;
