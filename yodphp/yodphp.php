@@ -718,13 +718,13 @@ class Yod_Model
 		empty($where) or $this->where($where);
 		$query = $this->parseQuery();
 		$params = array_merge($this->_params, $params);
-		$this->_db->query($query, $params);
-		$data = $this->_db->fetch();
-		$this->_db->free();
 		$this->initQuery();
-		$this->_params = array();
-
-		return $data;
+		if ($result = $this->_db->query($query, $params)) {
+			$data = $this->_db->fetch$result);
+			$this->_db->free($result);
+			return $data;
+		}
+		return false;
 	}
 
 	/**
@@ -741,13 +741,13 @@ class Yod_Model
 		empty($where) or $this->where($where);
 		$query = $this->parseQuery();
 		$params = array_merge($this->_params, $params);
-		$this->_db->query($query, $params);
-		$data = $this->_db->fetchAll();
-		$this->_db->free();
 		$this->initQuery();
-		$this->_params = array();
-
-		return $data;
+		if ($result = $this->_db->query($query, $params)) {
+			$data = $this->_db->fetchAll($result);
+			$this->_db->free($result);
+			return $data;
+		}
+		return false;
 	}
 
 	/**
@@ -766,13 +766,12 @@ class Yod_Model
 		$this->_query['LIMIT'] = 1;
 		$query = $this->parseQuery();
 		$params = array_merge($this->_params, $params);
-		$this->_db->query($query, $params);
 		$this->initQuery();
-		$this->_params = array();
-
-		if ($data = $this->_db->fetch()) {
-			$this->_db->free();
-			return current($data);
+		if ($result = $this->_db->query($query, $params)) {
+			if ($data = $this->_db->fetch($result)) {
+				$this->_db->free($result);
+				return current($data);
+			}
 		}
 		return 0;
 	}
@@ -961,6 +960,7 @@ class Yod_Model
 			'UNION' => '',
 			'COMMENT' => '',
 		);
+		$this->_params = array();
 	}
 
 	/**
@@ -1181,16 +1181,16 @@ class Yod_Database
 	 * @access public
 	 * @return mixed
 	 */
-	public function fetchAll()
+	public function fetchAll($result = null)
 	{
 		if (empty($this->_driver)) {
 			return false;
 		}
-		$result = array();
-		while ($fetch = $this->fetch()){
-			$result[] = $fetch;
+		$data = array();
+		while ($fetch = $this->fetch($result)){
+			$data[] = $fetch;
 		}
-		return $result;
+		return $data;
 	}
 
 	/**
