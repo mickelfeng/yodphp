@@ -11,8 +11,6 @@
 
 class Yod_DbMysql extends Yod_Database
 {
-	protected $_result;
-
 	/**
 	 * __construct
 	 * @access public
@@ -111,11 +109,8 @@ class Yod_DbMysql extends Yod_Database
 				$sql = str_replace($key, "'{$value}'", $sql);
 			}
 		}
-		if ($this->_result) {
-			mysql_free_result($this->_result);
-		}
 		if ($this->_result = mysql_query($sql, $this->_linkid)) {
-			return true;
+			return $this->_result;
 		}
 		if (error_reporting()) {
 			if ($error = mysql_error($this->_linkid)) {
@@ -136,11 +131,8 @@ class Yod_DbMysql extends Yod_Database
 			$this->_linkid = $this->connect();
 		}
 		$this->_lastsql = $sql;
-		if ($this->_result) {
-			mysql_free_result($this->_result);
-		}
 		if ($this->_result = mysql_query($sql, $this->_linkid)) {
-			return true;
+			return $this->_result;
 		}
 		if (error_reporting()) {
 			if ($error = mysql_error($this->_linkid)) {
@@ -148,6 +140,50 @@ class Yod_DbMysql extends Yod_Database
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * fetch
+	 * @access public
+	 * @return mixed
+	 */
+	public function fetch($result = null)
+	{
+		if (is_null($result)) {
+			$result = $this->_result;
+		}
+		return $result ? mysql_fetch_assoc($result) : false;
+	}
+
+	/**
+	 * free
+	 * @access public
+	 * @return mixed
+	 */
+	public function free($result = null)
+	{
+		if (is_null($result)) {
+			$result = $this->_result;
+		}
+		return $result ? mysql_free_result($result) : false;
+	}
+
+	/**
+	 * close
+	 * @access public
+	 * @return mixed
+	 */
+	public function close()
+	{
+		foreach ($this->_linkids as $key => $linkid) {
+			if ($linkid) {
+				mysql_close($linkid);
+				unset($this->_linkids[$key]);
+			}
+		}
+		if ($this->_linkid) {
+			$this->_linkid = null;
+		}
 	}
 
 	/**
@@ -216,50 +252,6 @@ class Yod_DbMysql extends Yod_Database
 	public function quote($string)
 	{
 		return mysql_real_escape_string($string, $this->_linkid);
-	}
-
-	/**
-	 * fetch
-	 * @access public
-	 * @return mixed
-	 */
-	public function fetch($free = false)
-	{
-		if ($this->_result) {
-			return mysql_fetch_assoc($this->_result);
-		}
-		return false;
-	}
-
-	/**
-	 * free
-	 * @access public
-	 * @return mixed
-	 */
-	public function free()
-	{
-		if ($this->_result) {
-			mysql_free_result($this->_result);
-		}
-		$this->_result = null;
-	}
-
-	/**
-	 * close
-	 * @access public
-	 * @return mixed
-	 */
-	public function close()
-	{
-		foreach ($this->_linkids as $key => $linkid) {
-			if ($linkid) {
-				mysql_close($linkid);
-				unset($this->_linkids[$key]);
-			}
-		}
-		if ($this->_linkid) {
-			$this->_linkid = null;
-		}
 	}
 
 	/**

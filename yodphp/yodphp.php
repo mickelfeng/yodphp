@@ -719,7 +719,8 @@ class Yod_Model
 		$query = $this->parseQuery();
 		$params = array_merge($this->_params, $params);
 		$this->_db->query($query, $params);
-		$data = $this->_db->fetch(true);
+		$data = $this->_db->fetch();
+		$this->_db->free();
 		$this->initQuery();
 		$this->_params = array();
 
@@ -742,6 +743,7 @@ class Yod_Model
 		$params = array_merge($this->_params, $params);
 		$this->_db->query($query, $params);
 		$data = $this->_db->fetchAll();
+		$this->_db->free();
 		$this->initQuery();
 		$this->_params = array();
 
@@ -768,7 +770,8 @@ class Yod_Model
 		$this->initQuery();
 		$this->_params = array();
 
-		if ($data = $this->_db->fetch(true)) {
+		if ($data = $this->_db->fetch()) {
+			$this->_db->free();
 			return current($data);
 		}
 		return 0;
@@ -1037,9 +1040,8 @@ class Yod_Database
 	protected $_driver;
 	protected $_linkid;
 	protected $_linkids = array();
-
-	protected $_queryid;
-	protected $_lastsql = '';
+	protected $_result;
+	protected $_lastsql;
 	protected $_pconnect = false;
 
 	/**
@@ -1124,11 +1126,11 @@ class Yod_Database
 		} else {
 			$classname = 'Yod_Db'.ucwords($config['type']);
 		}
-		$dbkey = md5(serialize($config));
-		if (empty(self::$_db[$dbkey])) {
-			self::$_db[$dbkey] = new $classname($config);
+		$md5hash = md5(serialize($config));
+		if (empty(self::$_db[$md5hash])) {
+			self::$_db[$md5hash] = new $classname($config);
 		}
-		return self::$_db[$dbkey];
+		return self::$_db[$md5hash];
 	}
 
 	/**
@@ -1265,7 +1267,7 @@ class Yod_Database
 	}
 
 	/**
-	 * lastsql
+	 * lastQuery
 	 * @access public
 	 * @return void
 	 */

@@ -89,8 +89,8 @@ class Yod_DbPdo extends Yod_Database
 				$bind_params[$key] = $value;
 			}
 		}
-		$this->_queryid = $this->_linkid->prepare($sql);
-		return $this->_queryid->execute($bind_params);
+		$this->_result = $this->_linkid->prepare($sql);
+		return $this->_result->execute($bind_params);
 	}
 
 	/**
@@ -104,10 +104,70 @@ class Yod_DbPdo extends Yod_Database
 			$this->_linkid = $this->connect();
 		}
 		$this->_lastsql = $sql;
-		if ($this->_queryid = $this->_linkid->query($sql)) {
-			return true;
+		return $this->_result = $this->_linkid->query($sql);
+	}
+
+	/**
+	 * fetch
+	 * @access public
+	 * @return mixed
+	 */
+	public function fetch($result = null)
+	{
+		if (is_null($result)) {
+			$result = $this->_result;
+		}
+		if (is_object($result)) {
+			return $result->fetch(PDO::FETCH_ASSOC);
 		}
 		return false;
+	}
+
+	/**
+	 * fetchAll
+	 * @access public
+	 * @return mixed
+	 */
+	public function fetchAll($result = null)
+	{
+		if (is_null($result)) {
+			$result = $this->_result;
+		}
+		if (is_object($result)) {
+			return $result->fetchAll(PDO::FETCH_ASSOC);
+		}
+		return array();
+	}
+
+	/**
+	 * free
+	 * @access public
+	 * @return mixed
+	 */
+	public function free($result = null)
+	{
+		if (is_null($result)) {
+			$this->_result = null;
+		} else {
+			$result = null;
+		}
+	}
+
+	/**
+	 * close
+	 * @access public
+	 * @return mixed
+	 */
+	public function close()
+	{
+		foreach ($this->_linkids as $key => $linkid) {
+			if ($linkid) {
+				unset($this->_linkids[$key]);
+			}
+		}
+		if ($this->_linkid) {
+			$this->_linkid = null;
+		}
 	}
 
 	/**
@@ -170,69 +230,14 @@ class Yod_DbPdo extends Yod_Database
 	}
 
 	/**
-	 * fetch
-	 * @access public
-	 * @return mixed
-	 */
-	public function fetch()
-	{
-		if ($this->_queryid) {
-			return $this->_queryid->fetch(PDO::FETCH_ASSOC);
-		}
-		return false;
-	}
-
-	/**
-	 * fetchAll
-	 * @access public
-	 * @return mixed
-	 */
-	public function fetchAll()
-	{
-		if ($this->_queryid) {
-			return $this->_queryid->fetchAll(PDO::FETCH_ASSOC);
-		}
-		return array();
-	}
-
-	/**
-	 * free
-	 * @access public
-	 * @return mixed
-	 */
-	public function free()
-	{
-		if ($this->_queryid) {
-			$this->_queryid = null;
-		}
-	}
-
-	/**
-	 * close
-	 * @access public
-	 * @return mixed
-	 */
-	public function close()
-	{
-		foreach ($this->_linkids as $key => $linkid) {
-			if ($linkid) {
-				unset($this->_linkids[$key]);
-			}
-		}
-		if ($this->_linkid) {
-			$this->_linkid = null;
-		}
-	}
-
-	/**
 	 * errno
 	 * @access public
 	 * @return mixed
 	 */
 	public function errno()
 	{
-		if ($this->_queryid) {
-			return $this->_queryid->errorCode();
+		if ($this->_result) {
+			return $this->_result->errorCode();
 		} elseif($this->_linkid) {
 			return $this->_linkid->errorCode();
 		} else {
@@ -247,8 +252,8 @@ class Yod_DbPdo extends Yod_Database
 	 */
 	public function error()
 	{
-		if ($this->_queryid) {
-			if ($error = $this->_queryid->errorInfo()) {
+		if ($this->_result) {
+			if ($error = $this->_result->errorInfo()) {
 				return $error[2];
 			}
 		} elseif ($this->_linkid) {

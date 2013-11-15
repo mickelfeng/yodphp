@@ -11,8 +11,8 @@
 
 class Yod_DbMysqli extends Yod_Database
 {
-	protected $_result;
-	protected $_fields;
+	protected $_stmt;
+	protected $_result = array();
 
 	/**
 	 * __construct
@@ -88,19 +88,23 @@ class Yod_DbMysqli extends Yod_Database
 		if (empty($params)){
 			return $this->exec($sql);
 		}
-		if ($query = $this->execute($sql, $params)) {
-			if (method_exists($this->_queryid, 'get_result')){
-				$this->_result = $this->_queryid->get_result();
+		if ($this->execute($sql, $params)) {
+			if (method_exists($this->_stmt, 'get_result')){
+				$this->_result = $this->_stmt->get_result();
+				$this->_stmt->close();
 			} else {
-				$result = $this->_queryid->result_metadata();
+				$result = $this->_stmt->result_metadata();
 				$fields = $result->fetch_fields();
-				$this->_fields = array();
+				
+				$this->_result['fields'] = array();
+				$this->_result['stmt'] = $this->_stmt;
 				foreach ($fields as $field) {
-					$this->_fields[$field->name] = null;
+					$this->_result['fields'][$field->name] = null;
 				}
 			}
+			return $this->_result;
 		}
-		return $query;
+		return false;
 	}
 
 	/**
@@ -127,14 +131,11 @@ class Yod_DbMysqli extends Yod_Database
 			}
 		}
 		ksort($bind_params);
-		if ($this->_queryid) {
-			$this->_queryid->close();
-		}
-		if ($this->_queryid = $this->_linkid->prepare($sql)) {
+		if ($this->_stmt = $this->_linkid->prepare($sql)) {
 			if (count($bind_params) > 1) {
-				call_user_func_array(array($this->_queryid, 'bind_param'), $bind_params);
+				call_user_func_array(array($this->_stmt, 'bind_param'), $bind_params);
 			}
-			return $this->_queryid->execute();
+			return $this->_stmt->execute();
 		}
 		return false;
 	}
@@ -150,13 +151,79 @@ class Yod_DbMysqli extends Yod_Database
 			$this->_linkid = $this->connect();
 		}
 		$this->_lastsql = $sql;
-		if ($this->_queryid) {
-			$this->_queryid->close();
-		}
 		if ($this->_result = $this->_linkid->query($sql)) {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * fetch
+	 * @access public
+	 * @return mixed
+	 */
+	public function fetch($result = null)
+	{
+		if (is_bool($result)) {
+			$free = $result;
+			$result = $this->_result;
+		} elseif (is_null($result)) {
+			$result = $this->_result;
+		}
+		if (is_object($result)) {
+			if ($fetch = $result->fetch_assoc()) {
+				return $fetch;
+			}
+		} elseif (isset($result['fields'])) {
+			$fetch = array();
+			foreach ($result['fields'] as $key => $value) {
+				$fetch[$key] = null;
+			}
+			foreach ($result['fields'] as $key => $value) {
+				$result['fields'][$key] = &$fetch[$key];
+			}
+			call_user_func_array(array($result['stmt'], 'bind_result'), $result['fields']);
+			if ($result['stmt']->fetch()) {
+				return $result['fields'];
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * free
+	 * @access public
+	 * @return mixed
+	 */
+	public function free($result = null)
+	{
+		if (is_null($result)) {
+			$result = $this->_result;
+		}
+		if (is_object($result)) {
+			$result->free();
+		} else {
+			empty($this->_result['stmt']) or $this->_result['stmt']->close();
+			$this->_result = array();
+		}
+	}
+
+	/**
+	 * close
+	 * @access public
+	 * @return mixed
+	 */
+	public function close()
+	{
+		foreach ($this->_linkids as $key => $linkid) {
+			if ($linkid) {
+				$linkid->close();
+				unset($this->_linkids[$key]);
+			}
+		}
+		if ($this->_linkid) {
+			$this->_linkid = null;
+		}
 	}
 
 	/**
@@ -219,82 +286,18 @@ class Yod_DbMysqli extends Yod_Database
 	}
 
 	/**
-	 * fetch
-	 * @access public
-	 * @return mixed
-	 */
-	public function fetch($free = false)
-	{
-		if ($this->_result) {
-			if ($fetch = $this->_result->fetch_assoc()) {
-				return $fetch;
-			} else {
-				$this->free();
-			}
-		} elseif ($this->_fields) {
-			$fetch = array();
-			foreach ($this->_fields as $key => $value) {
-				$fetch[$key] = null;
-			}
-			foreach ($this->_fields as $key => $value) {
-				$this->_fields[$key] = &$fetch[$key];
-			}
-			call_user_func_array(array($this->_queryid, 'bind_result'), $this->_fields);
-			if ($this->_queryid->fetch()) {
-				return $this->_fields;
-			} else {
-				$this->free();
-			}
-		}
-		if ($free) $this->free();
-		return false;
-	}
-
-	/**
-	 * free
-	 * @access public
-	 * @return mixed
-	 */
-	public function free()
-	{
-		if ($this->_result) {
-			$this->_result->free();
-		}
-		$this->_result = null;
-		$this->_fields = null;
-	}
-
-	/**
-	 * close
-	 * @access public
-	 * @return mixed
-	 */
-	public function close()
-	{
-		foreach ($this->_linkids as $key => $linkid) {
-			if ($linkid) {
-				$linkid->close();
-				unset($this->_linkids[$key]);
-			}
-		}
-		if ($this->_linkid) {
-			$this->_linkid = null;
-		}
-	}
-
-	/**
 	 * errno
 	 * @access public
 	 * @return mixed
 	 */
 	public function errno()
 	{
-		if ($this->_queryid) {
-			return $this->_queryid->errno;
+		if ($this->_stmt) {
+			return $this->_stmt->errno;
 		} elseif ($this->_linkid) {
 			return $this->_linkid->errno;
 		} else {
-			return false;
+				return false;
 		}
 	}
 
@@ -305,12 +308,12 @@ class Yod_DbMysqli extends Yod_Database
 	 */
 	public function error()
 	{
-		if ($this->_queryid) {
-			return $this->_queryid->error;
+		if ($this->_stmt) {
+			return $this->_stmt->error;
 		} elseif ($this->_linkid) {
 			return $this->_linkid->error;
 		} else {
-			return false;
+				return false;
 		}
 	}
 
