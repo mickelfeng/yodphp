@@ -510,7 +510,7 @@ abstract class Yod_Controller
 
 	/**
 	 * render
-	* @access protected
+	 * @access protected
 	 * @param mixed $view
 	 * @param array $data
 	 * @return string
@@ -526,6 +526,7 @@ abstract class Yod_Controller
 		}
 		$this->_view['tpl_file'] = $this->_view['tpl_path'] . strtolower($view) . '.php';
 		// tpl_data
+		$tpl_path = $this->_view['tpl_path'];
 		unset($this->_view['tpl_data']['this'], $data['this']);
 		extract($this->_view['tpl_data']);
 		if (is_array($data)) extract($data);
