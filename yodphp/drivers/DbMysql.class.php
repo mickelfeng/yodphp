@@ -81,12 +81,12 @@ class Yod_DbMysql extends Yod_Database
 	 * @access public
 	 * @return mixed
 	 */
-	public function query($sql, $params = array())
+	public function query($query, $params = array())
 	{
 		if (empty($params)) {
-			return $this->exec($sql);
+			return $this->exec($query);
 		}
-		return $this->execute($sql, $params);
+		return $this->execute($query, $params);
 	}
 
 	/**
@@ -94,22 +94,22 @@ class Yod_DbMysql extends Yod_Database
 	 * @access public
 	 * @return boolean
 	 */
-	public function execute($sql, $params = array())
+	public function execute($query, $params = array())
 	{
 		if (empty($params)) {
-			return $this->exec($sql);
+			return $this->exec($query);
 		}
 		if (empty($this->_linkid)) {
 			$this->_linkid = $this->connect();
 		}
-		$this->_lastsql = $sql;
+		$this->_lastquery = $query;
 		foreach ($params as $key => $value) {
-			if (strstr($sql, $key)) {
+			if (strstr($query, $key)) {
 				$value = mysql_real_escape_string($value);
-				$sql = str_replace($key, "'{$value}'", $sql);
+				$query = str_replace($key, "'{$value}'", $query);
 			}
 		}
-		if ($this->_result = mysql_query($sql, $this->_linkid)) {
+		if ($this->_result = mysql_query($query, $this->_linkid)) {
 			return $this->_result;
 		}
 		if (error_reporting()) {
@@ -125,13 +125,13 @@ class Yod_DbMysql extends Yod_Database
 	 * @access public
 	 * @return boolean
 	 */
-	public function exec($sql)
+	public function exec($query)
 	{
 		if (empty($this->_linkid)) {
 			$this->_linkid = $this->connect();
 		}
-		$this->_lastsql = $sql;
-		if ($this->_result = mysql_query($sql, $this->_linkid)) {
+		$this->_lastquery = $query;
+		if ($this->_result = mysql_query($query, $this->_linkid)) {
 			return $this->_result;
 		}
 		if (error_reporting()) {

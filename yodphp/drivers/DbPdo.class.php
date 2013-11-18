@@ -61,12 +61,12 @@ class Yod_DbPdo extends Yod_Database
 	 * @access public
 	 * @return mixed
 	 */
-	public function query($sql, $params = array())
-	{
+	public function query($query, $params = array())
+	{	
 		if (empty($params)) {
-			return $this->exec($sql);
+			return $this->exec($query);
 		}
-		return $this->execute($sql, $params);
+		return $this->execute($query, $params);
 	}
 
 	/**
@@ -74,23 +74,26 @@ class Yod_DbPdo extends Yod_Database
 	 * @access public
 	 * @return boolean
 	 */
-	public function execute($sql, $params = array())
+	public function execute($query, $params = array())
 	{
 		if (empty($params)) {
-			return $this->exec($sql);
+			return $this->exec($query);
 		}
 		if (empty($this->_linkid)) {
 			$this->_linkid = $this->connect();
 		}
-		$this->_lastsql = $sql;
+		$this->_lastquery = $query;
 		$bind_params = array();
 		foreach ($params as $key => $value) {
-			if (strstr($sql, $key)) {
+			if (strstr($query, $key)) {
 				$bind_params[$key] = $value;
 			}
 		}
-		$this->_result = $this->_linkid->prepare($sql);
-		return $this->_result->execute($bind_params);
+		if ($this->_result = $this->_linkid->prepare($query)) {
+			$this->_result->execute($bind_params);
+			return $this->_result;
+		}
+		return false;
 	}
 
 	/**
@@ -98,13 +101,13 @@ class Yod_DbPdo extends Yod_Database
 	 * @access public
 	 * @return mixed
 	 */
-	public function exec($sql)
+	public function exec($query)
 	{
 		if (empty($this->_linkid)) {
 			$this->_linkid = $this->connect();
 		}
-		$this->_lastsql = $sql;
-		return $this->_result = $this->_linkid->query($sql);
+		$this->_lastquery = $query;
+		return $this->_result = $this->_linkid->query($query);
 	}
 
 	/**

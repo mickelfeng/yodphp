@@ -1045,7 +1045,7 @@ class Yod_Database
 	protected $_linkid;
 	protected $_linkids = array();
 	protected $_result;
-	protected $_lastsql;
+	protected $_lastquery;
 	protected $_pconnect = false;
 
 	/**
@@ -1202,9 +1202,9 @@ class Yod_Database
 	 * @access public
 	 * @return void
 	 */
-	public function create($sql, $params)
+	public function create($query, $params)
 	{
-		return $this->execute($sql, $params);
+		return $this->execute($query, $params);
 	}
 
 	/**
@@ -1212,9 +1212,9 @@ class Yod_Database
 	 * @access public
 	 * @return void
 	 */
-	public function select($sql, $params)
+	public function select($query, $params)
 	{
-		return $this->query($sql, $params);
+		return $this->query($query, $params);
 	}
 
 	/**
@@ -1233,8 +1233,8 @@ class Yod_Database
 				$params[$name] = $value;
 			}
 		}
-		$sql = ($replace ? 'REPLACE' : 'INSERT') .' INTO '. $table .' ('. implode(',', $fields) .') VALUES ('. implode(',', $values) .')';
-		return $this->execute($sql, $params);
+		$query = ($replace ? 'REPLACE' : 'INSERT') .' INTO '. $table .' ('. implode(',', $fields) .') VALUES ('. implode(',', $values) .')';
+		return $this->execute($query, $params);
 	}
 
 	/**
@@ -1254,8 +1254,8 @@ class Yod_Database
 			}
 		}
 		$params = array_merge($params1, $params);
-		$sql = 'UPDATE '. $table. ' SET '.implode(',', $update) . (empty($where) ? '' : ' WHERE '. $where);
-		return $this->execute($sql, $params);
+		$query = 'UPDATE '. $table. ' SET '.implode(',', $update) . (empty($where) ? '' : ' WHERE '. $where);
+		return $this->execute($query, $params);
 	}
 
 	/**
@@ -1266,8 +1266,8 @@ class Yod_Database
 	public function delete($table, $where = null, $params = array())
 	{
 		if (empty($table)) return false;
-		$sql = 'DELETE FROM '. $table . (empty($where) ? '' : ' WHERE '. $where);
-		return $this->execute($sql, $params);
+		$query = 'DELETE FROM '. $table . (empty($where) ? '' : ' WHERE '. $where);
+		return $this->execute($query, $params);
 	}
 
 	/**
@@ -1277,6 +1277,6 @@ class Yod_Database
 	 */
 	public function lastQuery()
 	{
-		return $this->_lastsql;
+		return $this->_lastquery;
 	}
 }
