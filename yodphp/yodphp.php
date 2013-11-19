@@ -38,7 +38,7 @@ function __autoload($classname)
 	}
 
 	if (substr($classfile, 0, 4) == 'Yod_') { // yodphp extends class
-		if (strncmp(substr($classfile, 0, 6), 'Yod_Db', 6) == 0) {
+		if (strncmp($classfile, 'Yod_Db', 6) == 0) {
 			$directory = '/drivers/';
 		} else {
 			$directory = '/extends/';
