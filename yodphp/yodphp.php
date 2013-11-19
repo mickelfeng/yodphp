@@ -89,26 +89,29 @@ final class Yod_Application
 		}
 
 		// config
-		if (is_null($config)) {
-			$config = YOD_RUNPATH . '/configs/config.php';
-		}
-		if (is_string($config)) {
+		if (is_array($config)) {
+			$this->_config = $config;
+		} else {
+			if (!is_string($config)) {
+				$config = YOD_RUNPATH . '/configs/config.php';
+			}
 			if (is_file($config)) {
 				$this->_config = include($config);
 			} else {
 				$this->_config = array();
-				$confdir = dirname($config);
-				if (is_dir($confdir) && ($handle = opendir($confdir))) {
+				$scandir = dirname($config);
+				if (is_dir($scandir) && ($handle = opendir($scandir))) {
 					while (($file = readdir($handle)) != false) {
 						if (substr($file, -11) == '.config.php') {
 							$key = substr($file, 0, -11);
-							$value = include($confdir .'/'. $file);
+							$value = include($scandir .'/'. $file);
 							if (is_array($value)) {
 								if ($key == 'base') {
 									$this->_config = array_merge($this->_config, $value);
 								}elseif (isset($this->_config[$key])){
-									$this->_config[$key] = array_merge($this->_config[$key], $value);
-								} else {
+									if (is_array($this->_config[$key])) {
+										$value = array_merge($this->_config[$key], $value);
+									}
 									$this->_config[$key] = $value;
 								}
 							}
@@ -117,9 +120,8 @@ final class Yod_Application
 					closedir($handle);
 				}
 			}
-		} elseif (is_array($config)) {
-			$this->_config = $config;
 		}
+
 		// request
 		$this->_request = new Yod_Request();
 
@@ -136,7 +138,7 @@ final class Yod_Application
 	{
 		if ($this->_running) {
 			trigger_error('An application instance already running', E_USER_WARNING);
-			return true;
+			return;
 		}
 		$this->_running = true;
 

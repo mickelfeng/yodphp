@@ -59,7 +59,7 @@ extern PHPAPI void php_var_dump(zval **struc, int level TSRMLS_DC);
 extern PHPAPI void php_debug_zval_dump(zval **struc, int level TSRMLS_DC);
 
 ZEND_BEGIN_MODULE_GLOBALS(yod)
-  double   runtime; 
+  double  runtime;
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4))
   uint		buf_nesting;
   void		*buffer;
