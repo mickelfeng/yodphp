@@ -355,7 +355,7 @@ PHP_METHOD(yod_application, __construct) {
 /** {{{ proto public Yod_Application::run()
 */
 PHP_METHOD(yod_application, run) {
-	zval *running, *config, *request, *object;
+	zval *running, *request, *object;
 
 	object = getThis();
 
@@ -367,14 +367,6 @@ PHP_METHOD(yod_application, run) {
 
 	ZVAL_BOOL(running, 1);
 	zend_update_property(yod_application_ce, object, ZEND_STRL("_running"), running TSRMLS_CC);
-
-	config = zend_read_property(yod_application_ce, object, ZEND_STRL("_config"), 1 TSRMLS_CC);
-	if (ZVAL_IS_NULL(config)) {
-		zend_call_method_with_0_params(&object, yod_application_ce, NULL, "init", NULL);
-	} else {
-		zend_call_method_with_1_params(&object, yod_application_ce, NULL, "init", NULL, config);
-	}
-		
 
 	request = zend_read_property(yod_application_ce, object, ZEND_STRL("_request"), 1 TSRMLS_CC);
 	if (Z_TYPE_P(request) == IS_OBJECT) {
