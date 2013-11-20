@@ -70,8 +70,8 @@ final class Yod_Application
 {
 	protected static $_app;
 
-	protected $_config;
-	protected $_request;
+	protected $_config = array();
+	protected $_request = null;
 	protected $_imports = array();
 	protected $_running = false;
 
