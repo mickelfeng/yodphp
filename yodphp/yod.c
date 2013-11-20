@@ -365,8 +365,6 @@ PHP_METHOD(yod_application, __construct) {
 		return;
 	}
 
-php_printf("Yod_Application::__construct($config = null)\n");
-
 	yodapp = zend_read_static_property(yod_application_ce, ZEND_STRL("_app"), 0 TSRMLS_CC);
 	if (!ZVAL_IS_NULL(yodapp)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Only one application can be initialized");
@@ -375,11 +373,9 @@ php_printf("Yod_Application::__construct($config = null)\n");
 
 	object = getThis();
 
-php_printf("yod_application_init_config\n");
 	// config
 	yod_application_init_config(object, config);
 
-php_printf("yod_application_init_request\n");
 	// request
 	MAKE_STD_ZVAL(request);
 	object_init_ex(request, yod_request_ce);
@@ -388,10 +384,8 @@ php_printf("yod_application_init_request\n");
 	}
 	zend_update_property(yod_application_ce, object, ZEND_STRL("_request"), request TSRMLS_CC);
 
-php_printf("yod_application_init_app\n");
 	// app
 	zend_update_static_property(yod_application_ce, ZEND_STRL("_app"), object TSRMLS_CC);
-php_printf("yod_application_init_end\n");
 }
 /* }}} */
 
@@ -399,8 +393,6 @@ php_printf("yod_application_init_end\n");
 */
 PHP_METHOD(yod_application, run) {
 	zval *running, *request, *object;
-
-php_printf("Yod_Application::run()\n");
 
 	object = getThis();
 
@@ -428,8 +420,6 @@ PHP_METHOD(yod_application, config) {
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &name) == FAILURE) {
 		return;
 	}
-
-php_printf("Yod_Application::config($name = null)\n");
 
 	object = getThis();
 
@@ -483,8 +473,6 @@ PHP_METHOD(yod_application, app) {
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &config) == FAILURE) {
 		return;
 	}
-
-php_printf("Yod_Application::app($config = null)\n");
 
 	yodapp = zend_read_static_property(yod_application_ce, ZEND_STRL("_app"), 0 TSRMLS_CC);
 	if (yodapp && Z_TYPE_P(yodapp) == IS_OBJECT) {
