@@ -70,8 +70,8 @@ final class Yod_Application
 {
 	protected static $_app;
 
-	protected $_config = array();
-	protected $_request = array();
+	protected $_config;
+	protected $_request;
 	protected $_imports = array();
 	protected $_running = false;
 
@@ -142,6 +142,7 @@ final class Yod_Application
 		}
 		$this->_running = true;
 
+		// dispatch
 		$this->_request->dispatch();
 	}
 
