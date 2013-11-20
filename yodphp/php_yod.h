@@ -51,12 +51,41 @@ extern zend_module_entry yod_module_entry;
 #define Z_DELREF_P	 ZVAL_DELREF
 #endif
 
-#define yod_capplication_t	zval
+
+#if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION > 2)) || (PHP_MAJOR_VERSION > 5)
+#define YOD_STORE_EG_ENVIRON() \
+  { \
+    zval ** orig_return_value_pp   = EG(return_value_ptr_ptr); \
+    zend_op ** orig_opline_ptr   = EG(opline_ptr); \
+    zend_op_array * orig_op_array  = EG(active_op_array);
+
+#define YOD_RESTORE_EG_ENVIRON() \
+    EG(return_value_ptr_ptr) = orig_return_value_pp;\
+    EG(opline_ptr)       = orig_opline_ptr; \
+    EG(active_op_array)    = orig_op_array; \
+  }
+
+#else
+
+#define YOD_STORE_EG_ENVIRON() \
+  { \
+    zval ** orig_return_value_pp        = EG(return_value_ptr_ptr); \
+    zend_op ** orig_opline_ptr        = EG(opline_ptr); \
+    zend_op_array * orig_op_array       = EG(active_op_array); \
+    zend_function_state * orig_func_state = EG(function_state_ptr);
+
+#define YOD_RESTORE_EG_ENVIRON() \
+    EG(return_value_ptr_ptr) = orig_return_value_pp;\
+    EG(opline_ptr)       = orig_opline_ptr; \
+    EG(active_op_array)    = orig_op_array; \
+    EG(function_state_ptr)   = orig_func_state; \
+  }
+
+#endif
+
+#define yod_application_t	zval
 
 #define YOD_ME(c, m, a, f) {m, PHP_MN(c), a, (zend_uint) (sizeof(a)/sizeof(struct _zend_arg_info)-1), f},
-
-extern PHPAPI void php_var_dump(zval **struc, int level TSRMLS_DC);
-extern PHPAPI void php_debug_zval_dump(zval **struc, int level TSRMLS_DC);
 
 ZEND_BEGIN_MODULE_GLOBALS(yod)
   double  runtime;
