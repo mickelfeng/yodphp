@@ -182,11 +182,14 @@ final class Yod_Application
 	 */
 	public function import($alias)
 	{
+		$classfile = str_replace('.', '/', $alias);
+		$classname = basename($classfile);
+
 		if (empty($this->_imports[$alias])) {
-			$classfile = str_replace('.', '/', $alias);
-			$classname = basename($classfile);
+			if (substr($classfile, start))
 			$classpath = YOD_RUNPATH . '/extends/' . $classfile . '.class.php';
 			if (is_file($classpath)) include $classpath;
+			$this->_imports[$alias] = $classpath;
 		}
 
 		return class_exists($classname, false) || interface_exists($classname, false);
