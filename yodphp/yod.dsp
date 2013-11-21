@@ -154,6 +154,30 @@ LINK32=link.exe
 
 SOURCE=.\yod.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\yod_application.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\yod_request.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\yod_controller.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\yod_action.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\yod_model.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\yod_database.c
+# End Source File
 # End Group
 # End Target
 # End Project
