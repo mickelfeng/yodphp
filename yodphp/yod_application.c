@@ -184,7 +184,6 @@ void yod_application_instance(yod_application_t *this_ptr, zval *config TSRMLS_D
 void yod_application_run(TSRMLS_DC) {
 	yod_application_t *object;
 	yod_request_t *request;
-	zval *running;
 
 #if PHP_YOD_DEBUG
 	php_printf("yod_application_run()\n");
@@ -198,9 +197,7 @@ void yod_application_run(TSRMLS_DC) {
 
 	object = YOD_G(yodapp);
 
-	ALLOC_ZVAL(running);
-	ZVAL_BOOL(running, 1);
-	zend_update_property(yod_application_ce, object, ZEND_STRL("_running"), running TSRMLS_CC);
+	zend_update_property_bool(yod_application_ce, object, ZEND_STRL("_running"), 1 TSRMLS_CC);
 	
 	request = zend_read_property(yod_application_ce, object, ZEND_STRL("_request"), 1 TSRMLS_CC);
 	yod_request_dispatch(request TSRMLS_CC);
@@ -216,7 +213,6 @@ int yod_application_config(zval *name, zval *result TSRMLS_DC) {
 #if PHP_YOD_DEBUG
 	php_printf("yod_application_config()\n");
 #endif
-
 	
 	if (!YOD_G(yodapp)) {
 		ZVAL_NULL(result);

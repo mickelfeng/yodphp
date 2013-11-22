@@ -113,7 +113,7 @@ char *yod_pathvar(TSRMLS_DC) {
 	if (zend_get_constant(ZEND_STRL("YOD_PATHVAR"), &const_value TSRMLS_CC)) {
 		pathvar = Z_STRVAL(const_value);
 	} else {
-		pathvar = YOD_PATHVAR;
+		pathvar = estrndup(YOD_PATHVAR, strlen(YOD_PATHVAR));
 		zend_register_string_constant(ZEND_STRS("YOD_PATHVAR"), pathvar, CONST_CS, 0 TSRMLS_CC);
 	}
 	
