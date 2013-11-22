@@ -4,7 +4,7 @@
 ARG_ENABLE("yod", "enable yod support", "no");
 
 if (PHP_YOD == "yes") {
-	EXTENSION("yod", "yod.c");
+	EXTENSION("yod", "yod.c yod_application.c yod_request.c yod_controller.c yod_action.c yod_model.c yod_database.c");
 
 	AC_DEFINE("HAVE_YOD", 1, "Have Yod Support");
 }
