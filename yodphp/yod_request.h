@@ -22,6 +22,7 @@
 extern zend_class_entry *yod_request_ce;
 
 zval *yod_request_instance(zval *this_ptr, zval *route TSRMLS_DC);
+int yod_request_dispatch(yod_request_t *request TSRMLS_DC);
 
 PHP_MINIT_FUNCTION(yod_request);
 

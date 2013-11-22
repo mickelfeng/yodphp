@@ -56,16 +56,66 @@ ZEND_BEGIN_ARG_INFO_EX(yod_request_error404_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ zval *yod_request_instance(zval *this_ptr, zval *route TSRMLS_DC)
+/** {{{ int yod_request_route(yod_request_t *request, zval *route TSRMLS_DC)
 */
-zval *yod_request_instance(zval *this_ptr, zval *route TSRMLS_DC) {
+int yod_request_route(yod_request_t *request, zval *route TSRMLS_DC) {
+	zval *routed;
+
+	if (!request || Z_TYPE_P(request) != IS_OBJECT) {
+		return 0;
+	}
+	YOD_G(routed) = 1;
+
+	ALLOC_ZVAL(routed);
+	ZVAL_BOOL(routed, 1);
+	zend_update_property(yod_request_ce, request, ZEND_STRL("_routed"), routed TSRMLS_CC);
+
+	return 1;
+}
+/* }}} */
+
+/** {{{ int yod_request_dispatch(yod_request_t *request TSRMLS_DC)
+*/
+int yod_request_dispatch(yod_request_t *request TSRMLS_DC) {
+	zval *routed;
+	
+	if (!request || Z_TYPE_P(request) != IS_OBJECT) {
+		return 0;
+	}
+
+	if (!YOD_G(routed)) {
+		yod_request_route(request, NULL TSRMLS_CC);
+	}
+	return 1;
+}
+/* }}} */
+
+/** {{{ yod_request_t *yod_request_instance(yod_request_t *this_ptr, zval *route TSRMLS_DC)
+*/
+yod_request_t *yod_request_instance(yod_request_t *this_ptr, zval *route TSRMLS_DC) {
 	yod_request_t *object;
+	zval *method;
 
 	if (this_ptr) {
 		object = this_ptr;
 	} else {
 		MAKE_STD_ZVAL(object);
 		object_init_ex(object, yod_request_ce);
+	}
+
+	MAKE_STD_ZVAL(method);
+    if (SG(request_info).request_method) {
+        ZVAL_STRING(method, (char *)SG(request_info).request_method, 1);
+    } else if (strncasecmp(sapi_module.name, "cli", 3)) {
+        ZVAL_STRING(method, "Unknow", 1);
+    } else {
+        ZVAL_STRING(method, "Cli", 1);
+    }
+	zend_update_property(yod_request_ce, object, ZEND_STRL("_method"), method TSRMLS_CC);
+	zval_ptr_dtor(&method);
+
+	if (route) {
+		yod_request_route(object, route);
 	}
 
 	return object;
@@ -75,7 +125,7 @@ zval *yod_request_instance(zval *this_ptr, zval *route TSRMLS_DC) {
 /** {{{ proto public Yod_Request::__construct($route = null)
 */
 PHP_METHOD(yod_request, __construct) {
-	zval *route, *method, *params;
+	zval *route = NULL, *method, *params;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &route) == FAILURE) {
 		return;

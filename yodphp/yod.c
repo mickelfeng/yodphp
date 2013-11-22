@@ -57,15 +57,16 @@ double yod_runtime(TSRMLS_DC) {
 		runtime = YOD_G(runtime);
 		zend_register_double_constant(ZEND_STRS("YOD_RUNTIME"), runtime, CONST_CS, 0 TSRMLS_CC);
 	}
+
 	return runtime;
 }
 /* }}} */
 
-/** {{{ int yod_forward(TSRMLS_DC)
+/** {{{ long yod_forward(TSRMLS_DC)
 */
-int yod_forward(TSRMLS_DC) {
+long yod_forward(TSRMLS_DC) {
 	zval const_value;
-	int forward;
+	long forward;
 
 	if (zend_get_constant(ZEND_STRL("YOD_FORWARD"), &const_value TSRMLS_CC)) {
 		forward = Z_LVAL(const_value);
@@ -73,6 +74,11 @@ int yod_forward(TSRMLS_DC) {
 		forward = YOD_FORWARD;
 		zend_register_long_constant(ZEND_STRS("YOD_FORWARD"), forward, CONST_CS, 0 TSRMLS_CC);
 	}
+	
+#if PHP_YOD_DEBUG
+	php_printf("yod_forward:%d\n", forward);
+#endif
+	
 	return forward;
 }
 /* }}} */
@@ -89,6 +95,11 @@ char *yod_charset(TSRMLS_DC) {
 		charset = YOD_CHARSET;
 		zend_register_string_constant(ZEND_STRS("YOD_CHARSET"), charset, CONST_CS, 0 TSRMLS_CC);
 	}
+	
+#if PHP_YOD_DEBUG
+	php_printf("yod_charset:%s\n", charset);
+#endif
+
 	return charset;
 }
 /* }}} */
@@ -105,6 +116,11 @@ char *yod_pathvar(TSRMLS_DC) {
 		pathvar = YOD_PATHVAR;
 		zend_register_string_constant(ZEND_STRS("YOD_PATHVAR"), pathvar, CONST_CS, 0 TSRMLS_CC);
 	}
+	
+#if PHP_YOD_DEBUG
+	php_printf("yod_pathvar:%s\n", pathvar);
+#endif
+
 	return pathvar;
 }
 /* }}} */
@@ -124,6 +140,11 @@ char *yod_extpath(TSRMLS_DC) {
 		extpath_len = php_dirname(extpath, extpath_len);
 		zend_register_stringl_constant(ZEND_STRS("YOD_EXTPATH"), extpath, extpath_len, CONST_CS, 0 TSRMLS_CC);
 	}
+	
+#if PHP_YOD_DEBUG
+	php_printf("yod_extpath:%s\n", extpath);
+#endif
+
 	return extpath;
 }
 /* }}} */
@@ -143,6 +164,10 @@ char *yod_runpath(TSRMLS_DC) {
 		runpath_len = php_dirname(runpath, runpath_len);
 		zend_register_stringl_constant(ZEND_STRS("YOD_RUNPATH"), runpath, runpath_len, CONST_CS, 0 TSRMLS_CC);
 	}
+	
+#if PHP_YOD_DEBUG
+	php_printf("yod_runpath:%s\n", runpath);
+#endif
 	return runpath;
 }
 /* }}} */
@@ -157,6 +182,10 @@ int yod_execute_scripts(char *filepath, zval **result, int dtor TSRMLS_DC) {
 	if (!VCWD_REALPATH(filepath, realpath)) {
 		return 0;
 	}
+	
+#if PHP_YOD_DEBUG
+	php_printf("yod_execute_scripts:%s\n", filepath);
+#endif
 
 	file_handle.filename = filepath;
 	file_handle.free_filename = 0;
@@ -281,6 +310,11 @@ int yod_autoload_class(char *classname, uint classname_len TSRMLS_DC) {
 	if (VCWD_ACCESS(classpath, F_OK) == 0) {
 		yod_execute_scripts(classpath, NULL, 1 TSRMLS_CC);
 	}
+	
+#if PHP_YOD_DEBUG
+	php_printf("yod_autoload_class:%s=%s\n", classname, classpath);
+#endif
+
 	efree(classpath);
 
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
@@ -323,7 +357,9 @@ zend_function_entry yod_functions[] = {
 */
 PHP_GINIT_FUNCTION(yod)
 {
-	yod_globals->runtime = 0;
+	yod_globals->runtime	= 0;
+	yod_globals->yodapp		= NULL;
+	yod_globals->running	= 0;
 }
 /* }}} */
 
@@ -366,6 +402,10 @@ PHP_RINIT_FUNCTION(yod)
 	}
 	REGISTER_DOUBLE_CONSTANT("YOD_RUNTIME", YOD_G(runtime), CONST_CS);
 
+	YOD_G(yodapp)			= NULL;
+	YOD_G(routed)			= 0;
+	YOD_G(running)			= 0;
+
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4))
 	YOD_G(buffer)			= NULL;
 	YOD_G(owrite_handler)	= NULL;
@@ -386,25 +426,28 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 	zval runpath;
 
 	if (zend_get_constant(ZEND_STRL("YOD_RUNPATH"), &runpath TSRMLS_CC)) {
-		yod_application_app(NULL);
-		zval_dtor(&runpath);
+		if (!YOD_G(yodapp)) {
+			yod_application_app(NULL);
+		}
+
+#if PHP_YOD_DEBUG
+		double runtime;
+		struct timeval tp = {0};
+
+		if (gettimeofday(&tp, NULL)) {
+			runtime	= 0;	
+		} else {
+			runtime	= (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
+		}
+
+		runtime = (runtime - YOD_G(runtime)) * 1000;
+		php_printf("<hr>[runtime:%fms]", runtime);
+#endif
+
 	}
 
-/*
-	double runtime;
-	struct timeval tp = {0};
+	YOD_G(yodapp) = NULL;
 
-	php_printf("<hr>");
-
-	if (gettimeofday(&tp, NULL)) {
-		runtime	= 0;	
-	} else {
-		runtime	= (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
-	}
-
-	runtime = (runtime - YOD_G(runtime)) * 1000;
-	php_printf("%f\n", runtime);
-*/
 	return SUCCESS;
 }
 /* }}} */

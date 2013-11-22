@@ -60,7 +60,7 @@ ZEND_BEGIN_ARG_INFO_EX(yod_application_destruct_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ void yod_application_init_config(yod_application_t *object)
+/** {{{ void yod_application_init_config(yod_application_t *object, zval *config)
 */
 void yod_application_init_config(yod_application_t *object, zval *config) {
 	zval *result;
@@ -71,75 +71,83 @@ void yod_application_init_config(yod_application_t *object, zval *config) {
 	char dentry[sizeof(struct dirent) + MAXPATHLEN];
 	struct dirent *entry = (struct dirent *) &dentry;
 
-	if(Z_TYPE_P(config) == IS_ARRAY) {
+	if(config && Z_TYPE_P(config) == IS_ARRAY) {
 		zend_update_property(yod_application_ce, object, ZEND_STRL("_config"), config TSRMLS_CC);
+		return;
+	}
+
+	if(config && Z_TYPE_P(config) == IS_STRING) {
+		filepath = Z_STRVAL_P(config);
 	} else {
+		spprintf(&filepath, 0, "%s/configs/config.php", yod_runpath(TSRMLS_CC));
+	}
 
-		if(Z_TYPE_P(config) == IS_STRING) {
-			filepath = Z_STRVAL_P(config);
-		} else {
-			spprintf(&filepath, 0, "%s/configs/config.php", yod_runpath(TSRMLS_CC));
-		}
-		if (VCWD_ACCESS(filepath, F_OK) == 0) {
-			yod_execute_scripts(filepath, &result, 0 TSRMLS_CC);
-			zend_update_property(yod_application_ce, object, ZEND_STRL("_config"), result TSRMLS_CC);
-		} else {
-			MAKE_STD_ZVAL(result);
-			array_init(result);
+#if PHP_YOD_DEBUG
+	php_printf("config_filepath:%s\n", filepath);
+#endif
 
-			filepath_len = php_dirname(filepath, strlen(filepath));
-			dir = VCWD_OPENDIR(filepath);
-			if (dir) {
-				while (php_readdir_r(dir, (struct dirent *) dentry, &entry) == 0 && entry) {
-					zval *value;
-					char *filename;
-					size_t entry_len = strlen(entry->d_name);
+	if (VCWD_ACCESS(filepath, F_OK) == 0) {
+		yod_execute_scripts(filepath, &result, 0 TSRMLS_CC);
+	} else {
+		MAKE_STD_ZVAL(result);
+		array_init(result);
 
-					if (entry_len > 11 && strncmp(entry->d_name + entry_len - 11, ".config.php", 11) == 0) {
-						spprintf(&filename, 0, "%s/%s", filepath, entry->d_name);
-						if (VCWD_ACCESS(filename, F_OK) == 0) {
-							yod_execute_scripts(filename, &value, 0 TSRMLS_CC);
-							if (entry_len == 15 && strncmp(entry->d_name, "base", 4) == 0) {
-								if (Z_TYPE_P(value) == IS_ARRAY) {
-									php_array_merge(Z_ARRVAL_P(result), Z_ARRVAL_P(value), 0 TSRMLS_DC);
-								}
-							} else {
-								zval **ppval;
-								uint key_len = entry_len - 11;
-								char *key = estrndup(entry->d_name, key_len);
+		filepath_len = php_dirname(filepath, strlen(filepath));
+		dir = VCWD_OPENDIR(filepath);
+		if (dir) {
+			while (php_readdir_r(dir, (struct dirent *) dentry, &entry) == 0 && entry) {
+				zval *value;
+				char *filename;
+				size_t entry_len = strlen(entry->d_name);
 
-								if (zend_hash_find(Z_ARRVAL_P(result), key, key_len + 1, (void **)&ppval) == SUCCESS) {
-									if (Z_TYPE_PP(ppval) == IS_ARRAY) {
-										php_array_merge(Z_ARRVAL_P(value), Z_ARRVAL_PP(ppval), 0 TSRMLS_DC);
-									}
-									zval_ptr_dtor(ppval);
-								}
-								add_assoc_zval_ex(result, key, key_len + 1, value);
-								efree(key);
+				if (entry_len > 11 && strncmp(entry->d_name + entry_len - 11, ".config.php", 11) == 0) {
+					spprintf(&filename, 0, "%s/%s", filepath, entry->d_name);
+					if (VCWD_ACCESS(filename, F_OK) == 0) {
+						yod_execute_scripts(filename, &value, 0 TSRMLS_CC);
+						if (entry_len == 15 && strncmp(entry->d_name, "base", 4) == 0) {
+							if (Z_TYPE_P(value) == IS_ARRAY) {
+								php_array_merge(Z_ARRVAL_P(result), Z_ARRVAL_P(value), 0 TSRMLS_DC);
 							}
+						} else {
+							zval **ppval;
+							uint key_len = entry_len - 11;
+							char *key = estrndup(entry->d_name, key_len);
+
+							if (zend_hash_find(Z_ARRVAL_P(result), key, key_len + 1, (void **)&ppval) == SUCCESS) {
+								if (Z_TYPE_PP(ppval) == IS_ARRAY) {
+									php_array_merge(Z_ARRVAL_P(value), Z_ARRVAL_PP(ppval), 0 TSRMLS_DC);
+								}
+								zval_ptr_dtor(ppval);
+							}
+							add_assoc_zval_ex(result, key, key_len + 1, value);
+							efree(key);
 						}
 					}
-					if (value) {
-						zval_dtor(value);
-					}
-					
 				}
-				closedir(dir);
+				if (value) {
+					zval_dtor(value);
+				}
+				
 			}
-			zend_update_property(yod_application_ce, object, ZEND_STRL("_config"), result TSRMLS_CC);
+			closedir(dir);
 		}
+		
 		efree(filepath);
+
 	}
+	zend_update_property(yod_application_ce, object, ZEND_STRL("_config"), result TSRMLS_CC);
+
 }
 /* }}} */
 
-/** {{{ zval *yod_application_instance(zval *this_ptr, zval *config TSRMLS_DC)
+/** {{{ void yod_application_instance(yod_application_t *this_ptr, zval *config TSRMLS_DC)
 */
-zval *yod_application_instance(zval *this_ptr, zval *config TSRMLS_DC) {
-	zval *object, *request, *imports;
+void yod_application_instance(yod_application_t *this_ptr, zval *config TSRMLS_DC) {
+	yod_application_t *object;
+	yod_request_t *request;
+	zval *imports;
 
-	object = zend_read_static_property(yod_application_ce, ZEND_STRL("_app"), 0 TSRMLS_CC);
-	if (!ZVAL_IS_NULL(object)) {
+	if (YOD_G(yodapp)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Only one application can be initialized");
 		return;
 	}
@@ -163,123 +171,116 @@ zval *yod_application_instance(zval *this_ptr, zval *config TSRMLS_DC) {
 	MAKE_STD_ZVAL(imports);
 	array_init(imports);
 	zend_update_property(yod_application_ce, object, ZEND_STRL("_imports"), imports TSRMLS_CC);
+	zval_ptr_dtor(&imports);
 
 	// app
 	zend_update_static_property(yod_application_ce, ZEND_STRL("_app"), object TSRMLS_CC);
-
-	return object;
+	YOD_G(yodapp) = object;
 }
 /* }}} */
 
-/** {{{ zval *yod_application_app(zval *config TSRMLS_DC)
+/** {{{ void yod_application_run(TSRMLS_DC)
 */
-zval *yod_application_app(zval *config TSRMLS_DC) {
-	zval *object;
+void yod_application_run(TSRMLS_DC) {
+	yod_application_t *object;
+	yod_request_t *request;
+	zval *running;
 
-	object = zend_read_static_property(yod_application_ce, ZEND_STRL("_app"), 0 TSRMLS_CC);
-	if (Z_TYPE_P(object) == IS_OBJECT) {
-		return object;
-	}
+#if PHP_YOD_DEBUG
+	php_printf("yod_application_run()\n");
+#endif
 
-	return yod_application_instance(NULL, config TSRMLS_CC);
-}
-/* }}} */
-
-/** {{{ proto public Yod_Application::__construct($config = null)
-*/
-PHP_METHOD(yod_application, __construct) {
-	zval *config;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &config) == FAILURE) {
-		return;
-	}
-
-	(void)yod_application_instance(getThis(), config TSRMLS_CC);
-}
-/* }}} */
-
-/** {{{ proto public Yod_Application::run()
-*/
-PHP_METHOD(yod_application, run) {
-	zval *running, *request, *object;
-
-	object = getThis();
-
-	running = zend_read_property(yod_application_ce, object, ZEND_STRL("_running"), 1 TSRMLS_CC);
-	if (Z_BVAL_P(running)) {
+	if (YOD_G(running)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "An application instance already running");
 		return;
 	}
+	YOD_G(running) = 1;
 
+	object = YOD_G(yodapp);
+
+	ALLOC_ZVAL(running);
 	ZVAL_BOOL(running, 1);
 	zend_update_property(yod_application_ce, object, ZEND_STRL("_running"), running TSRMLS_CC);
-
+	
 	request = zend_read_property(yod_application_ce, object, ZEND_STRL("_request"), 1 TSRMLS_CC);
-	if (Z_TYPE_P(request) == IS_OBJECT) {
-		zend_call_method_with_0_params(&request, yod_request_ce, NULL, "dispatch", NULL);
-	}
+	yod_request_dispatch(request TSRMLS_CC);
 }
 /* }}} */
 
-/** {{{ proto public Yod_Application::config($name = null)
+/** {{{ int yod_application_config(zval *name, zval *result TSRMLS_DC)
 */
-PHP_METHOD(yod_application, config) {
-	zval *name, *config, *object;
+int yod_application_config(zval *name, zval *result TSRMLS_DC) {
+	yod_application_t *object;
+	zval *config;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &name) == FAILURE) {
-		return;
+#if PHP_YOD_DEBUG
+	php_printf("yod_application_config()\n");
+#endif
+
+	
+	if (!YOD_G(yodapp)) {
+		ZVAL_NULL(result);
+		return 0;
 	}
 
-	object = getThis();
-
+	object = YOD_G(yodapp);
+	
 	config = zend_read_property(yod_application_ce, object, ZEND_STRL("_config"), 1 TSRMLS_CC);
 
 	if (Z_TYPE_P(config) != IS_ARRAY) {
-		RETURN_NULL();
+		ZVAL_NULL(result);
+		return 0;
 	}
 
-	if (ZEND_NUM_ARGS() == 0) {
-		RETURN_ZVAL(config, 1, 0);
+	if (!name) {
+		ZVAL_ZVAL(result, config, 1, 0);
+		return 1;
 	} else if (Z_TYPE_P(name) == IS_STRING) {
 		zval **ppval;
 		char *skey, *token;
 
 		if (zend_hash_find(Z_ARRVAL_P(config), Z_STRVAL_P(name), Z_STRLEN_P(name) + 1, (void **)&ppval) == SUCCESS) {
-			RETURN_ZVAL(*ppval, 1, 1);
+			ZVAL_ZVAL(result, *ppval, 1, 1);
+			return 1;
 		} else {
-			ZVAL_ZVAL(return_value, config, 1, 0);
+			ZVAL_ZVAL(result, config, 1, 0);
 			skey = php_strtok_r(Z_STRVAL_P(name), ".", &token);
 			while (skey) {
-				if (zend_hash_find(Z_ARRVAL_P(return_value), skey, strlen(skey) + 1, (void **)&ppval) == SUCCESS){
-					ZVAL_ZVAL(return_value, *ppval, 1, 1);
+				if (zend_hash_find(Z_ARRVAL_P(result), skey, strlen(skey) + 1, (void **)&ppval) == SUCCESS){
+					ZVAL_ZVAL(result, *ppval, 1, 1);
 				} else {
-					RETURN_NULL();
+					zval_ptr_dtor(ppval);
+					ZVAL_NULL(result);
+					return 0;
 				}
 				skey = php_strtok_r(NULL, ".", &token);
 			}
 		}
 		zval_ptr_dtor(ppval);
 	} else {
-		RETURN_NULL();
+		ZVAL_NULL(result);
+		return 0;
 	}
+	return 1;
 }
 /* }}} */
 
-/** {{{ proto public Yod_Application::import($alias)
+/** {{{ int yod_application_import(zval *alias TSRMLS_DC)
 */
-PHP_METHOD(yod_application, import) {
-	zval *alias, *imports, *object, **ppval;
+int yod_application_import(zval *alias TSRMLS_DC) {
+	yod_application_t *object;
+	zval *imports, **ppval;
 	char *classfile, *classname, *classpath;
 	size_t classfile_len, classname_len;
 	zend_class_entry **pce = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &alias) == FAILURE) {
-		return;
+	if (!alias || Z_TYPE_P(alias) != IS_STRING || !YOD_G(yodapp)) {
+		return 0;
 	}
 
-	if (!alias || Z_TYPE_P(alias) != IS_STRING) {
-		RETURN_FALSE;
-	}
+#if PHP_YOD_DEBUG
+	php_printf("yod_application_import(%s)\n", Z_STRVAL_P(alias));
+#endif
 
 	classfile = estrndup(Z_STRVAL_P(alias), Z_STRLEN_P(alias));
 	classfile_len = 0;
@@ -295,7 +296,7 @@ PHP_METHOD(yod_application, import) {
 
 	php_basename(classfile, classfile_len, NULL, 0, &classname, &classname_len TSRMLS_CC);
 
-	object = getThis();
+	object = YOD_G(yodapp);
 
 	imports = zend_read_property(yod_application_ce, object, ZEND_STRL("_imports"), 1 TSRMLS_CC);
 	if (zend_hash_find(Z_ARRVAL_P(imports), Z_STRVAL_P(alias), Z_STRLEN_P(alias) + 1, (void **)&ppval) == FAILURE) {
@@ -311,6 +312,65 @@ PHP_METHOD(yod_application, import) {
 	}
 
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+		return 1;
+	}
+	return 0;
+}
+/* }}} */
+
+/** {{{ void yod_application_app(zval *config TSRMLS_DC)
+*/
+void yod_application_app(zval *config TSRMLS_DC) {
+
+	if (!YOD_G(yodapp)) {
+		yod_application_instance(NULL, config TSRMLS_CC);
+	}
+}
+/* }}} */
+
+/** {{{ proto public Yod_Application::__construct($config = null)
+*/
+PHP_METHOD(yod_application, __construct) {
+	zval *config = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &config) == FAILURE) {
+		return;
+	}
+
+	yod_application_instance(getThis(), config TSRMLS_CC);
+}
+/* }}} */
+
+/** {{{ proto public Yod_Application::run()
+*/
+PHP_METHOD(yod_application, run) {
+	yod_application_run(TSRMLS_CC);
+}
+/* }}} */
+
+/** {{{ proto public Yod_Application::config($name = null)
+*/
+PHP_METHOD(yod_application, config) {
+	zval *name = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &name) == FAILURE) {
+		return;
+	}
+
+	yod_application_config(name, return_value TSRMLS_CC);
+}
+/* }}} */
+
+/** {{{ proto public Yod_Application::import($alias)
+*/
+PHP_METHOD(yod_application, import) {
+	zval *alias = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &alias) == FAILURE) {
+		return;
+	}
+
+	if (yod_application_import(alias TSRMLS_CC)) {
 		RETURN_TRUE;
 	}
 	RETURN_FALSE;
@@ -320,26 +380,22 @@ PHP_METHOD(yod_application, import) {
 /** {{{ proto public static Yod_Application::app($config = null)
 */
 PHP_METHOD(yod_application, app) {
-	zval *config;
+	zval *object, *config = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &config) == FAILURE) {
 		return;
 	}
 
-	return_value = yod_application_app(config);
+	yod_application_app(config);
+	RETURN_ZVAL(YOD_G(yodapp), 1, 0);
 }
 /* }}} */
 
-/** {{{ proto public static Yod_Application::__destruct()
+/** {{{ proto public Yod_Application::__destruct()
 */
 PHP_METHOD(yod_application, __destruct) {
-	zval *running, *object;
-
-	object = getThis();
-
-	running = zend_read_property(yod_application_ce, object, ZEND_STRL("_running"), 1 TSRMLS_CC);
-	if (!Z_BVAL_P(running)) {
-		zend_call_method_with_0_params(&object, yod_application_ce, NULL, "run", NULL);
+	if (!YOD_G(running)) {
+		yod_application_run(TSRMLS_CC);
 	}
 }
 /* }}} */

@@ -87,8 +87,17 @@ extern zend_module_entry yod_module_entry;
 #define yod_model_t			zval
 #define yod_database_t		zval
 
+long yod_forward(TSRMLS_DC);
+char *yod_charset(TSRMLS_DC);
+char *yod_pathvar(TSRMLS_DC);
+char *yod_runpath(TSRMLS_DC);
+
 ZEND_BEGIN_MODULE_GLOBALS(yod)
 	double		runtime;
+	zval		*yodapp;
+	int			routed;
+	int			running;
+	
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4))
 	uint		buf_nesting;
 	void		*buffer;
