@@ -116,10 +116,6 @@ char *yod_pathvar(TSRMLS_DC) {
 		pathvar = estrndup(YOD_PATHVAR, strlen(YOD_PATHVAR));
 		zend_register_string_constant(ZEND_STRS("YOD_PATHVAR"), pathvar, CONST_CS, 0 TSRMLS_CC);
 	}
-	
-#if PHP_YOD_DEBUG
-	php_printf("yod_pathvar:%s\n", pathvar);
-#endif
 
 	return pathvar;
 }
@@ -164,10 +160,7 @@ char *yod_runpath(TSRMLS_DC) {
 		runpath_len = php_dirname(runpath, runpath_len);
 		zend_register_stringl_constant(ZEND_STRS("YOD_RUNPATH"), runpath, runpath_len, CONST_CS, 0 TSRMLS_CC);
 	}
-	
-#if PHP_YOD_DEBUG
-	php_printf("yod_runpath:%s\n", runpath);
-#endif
+
 	return runpath;
 }
 /* }}} */
@@ -183,10 +176,6 @@ int yod_execute_scripts(char *filepath, zval **result, int dtor TSRMLS_DC) {
 		return 0;
 	}
 	
-#if PHP_YOD_DEBUG
-	php_printf("yod_execute_scripts:%s\n", filepath);
-#endif
-
 	file_handle.filename = filepath;
 	file_handle.free_filename = 0;
 	file_handle.type = ZEND_HANDLE_FILENAME;
@@ -359,6 +348,8 @@ PHP_GINIT_FUNCTION(yod)
 {
 	yod_globals->runtime	= 0;
 	yod_globals->yodapp		= NULL;
+	yod_globals->exited		= 0;
+	yod_globals->routed		= 0;
 	yod_globals->running	= 0;
 }
 /* }}} */
@@ -403,6 +394,7 @@ PHP_RINIT_FUNCTION(yod)
 	REGISTER_DOUBLE_CONSTANT("YOD_RUNTIME", YOD_G(runtime), CONST_CS);
 
 	YOD_G(yodapp)			= NULL;
+	YOD_G(exited)			= 0;
 	YOD_G(routed)			= 0;
 	YOD_G(running)			= 0;
 
@@ -426,7 +418,7 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 	zval runpath;
 
 	if (zend_get_constant(ZEND_STRL("YOD_RUNPATH"), &runpath TSRMLS_CC)) {
-		if (!YOD_G(yodapp)) {
+		if (!YOD_G(yodapp) && !YOD_G(exited)) {
 			yod_application_app(NULL);
 		}
 
@@ -441,7 +433,7 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 		}
 
 		runtime = (runtime - YOD_G(runtime)) * 1000;
-		php_printf("<hr>[runtime:%fms]", runtime);
+		php_printf("\n<hr>[%fms]", runtime);
 #endif
 
 	}

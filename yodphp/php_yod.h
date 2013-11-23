@@ -95,6 +95,7 @@ char *yod_runpath(TSRMLS_DC);
 ZEND_BEGIN_MODULE_GLOBALS(yod)
 	double		runtime;
 	zval		*yodapp;
+	int			exited;
 	int			routed;
 	int			running;
 	

@@ -82,10 +82,6 @@ void yod_application_init_config(yod_application_t *object, zval *config) {
 		spprintf(&filepath, 0, "%s/configs/config.php", yod_runpath(TSRMLS_CC));
 	}
 
-#if PHP_YOD_DEBUG
-	php_printf("config_filepath:%s\n", filepath);
-#endif
-
 	if (VCWD_ACCESS(filepath, F_OK) == 0) {
 		yod_execute_scripts(filepath, &result, 0 TSRMLS_CC);
 	} else {
@@ -185,10 +181,6 @@ void yod_application_run(TSRMLS_DC) {
 	yod_application_t *object;
 	yod_request_t *request;
 
-#if PHP_YOD_DEBUG
-	php_printf("yod_application_run()\n");
-#endif
-
 	if (YOD_G(running)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "An application instance already running");
 		return;
@@ -210,10 +202,6 @@ int yod_application_config(zval *name, zval *result TSRMLS_DC) {
 	yod_application_t *object;
 	zval *config;
 
-#if PHP_YOD_DEBUG
-	php_printf("yod_application_config()\n");
-#endif
-	
 	if (!YOD_G(yodapp)) {
 		ZVAL_NULL(result);
 		return 0;
@@ -273,10 +261,6 @@ int yod_application_import(zval *alias TSRMLS_DC) {
 	if (!alias || Z_TYPE_P(alias) != IS_STRING || !YOD_G(yodapp)) {
 		return 0;
 	}
-
-#if PHP_YOD_DEBUG
-	php_printf("yod_application_import(%s)\n", Z_STRVAL_P(alias));
-#endif
 
 	classfile = estrndup(Z_STRVAL_P(alias), Z_STRLEN_P(alias));
 	classfile_len = 0;
@@ -390,7 +374,7 @@ PHP_METHOD(yod_application, app) {
 /** {{{ proto public Yod_Application::__destruct()
 */
 PHP_METHOD(yod_application, __destruct) {
-	if (!YOD_G(running)) {
+	if (!YOD_G(running) && !YOD_G(exited)) {
 		yod_application_run(TSRMLS_CC);
 	}
 }

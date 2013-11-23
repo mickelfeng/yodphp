@@ -19,10 +19,19 @@
 #ifndef PHP_YOD_REQUEST_H
 #define PHP_YOD_REQUEST_H
 
+#define YOD_ERR404_HTML	"<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n\
+<html><head><title>404 Not Found</title>\n\
+</head><body>\n\
+<h1>Not Found</h1>\n\
+<p>The requested URL %s was not found on this server.</p>\n\
+</body></html>"
+
 extern zend_class_entry *yod_request_ce;
 
 zval *yod_request_instance(zval *this_ptr, zval *route TSRMLS_DC);
 int yod_request_dispatch(yod_request_t *request TSRMLS_DC);
+void yod_request_error404(yod_request_t *request, zval *html TSRMLS_DC);
+void yod_request_erroraction(yod_request_t *request TSRMLS_DC);
 
 PHP_MINIT_FUNCTION(yod_request);
 
