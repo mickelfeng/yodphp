@@ -254,7 +254,18 @@ int yod_application_import(char *alias, size_t alias_len TSRMLS_DC) {
 		classfile++;
 		classfile_len++;
 	}
+
+	while (*classfile == '/') {
+		classfile--;
+		classfile_len--;
+	}
+
 	classfile = classfile - classfile_len;
+
+	while (*classfile == '/') {
+		classfile++;
+		classfile_len--;
+	}
 
 	php_basename(classfile, classfile_len, NULL, 0, &classname, &classname_len TSRMLS_CC);
 
