@@ -442,17 +442,19 @@ abstract class Yod_Controller
 	 */
 	protected function run()
 	{
-		$method = ucfirst($this->_action) . 'Action';
+		$this->_action = empty($this->_action) ? 'index' : strtolower($this->_action);
+		$method = $this->_action . 'Action';
 		if (method_exists($this, $method)) {
 			call_user_func(array($this, $method), $this->_request->params);
 		} else {
+			$this->_name = empty($this->_name) ? 'index' : strtolower($this->_name);
 			$classpath = YOD_RUNPATH . '/actions/' . $this->_name . '/' . $method . '.php';
 			if (is_file($classpath)) {
 				require $classpath;
 				$action = new $method($this->_request);
 				$action->run($this->_request->params);
 			} elseif (method_exists($this, 'errorAction')) {
-				$this->errorAction();
+				$this->errorAction($this->_request->params);
 			} else {
 				$this->_request->errorAction();
 			}
