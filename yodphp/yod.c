@@ -405,7 +405,11 @@ PHP_RINIT_FUNCTION(yod)
 #endif
 
 	// spl_autoload_register
-	yod_autoload_register(TSRMLS_CC);
+	zval *autoload;
+	MAKE_STD_ZVAL(autoload);
+	ZVAL_STRING(autoload, "__autoload", 1);
+	zend_call_method_with_1_params(NULL, NULL, NULL, "spl_autoload_register", NULL, autoload);
+	//yod_autoload_register(TSRMLS_CC);
 
 	return SUCCESS;
 }
