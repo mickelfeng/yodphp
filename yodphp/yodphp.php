@@ -444,7 +444,7 @@ abstract class Yod_Controller
 	{
 		$method = ucfirst($this->_action) . 'Action';
 		if (method_exists($this, $method)) {
-			call_user_func_array(array($this, $method), $this->_request->params);
+			call_user_func(array($this, $method), $this->_request->params);
 		} else {
 			$classpath = YOD_RUNPATH . '/actions/' . $this->_name . '/' . $method . '.php';
 			if (is_file($classpath)) {
