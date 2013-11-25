@@ -71,6 +71,10 @@ void yod_application_init_config(yod_application_t *object, zval *config) {
 	char dentry[sizeof(struct dirent) + MAXPATHLEN];
 	struct dirent *entry = (struct dirent *) &dentry;
 
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_application_init_config()\n", yod_rundate(TSRMLS_CC));
+#endif
+
 	if(config && Z_TYPE_P(config) == IS_ARRAY) {
 		zend_update_property(yod_application_ce, object, ZEND_STRL("_config"), config TSRMLS_CC);
 		return;
@@ -136,6 +140,10 @@ void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC
 	yod_request_t *request;
 	zval *imports;
 
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_application_construct()\n", yod_rundate(TSRMLS_CC));
+#endif
+
 	if (YOD_G(yodapp)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Only one application can be initialized");
 		return;
@@ -152,9 +160,8 @@ void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC
 	yod_application_init_config(YOD_G(yodapp), config);
 
 	// request
-	request = yod_request_construct(NULL, NULL, 0);
+	request = yod_request_construct(NULL, NULL, 0 TSRMLS_CC);
 	zend_update_property(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_request"), request TSRMLS_CC);
-	zval_ptr_dtor(&request);
 
 	// imports
 	MAKE_STD_ZVAL(imports);
@@ -164,6 +171,13 @@ void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC
 
 	// app
 	zend_update_static_property(yod_application_ce, ZEND_STRL("_app"), YOD_G(yodapp) TSRMLS_CC);
+
+#if PHP_YOD_DEBUG
+	php_printf("%s\n", YOD_DOTLINE);
+	zend_print_zval_r(YOD_G(yodapp), 0 TSRMLS_CC);
+	php_printf("%s\n", YOD_DOTLINE);
+#endif
+
 }
 /* }}} */
 
@@ -171,6 +185,10 @@ void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC
 */
 void yod_application_run(TSRMLS_DC) {
 	yod_request_t *request;
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_application_run()\n", yod_rundate(TSRMLS_CC));
+#endif
 
 	if (YOD_G(running)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "An application instance already running");
@@ -182,6 +200,13 @@ void yod_application_run(TSRMLS_DC) {
 	
 	request = zend_read_property(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_request"), 1 TSRMLS_CC);
 	yod_request_dispatch(request TSRMLS_CC);
+
+#if PHP_YOD_DEBUG
+	php_printf("%s\n", YOD_DOTLINE);
+	zend_print_zval_r(YOD_G(yodapp), 0 TSRMLS_CC);
+	php_printf("%s\n", YOD_DOTLINE);
+#endif
+
 }
 /* }}} */
 
@@ -189,6 +214,10 @@ void yod_application_run(TSRMLS_DC) {
 */
 int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC) {
 	zval *config;
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_application_config(%s)\n", yod_rundate(TSRMLS_CC), name);
+#endif
 
 	if (!YOD_G(yodapp)) {
 		ZVAL_NULL(result);
@@ -239,6 +268,10 @@ int yod_application_import(char *alias, size_t alias_len TSRMLS_DC) {
 	char *classfile, *classname, *classpath;
 	size_t classfile_len, classname_len;
 	zend_class_entry **pce = NULL;
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_application_import(%s)\n", yod_rundate(TSRMLS_CC), alias);
+#endif
 
 	if (!YOD_G(yodapp) || alias_len == 0) {
 		return 0;
@@ -293,6 +326,10 @@ int yod_application_import(char *alias, size_t alias_len TSRMLS_DC) {
 /** {{{ void yod_application_app(zval *config TSRMLS_DC)
 */
 void yod_application_app(zval *config TSRMLS_DC) {
+	
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_application_app()\n", yod_rundate(TSRMLS_CC));
+#endif
 
 	if (!YOD_G(yodapp)) {
 		yod_application_construct(NULL, config TSRMLS_CC);
@@ -368,6 +405,7 @@ PHP_METHOD(yod_application, app) {
 /** {{{ proto public Yod_Application::__destruct()
 */
 PHP_METHOD(yod_application, __destruct) {
+
 	if (!YOD_G(running) && !YOD_G(exited)) {
 		yod_application_run(TSRMLS_CC);
 	}
@@ -394,6 +432,7 @@ PHP_MINIT_FUNCTION(yod_application) {
 
 	INIT_CLASS_ENTRY(ce, "Yod_Application", yod_application_methods);
 	yod_application_ce = zend_register_internal_class(&ce TSRMLS_CC);
+	yod_application_ce->ce_flags |= ZEND_ACC_FINAL_CLASS;
 
 	zend_declare_property_null(yod_application_ce, ZEND_STRL("_app"), ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
 	zend_declare_property_null(yod_application_ce, ZEND_STRL("_config"), ZEND_ACC_PROTECTED TSRMLS_CC);

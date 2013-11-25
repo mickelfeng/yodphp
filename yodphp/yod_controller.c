@@ -100,6 +100,10 @@ void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 	char *method, *classname, *classpath;
 	size_t method_len, classname_len;
 	zend_class_entry **pce = NULL;
+	
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_controller_run()\n", yod_rundate(TSRMLS_CC));
+#endif
 
 	action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
 	if (action && Z_TYPE_P(action) == IS_STRING) {
@@ -164,6 +168,10 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 	zval *name, *view, *tpl_data;
 	char *cname, *tpl_path;
 
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_controller_construct()\n", yod_rundate(TSRMLS_CC));
+#endif
+
 	if (!object) {
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Cannot instantiate abstract class Yod_Controller");
 		return;
@@ -200,14 +208,117 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 	zval_ptr_dtor(&view);
 	efree(tpl_path);
 
+#if PHP_YOD_DEBUG
+	if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
+		php_printf("[%s] yod_action_init()\n", yod_rundate(TSRMLS_CC));
+	} else {
+		php_printf("[%s] yod_controller_init()\n", yod_rundate(TSRMLS_CC));
+	}
+#endif
 	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), ZEND_STRS("init"))) {
 		zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "init", NULL);
 	}
+
+#if PHP_YOD_DEBUG
+	if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
+		php_printf("[%s] yod_action_run()\n", yod_rundate(TSRMLS_CC));
+	}
+#endif
 
 	if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
 		zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "run", NULL);
 	} else {
 		yod_controller_run(object TSRMLS_CC);
+	}
+
+#if PHP_YOD_DEBUG
+	php_printf("%s\n", YOD_DOTLINE);
+	zend_print_zval_r(object, 0 TSRMLS_CC);
+	php_printf("%s\n", YOD_DOTLINE);
+#endif
+
+}
+/* }}} */
+
+
+/** {{{ int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRMLS_DC)
+*/
+int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRMLS_DC) {
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_controller_assign()\n", yod_rundate(TSRMLS_CC));
+#endif
+
+}
+/* }}} */
+
+
+/** {{{ int yod_controller_render(yod_controller_t *object, zval *response, char *view, size_t view_len, zval *data TSRMLS_DC)
+*/
+int yod_controller_render(yod_controller_t *object, zval *response, char *view, size_t view_len, zval *data TSRMLS_DC) {
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_controller_render()\n", yod_rundate(TSRMLS_CC));
+#endif
+
+}
+/* }}} */
+
+/** {{{ int yod_controller_display(yod_controller_t *object, char *view, size_t view_len, zval *data TSRMLS_DC)
+*/
+int yod_controller_display(yod_controller_t *object, char *view, size_t view_len, zval *data TSRMLS_DC) {
+	sapi_header_line ctr = {0};
+	zval *response = NULL;
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_controller_display()\n", yod_rundate(TSRMLS_CC));
+#endif
+
+	if (!SG(headers_sent)) {
+		ctr.response_code = 200;
+		ctr.line_len = spprintf(&(ctr.line), 0, "Content-type: text/html; charset=%s", yod_charset(TSRMLS_CC));
+		sapi_header_op(SAPI_HEADER_REPLACE, &ctr TSRMLS_CC);
+		sapi_send_headers(TSRMLS_C);
+		efree(ctr.line);
+	}
+
+	if (yod_controller_render(object, response, view, view_len, data TSRMLS_CC)) {
+		if (response && Z_TYPE_P(response) == IS_STRING) {
+			PHPWRITE(Z_STRVAL_P(response), Z_STRLEN_P(response));
+		}
+	}
+
+}
+/* }}} */
+
+/** {{{ void yod_controller_forward(yod_controller_t *object, char *route, size_t route_len, int exited TSRMLS_DC)
+*/
+void yod_controller_forward(yod_controller_t *object, char *route, size_t route_len, int exited TSRMLS_DC) {
+	yod_request_t *request;
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_controller_forward(%s)\n", yod_rundate(TSRMLS_CC), route);
+#endif
+
+	zend_update_static_property_long(yod_controller_ce, ZEND_STRL("_forward"), YOD_G(forward) + 1 TSRMLS_CC);
+	if (YOD_G(forward)++ > yod_forward(TSRMLS_CC)) {	
+		return;
+	}
+
+	if (!strstr(route, "/")) {
+		zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_action"), route TSRMLS_CC);
+		yod_controller_run(object TSRMLS_CC);
+	} else {
+		request = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), 1 TSRMLS_CC);
+		yod_request_construct(request, route, route_len TSRMLS_CC);
+		yod_request_dispatch(request TSRMLS_CC);
+	}
+
+	if (exited) {
+		YOD_G(exited) = 1;
+		zend_set_memory_limit(PG(memory_limit));
+		zend_objects_store_mark_destructed(&EG(objects_store) TSRMLS_CC);
+		zend_bailout();
 	}
 }
 /* }}} */
@@ -282,42 +393,102 @@ PHP_METHOD(yod_controller, model) {
 /** {{{ proto protected Yod_Controller::assign($name, $value = null)
 */
 PHP_METHOD(yod_controller, assign) {
-	
+	zval *name = NULL, *value = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|z", &name, &value) == FAILURE) {
+		return;
+	}
+
+	return_value = getThis();
+
+	yod_controller_assign(return_value, name, value TSRMLS_CC);
 }
 /* }}} */
 
 /** {{{ proto protected Yod_Controller::render($view = null, $data = array())
 */
 PHP_METHOD(yod_controller, render) {
-	
+	zval *data = NULL;
+	char *view = NULL;
+	size_t view_len = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &view, &view_len, &data) == FAILURE) {
+		return;
+	}
+
+	yod_controller_render(getThis(), return_value, view, view_len, data TSRMLS_CC);
+
 }
 /* }}} */
 
 /** {{{ proto protected Yod_Controller::display($view = null, $data = array())
 */
 PHP_METHOD(yod_controller, display) {
-	
+	zval *data = NULL;
+	char *view = NULL;
+	size_t view_len = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &view, &view_len, &data) == FAILURE) {
+		return;
+	}
+
+	yod_controller_display(getThis(), view, view_len, data TSRMLS_CC);
+
 }
 /* }}} */
 
 /** {{{ proto protected Yod_Controller::forward($route, $exited = true)
 */
 PHP_METHOD(yod_controller, forward) {
-	
+	char *route;
+	size_t route_len;
+	int exited = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &route, &route_len, &exited) == FAILURE) {
+		return;
+	}
+
+	yod_controller_forward(getThis(), route, route_len, exited TSRMLS_CC);
 }
 /* }}} */
 
 /** {{{ proto protected Yod_Controller::redirect($url, $code = 302)
 */
 PHP_METHOD(yod_controller, redirect) {
+	char *url;
+	uint url_len;
+	long code = 302;
 	
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &url, &url_len, &code) == FAILURE) {
+		return;
+	}
+
+	if (!SG(headers_sent)) {
+		sapi_header_line ctr = {0};
+
+		ctr.response_code = code;
+		ctr.line_len = spprintf(&(ctr.line), 0, "Location: %s", url);
+		sapi_header_op(SAPI_HEADER_REPLACE, &ctr TSRMLS_CC);
+		sapi_send_headers(TSRMLS_C);
+		efree(ctr.line);
+	}
 }
 /* }}} */
 
 /** {{{ proto protected Yod_Controller::error404($html = null)
 */
 PHP_METHOD(yod_controller, error404) {
-	
+	zval *request, *object, *html = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &html) == FAILURE) {
+		return;
+	}
+
+	object = getThis();
+
+	request = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), 1 TSRMLS_CC);
+
+	yod_request_error404(request, html TSRMLS_CC);
 }
 /* }}} */
 
@@ -364,7 +535,6 @@ PHP_MINIT_FUNCTION(yod_controller) {
 	zend_declare_property_null(yod_controller_ce, ZEND_STRL("_action"), ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_null(yod_controller_ce, ZEND_STRL("_request"), ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_null(yod_controller_ce, ZEND_STRL("_view"), ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_bool(yod_controller_ce, ZEND_STRL("_exited"), 0, ZEND_ACC_PROTECTED TSRMLS_CC);
 
 	return SUCCESS;
 }

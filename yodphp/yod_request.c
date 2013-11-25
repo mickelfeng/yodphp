@@ -63,6 +63,10 @@ void yod_request_err404_html(TSRMLS_DC) {
 	zval **ppval;
 	char *errpath = "";
 
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_request_err404_html()\n", yod_rundate(TSRMLS_CC));
+#endif
+
 	if (!PG(http_globals)[TRACK_VARS_SERVER]) {
 		zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC);
 	}
@@ -84,6 +88,10 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 	sapi_header_line ctr = {0};
 	zval *method;
 
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_request_error404()\n", yod_rundate(TSRMLS_CC));
+#endif
+
 	ctr.response_code = 404;
 	ctr.line = "HTTP/1.0 404 Not Found";
 	ctr.line_len = strlen(ctr.line);
@@ -93,18 +101,30 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 	if (html && Z_TYPE_P(html) == IS_STRING) {
 		PHPWRITE(Z_STRVAL_P(html), Z_STRLEN_P(html));
 	} else {
-		method = zend_read_property(yod_request_ce, object, ZEND_STRL("method"), 1 TSRMLS_CC);
-		if (method && Z_TYPE_P(method) == IS_STRING) {
-			if (strncasecmp(Z_STRVAL_P(method), "cli", 3) == 0) {
-				PUTS("HTTP/1.0 404 Not Found");
+		if (object && Z_TYPE_P(object) == IS_OBJECT) {
+			method = zend_read_property(yod_request_ce, object, ZEND_STRL("method"), 1 TSRMLS_CC);
+			if (method && Z_TYPE_P(method) == IS_STRING) {
+				if (strncasecmp(Z_STRVAL_P(method), "cli", 3) == 0) {
+					PUTS("HTTP/1.0 404 Not Found");
+				} else {
+					yod_request_err404_html(TSRMLS_CC);
+				}
 			} else {
 				yod_request_err404_html(TSRMLS_CC);
 			}
 		} else {
-			yod_request_err404_html(TSRMLS_CC);
+			PUTS("HTTP/1.0 404 Not Found");
 		}
 	}
 
+#if PHP_YOD_DEBUG
+	if (SG(request_info).request_method) {
+		php_printf("\n<hr>\n[%fms]\n", yod_runmsec(TSRMLS_CC));
+	} else {
+		php_printf("\n%s\n[%fms]\n", YOD_DOTLINE, yod_runmsec(TSRMLS_CC));
+	}
+#endif
+	
 	YOD_G(exited) = 1;
 	zend_set_memory_limit(PG(memory_limit));
 	zend_objects_store_mark_destructed(&EG(objects_store) TSRMLS_CC);
@@ -119,6 +139,10 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 	char *controller_str, *action_str, *classname, *classpath;
 	uint controller_len, action_len, classname_len;
 	zend_class_entry **pce = NULL;
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_request_erroraction()\n", yod_rundate(TSRMLS_CC));
+#endif
 
 	controller = zend_read_property(yod_request_ce, object, ZEND_STRL("controller"), 1 TSRMLS_CC);
 	if (controller && Z_TYPE_P(controller) == IS_STRING) {
@@ -171,6 +195,10 @@ int yod_request_route(yod_request_t *object, char *route, size_t route_len TSRML
 	char *controller, *action, *token;
 	char *key, *value;
 	uint key_len;
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_request_route()\n", yod_rundate(TSRMLS_CC));
+#endif
 
 	if (!object || Z_TYPE_P(object) != IS_OBJECT) {
 		return 0;
@@ -256,7 +284,7 @@ int yod_request_route(yod_request_t *object, char *route, size_t route_len TSRML
 					if (HASH_OF(PG(http_globals)[TRACK_VARS_GET])) {
 						zend_hash_update(HASH_OF(PG(http_globals)[TRACK_VARS_GET]), key, key_len + 1, (void **)&pzval, sizeof(zval *), NULL);
 					}
-					zval_ptr_dtor(ppval);
+					//zval_ptr_dtor(ppval);
 				}
 			}
 		}
@@ -275,7 +303,11 @@ int yod_request_route(yod_request_t *object, char *route, size_t route_len TSRML
 yod_request_t *yod_request_construct(yod_request_t *object, char *route, size_t route_len TSRMLS_DC) {
 	yod_request_t *retval;
 	zval *method;
-	
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_request_construct()\n", yod_rundate(TSRMLS_CC));
+#endif
+
 	if (object) {
 		retval = object;
 	} else {
@@ -284,13 +316,13 @@ yod_request_t *yod_request_construct(yod_request_t *object, char *route, size_t 
 	}
 
 	MAKE_STD_ZVAL(method);
-    if (SG(request_info).request_method) {
-        ZVAL_STRING(method, (char *)SG(request_info).request_method, 1);
-    } else if (strncasecmp(sapi_module.name, "cli", 3)) {
-        ZVAL_STRING(method, "Unknow", 1);
-    } else {
-        ZVAL_STRING(method, "Cli", 1);
-    }
+	if (SG(request_info).request_method) {
+		ZVAL_STRING(method, (char *)SG(request_info).request_method, 1);
+	} else if (strncasecmp(sapi_module.name, "cli", 3)) {
+		ZVAL_STRING(method, "Unknow", 1);
+	} else {
+		ZVAL_STRING(method, "Cli", 1);
+	}
 	zend_update_property(yod_request_ce, retval, ZEND_STRL("method"), method TSRMLS_CC);
 	zval_ptr_dtor(&method);
 
@@ -309,6 +341,10 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 	char *controller_str, *action_str, *classname, *classpath;
 	uint controller_len, action_len, classname_len;
 	zend_class_entry **pce = NULL;
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_request_dispatch()\n", yod_rundate(TSRMLS_CC));
+#endif
 
 	if (!object || Z_TYPE_P(object) != IS_OBJECT) {
 		return 0;
@@ -455,7 +491,7 @@ PHP_METHOD(yod_request, error404) {
 /** {{{ proto public Yod_Request::__destruct()
 */
 PHP_METHOD(yod_request, __destruct) {
-	
+
 }
 /* }}} */
 
@@ -479,6 +515,7 @@ PHP_MINIT_FUNCTION(yod_request) {
 
 	INIT_CLASS_ENTRY(ce, "Yod_Request", yod_request_methods);
 	yod_request_ce = zend_register_internal_class(&ce TSRMLS_CC);
+	yod_request_ce->ce_flags |= ZEND_ACC_FINAL_CLASS;
 
 	zend_declare_property_bool(yod_request_ce, ZEND_STRL("_routed"), 0, ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_null(yod_request_ce, ZEND_STRL("controller"), ZEND_ACC_PUBLIC TSRMLS_CC);

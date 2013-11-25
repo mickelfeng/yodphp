@@ -29,6 +29,7 @@
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_math.h"
 
+
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -44,6 +45,42 @@
 #define MICRO_IN_SEC 1000000.00
 
 ZEND_DECLARE_MODULE_GLOBALS(yod);
+
+/** {{{ char *yod_rundate(TSRMLS_DC)
+*/
+char *yod_rundate(TSRMLS_DC) {
+	char *rundate;
+	zval *fmtdata, *retdata;
+	struct timeval tp = {0};
+
+	MAKE_STD_ZVAL(fmtdata);
+	ZVAL_STRING(fmtdata, "Y-m-d H:i:s", 1);
+	zend_call_method_with_1_params(NULL, NULL, NULL, "date", &retdata, fmtdata);
+	if (retdata && Z_TYPE_P(retdata) == IS_STRING && !gettimeofday(&tp, NULL)) {
+		spprintf(&rundate, 0, "%s:%06d", Z_STRVAL_P(retdata), tp.tv_usec);
+	}
+	
+	return rundate;
+}
+/* }}} */
+
+/** {{{ double yod_runmsec(TSRMLS_DC)
+*/
+double yod_runmsec(TSRMLS_DC) {
+	double runmsec;
+	struct timeval tp = {0};
+
+	if (gettimeofday(&tp, NULL)) {
+		runmsec	= 0;	
+	} else {
+		runmsec	= (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
+	}
+
+	runmsec = (runmsec - YOD_G(runtime)) * 1000;
+
+	return runmsec;
+}
+/* }}} */
 
 /** {{{ double yod_runtime(TSRMLS_DC)
 */
@@ -76,7 +113,7 @@ long yod_forward(TSRMLS_DC) {
 	}
 	
 #if PHP_YOD_DEBUG
-	php_printf("yod_forward:%d\n", forward);
+	php_printf("[%s] yod_forward:%d\n", yod_rundate(TSRMLS_CC), forward);
 #endif
 	
 	return forward;
@@ -92,12 +129,12 @@ char *yod_charset(TSRMLS_DC) {
 	if (zend_get_constant(ZEND_STRL("YOD_CHARSET"), &const_value TSRMLS_CC)) {
 		charset = Z_STRVAL(const_value);
 	} else {
-		charset = YOD_CHARSET;
+		charset = estrndup(YOD_CHARSET, strlen(YOD_CHARSET));
 		zend_register_string_constant(ZEND_STRS("YOD_CHARSET"), charset, CONST_CS, 0 TSRMLS_CC);
 	}
-	
+
 #if PHP_YOD_DEBUG
-	php_printf("yod_charset:%s\n", charset);
+	php_printf("[%s] yod_charset:%s\n", yod_rundate(TSRMLS_CC), charset);
 #endif
 
 	return charset;
@@ -116,6 +153,10 @@ char *yod_pathvar(TSRMLS_DC) {
 		pathvar = estrndup(YOD_PATHVAR, strlen(YOD_PATHVAR));
 		zend_register_string_constant(ZEND_STRS("YOD_PATHVAR"), pathvar, CONST_CS, 0 TSRMLS_CC);
 	}
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_pathvar():%s\n", yod_rundate(TSRMLS_CC), pathvar);
+#endif
 
 	return pathvar;
 }
@@ -138,7 +179,7 @@ char *yod_extpath(TSRMLS_DC) {
 	}
 	
 #if PHP_YOD_DEBUG
-	php_printf("yod_extpath:%s\n", extpath);
+	php_printf("[%s] yod_extpath():%s\n", yod_rundate(TSRMLS_CC), extpath);
 #endif
 
 	return extpath;
@@ -161,6 +202,10 @@ char *yod_runpath(TSRMLS_DC) {
 		zend_register_stringl_constant(ZEND_STRS("YOD_RUNPATH"), runpath, runpath_len, CONST_CS, 0 TSRMLS_CC);
 	}
 
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_runpath():%s\n", yod_rundate(TSRMLS_CC), runpath);
+#endif
+
 	return runpath;
 }
 /* }}} */
@@ -175,7 +220,11 @@ int yod_execute_scripts(char *filepath, zval **result, int dtor TSRMLS_DC) {
 	if (!VCWD_REALPATH(filepath, realpath)) {
 		return 0;
 	}
-	
+
+#if PHP_YOD_DEBUG
+	php_printf("[%s] yod_execute_scripts(%s)\n", yod_rundate(TSRMLS_CC), filepath);
+#endif
+
 	file_handle.filename = filepath;
 	file_handle.free_filename = 0;
 	file_handle.type = ZEND_HANDLE_FILENAME;
@@ -301,7 +350,7 @@ int yod_autoload_class(char *classname, uint classname_len TSRMLS_DC) {
 	}
 	
 #if PHP_YOD_DEBUG
-	php_printf("yod_autoload_class:%s=%s\n", classname, classpath);
+	php_printf("[%s] yod_autoload_class(%s):%s\n", yod_rundate(TSRMLS_CC), classname, classpath);
 #endif
 
 	efree(classpath);
@@ -351,6 +400,7 @@ PHP_GINIT_FUNCTION(yod)
 	yod_globals->exited		= 0;
 	yod_globals->routed		= 0;
 	yod_globals->running	= 0;
+	yod_globals->forward	= 0;
 }
 /* }}} */
 
@@ -397,6 +447,7 @@ PHP_RINIT_FUNCTION(yod)
 	YOD_G(exited)			= 0;
 	YOD_G(routed)			= 0;
 	YOD_G(running)			= 0;
+	YOD_G(forward)			= 0;
 
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4))
 	YOD_G(buffer)			= NULL;
@@ -404,12 +455,23 @@ PHP_RINIT_FUNCTION(yod)
 	YOD_G(buf_nesting)		= 0;
 #endif
 
+
+#if PHP_YOD_DEBUG
+	if (SG(request_info).request_method) {
+		php_printf("<pre>\n<font color=\"red\">Yod is running in debug mode</font>\n<hr>\n");
+	} else {
+		php_printf("\n%s\nYod is running in debug mode:\n%s\n", YOD_DOTLINE, YOD_DOTLINE);
+	}
+#endif
+
 	// spl_autoload_register
+/*
 	zval *autoload;
 	MAKE_STD_ZVAL(autoload);
 	ZVAL_STRING(autoload, "__autoload", 1);
 	zend_call_method_with_1_params(NULL, NULL, NULL, "spl_autoload_register", NULL, autoload);
-	//yod_autoload_register(TSRMLS_CC);
+*/
+	yod_autoload_register(TSRMLS_CC);
 
 	return SUCCESS;
 }
@@ -424,26 +486,22 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 	if (zend_get_constant(ZEND_STRL("YOD_RUNPATH"), &runpath TSRMLS_CC)) {
 		if (!YOD_G(yodapp) && !YOD_G(exited)) {
 			yod_application_app(NULL);
+			yod_application_run(TSRMLS_CC);
 		}
-
-#if PHP_YOD_DEBUG
-		double runtime;
-		struct timeval tp = {0};
-
-		if (gettimeofday(&tp, NULL)) {
-			runtime	= 0;	
-		} else {
-			runtime	= (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
-		}
-
-		runtime = (runtime - YOD_G(runtime)) * 1000;
-		php_printf("\n<hr>[%fms]", runtime);
-#endif
-
 	}
 
-	YOD_G(yodapp) = NULL;
+	if (YOD_G(yodapp)) {
+		zval_ptr_dtor(&YOD_G(yodapp));
+		YOD_G(yodapp) = NULL;
+	}
 
+#if PHP_YOD_DEBUG
+	if (SG(request_info).request_method) {
+		php_printf("\n<hr>\n[%fms]\n", yod_runmsec(TSRMLS_CC));
+	} else {
+		php_printf("\n%s\n[%fms]\n", YOD_DOTLINE, yod_runmsec(TSRMLS_CC));
+	}
+#endif
 	return SUCCESS;
 }
 /* }}} */

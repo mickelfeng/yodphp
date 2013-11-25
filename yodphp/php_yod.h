@@ -45,6 +45,7 @@ extern zend_module_entry yod_module_entry;
 #define YOD_FORWARD					5
 #define YOD_CHARSET					"utf-8"
 #define YOD_PATHVAR					""
+#define YOD_DOTLINE					"----------------------------------------------------------------------"
 
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 2)) || (PHP_MAJOR_VERSION > 5)
 #define Z_SET_REFCOUNT_P(pz, rc)	  (pz)->refcount = rc
@@ -57,26 +58,26 @@ extern zend_module_entry yod_module_entry;
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION > 2)) || (PHP_MAJOR_VERSION > 5)
 #define YOD_STORE_EG_ENVIRON() \
 	{ \
-		zval ** orig_return_value_pp   = EG(return_value_ptr_ptr); \
-		zend_op ** orig_opline_ptr   = EG(opline_ptr); \
-		zend_op_array * orig_op_array  = EG(active_op_array);
+		zval ** orig_return_value_pp	= EG(return_value_ptr_ptr); \
+		zend_op ** orig_opline_ptr		= EG(opline_ptr); \
+		zend_op_array * orig_op_array	= EG(active_op_array);
 #define YOD_RESTORE_EG_ENVIRON() \
-		EG(return_value_ptr_ptr) = orig_return_value_pp;\
-		EG(opline_ptr)       = orig_opline_ptr; \
-		EG(active_op_array)    = orig_op_array; \
+		EG(return_value_ptr_ptr)	= orig_return_value_pp; \
+		EG(opline_ptr)				= orig_opline_ptr; \
+		EG(active_op_array)			= orig_op_array; \
 	}
 #else
 #define YOD_STORE_EG_ENVIRON() \
 	{ \
-		zval ** orig_return_value_pp        = EG(return_value_ptr_ptr); \
-		zend_op ** orig_opline_ptr        = EG(opline_ptr); \
-		zend_op_array * orig_op_array       = EG(active_op_array); \
-		zend_function_state * orig_func_state = EG(function_state_ptr);
+		zval ** orig_return_value_pp			= EG(return_value_ptr_ptr); \
+		zend_op ** orig_opline_ptr				= EG(opline_ptr); \
+		zend_op_array * orig_op_array			= EG(active_op_array); \
+		zend_function_state * orig_func_state	= EG(function_state_ptr);
 #define YOD_RESTORE_EG_ENVIRON() \
-		EG(return_value_ptr_ptr) = orig_return_value_pp;\
-		EG(opline_ptr)       = orig_opline_ptr; \
-		EG(active_op_array)    = orig_op_array; \
-		EG(function_state_ptr)   = orig_func_state; \
+		EG(return_value_ptr_ptr)	= orig_return_value_pp; \
+		EG(opline_ptr)				= orig_opline_ptr; \
+		EG(active_op_array)			= orig_op_array; \
+		EG(function_state_ptr)		= orig_func_state; \
 	}
 #endif
 
@@ -91,6 +92,8 @@ long yod_forward(TSRMLS_DC);
 char *yod_charset(TSRMLS_DC);
 char *yod_pathvar(TSRMLS_DC);
 char *yod_runpath(TSRMLS_DC);
+char *yod_rundate(TSRMLS_DC);
+double yod_runmsec(TSRMLS_DC);
 
 ZEND_BEGIN_MODULE_GLOBALS(yod)
 	double		runtime;
@@ -98,6 +101,7 @@ ZEND_BEGIN_MODULE_GLOBALS(yod)
 	int			exited;
 	int			routed;
 	int			running;
+	long		forward;
 	
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4))
 	uint		buf_nesting;
