@@ -345,7 +345,7 @@ final class Yod_Request
 			require $classpath;
 			new ErrorAction($this);
 		} else {
-			$this->controller = 'Error';
+			//$this->controller = 'Error';
 			$classpath = YOD_RUNPATH . '/actions/ErrorAction.php';
 			if (is_file($classpath)) {
 				require $classpath;
