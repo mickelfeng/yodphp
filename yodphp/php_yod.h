@@ -88,12 +88,18 @@ extern zend_module_entry yod_module_entry;
 #define yod_model_t			zval
 #define yod_database_t		zval
 
+#if PHP_YOD_DEBUG
+char *yod_rundate(TSRMLS_DC);
+double yod_runmsec(TSRMLS_DC);
+void yod_debugf(const char *format,...);
+void yod_debugs(TSRMLS_DC);
+#endif
+
+void yod_do_exit(TSRMLS_DC);
 long yod_forward(TSRMLS_DC);
 char *yod_charset(TSRMLS_DC);
 char *yod_pathvar(TSRMLS_DC);
 char *yod_runpath(TSRMLS_DC);
-char *yod_rundate(TSRMLS_DC);
-double yod_runmsec(TSRMLS_DC);
 
 ZEND_BEGIN_MODULE_GLOBALS(yod)
 	double		runtime;
@@ -102,7 +108,11 @@ ZEND_BEGIN_MODULE_GLOBALS(yod)
 	int			routed;
 	int			running;
 	long		forward;
-	
+
+#if PHP_YOD_DEBUG
+	zval		*debugs;
+#endif
+
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4))
 	uint		buf_nesting;
 	void		*buffer;

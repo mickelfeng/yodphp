@@ -42,43 +42,90 @@
 #include "yod_model.h"
 #include "yod_database.h"
 
+#if PHP_YOD_DEBUG
+#include "yod_debug.h"
+#endif
+
 #define MICRO_IN_SEC 1000000.00
 
 ZEND_DECLARE_MODULE_GLOBALS(yod);
 
-/** {{{ char *yod_rundate(TSRMLS_DC)
+#if PHP_YOD_DEBUG
+
+/** {{{ void yod_debugf(const char *format,...)
 */
-char *yod_rundate(TSRMLS_DC) {
-	char *rundate;
+void yod_debugf(const char *format,...) {
 	zval *fmtdata, *retdata;
 	struct timeval tp = {0};
+	va_list args;
+	char *buffer;
+
+	TSRMLS_FETCH();
 
 	MAKE_STD_ZVAL(fmtdata);
 	ZVAL_STRING(fmtdata, "Y-m-d H:i:s", 1);
 	zend_call_method_with_1_params(NULL, NULL, NULL, "date", &retdata, fmtdata);
 	if (retdata && Z_TYPE_P(retdata) == IS_STRING && !gettimeofday(&tp, NULL)) {
-		spprintf(&rundate, 0, "%s:%06d", Z_STRVAL_P(retdata), tp.tv_usec);
+		va_start(args, format);
+		vspprintf(&buffer, 0, format, args);
+		va_end(args);
+
+		spprintf(&buffer, 0, "[%s %06d] %s\n", Z_STRVAL_P(retdata), tp.tv_usec, buffer);
+		add_next_index_string(YOD_G(debugs), buffer, 1);
+		efree(buffer);
 	}
-	
-	return rundate;
+	zval_ptr_dtor(&fmtdata);
 }
 /* }}} */
 
-/** {{{ double yod_runmsec(TSRMLS_DC)
+/** {{{ void yod_debugs(TSRMLS_DC)
 */
-double yod_runmsec(TSRMLS_DC) {
-	double runmsec;
+void yod_debugs(TSRMLS_DC) {
+	double runtime;
 	struct timeval tp = {0};
+	zval **ppzval;
 
 	if (gettimeofday(&tp, NULL)) {
-		runmsec	= 0;	
+		runtime	= 0;	
 	} else {
-		runmsec	= (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
+		runtime	= (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
 	}
 
-	runmsec = (runmsec - YOD_G(runtime)) * 1000;
+	runtime = (runtime - YOD_G(runtime)) * 1000;
 
-	return runmsec;
+	if (SG(request_info).request_method) {
+		php_printf("\n<pre><hr><font color=\"red\">Yod is running in debug mode</font>\n%s\n", YOD_DOTLINE);
+	} else {
+		php_printf("\n%s\nYod is running in debug mode:\n%s\n", YOD_DOTLINE, YOD_DOTLINE);
+	}
+
+	zend_hash_internal_pointer_reset(Z_ARRVAL_P(YOD_G(debugs)));
+	while (zend_hash_get_current_data(Z_ARRVAL_P(YOD_G(debugs)), (void **) &ppzval) == SUCCESS) {
+		if (Z_TYPE_PP(ppzval) == IS_STRING) {
+			PHPWRITE(Z_STRVAL_PP(ppzval), Z_STRLEN_PP(ppzval));
+		}
+		zend_hash_move_forward(Z_ARRVAL_P(YOD_G(debugs)));
+	}
+
+	php_printf("%s\n[%fms]\n", YOD_DOTLINE, runtime);
+}
+/* }}} */
+
+#endif
+
+/** {{{ void yod_do_exit(TSRMLS_DC)
+*/
+void yod_do_exit(TSRMLS_DC) {
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_do_exit()");
+	yod_debugs(TSRMLS_CC);
+#endif
+
+	YOD_G(exited) = 1;
+	zend_set_memory_limit(PG(memory_limit));
+	zend_objects_store_mark_destructed(&EG(objects_store) TSRMLS_CC);
+	zend_bailout();
 }
 /* }}} */
 
@@ -113,7 +160,7 @@ long yod_forward(TSRMLS_DC) {
 	}
 	
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_forward:%d\n", yod_rundate(TSRMLS_CC), forward);
+	yod_debugf("yod_forward():%s", forward);
 #endif
 	
 	return forward;
@@ -134,7 +181,7 @@ char *yod_charset(TSRMLS_DC) {
 	}
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_charset:%s\n", yod_rundate(TSRMLS_CC), charset);
+	yod_debugf("yod_charset():%s", charset);
 #endif
 
 	return charset;
@@ -155,7 +202,7 @@ char *yod_pathvar(TSRMLS_DC) {
 	}
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_pathvar():%s\n", yod_rundate(TSRMLS_CC), pathvar);
+	yod_debugf("yod_pathvar():%s", pathvar);
 #endif
 
 	return pathvar;
@@ -179,7 +226,7 @@ char *yod_extpath(TSRMLS_DC) {
 	}
 	
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_extpath():%s\n", yod_rundate(TSRMLS_CC), extpath);
+	yod_debugf("yod_extpath():%s", extpath);
 #endif
 
 	return extpath;
@@ -203,7 +250,7 @@ char *yod_runpath(TSRMLS_DC) {
 	}
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_runpath():%s\n", yod_rundate(TSRMLS_CC), runpath);
+	yod_debugf("yod_runpath():%s", runpath);
 #endif
 
 	return runpath;
@@ -222,7 +269,7 @@ int yod_execute_scripts(char *filepath, zval **result, int dtor TSRMLS_DC) {
 	}
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_execute_scripts(%s)\n", yod_rundate(TSRMLS_CC), filepath);
+	yod_debugf("yod_execute_scripts(%s)", filepath);
 #endif
 
 	file_handle.filename = filepath;
@@ -318,6 +365,8 @@ int yod_autoload_class(char *classname, uint classname_len TSRMLS_DC) {
 	char *classfile, *classpath;
 	zend_class_entry **pce = NULL;
 
+	if (!YOD_G(yodapp)) return;
+
 	classfile = estrndup(classname, classname_len);
 	// class name with namespace in PHP 5.3
 	if (strstr(classname, "\\")) {
@@ -350,7 +399,7 @@ int yod_autoload_class(char *classname, uint classname_len TSRMLS_DC) {
 	}
 	
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_autoload_class(%s):%s\n", yod_rundate(TSRMLS_CC), classname, classpath);
+	yod_debugf("yod_autoload_class(%s):%s", classname, classpath);
 #endif
 
 	efree(classpath);
@@ -401,6 +450,11 @@ PHP_GINIT_FUNCTION(yod)
 	yod_globals->routed		= 0;
 	yod_globals->running	= 0;
 	yod_globals->forward	= 0;
+
+#if PHP_YOD_DEBUG
+	yod_globals->debugs		= NULL;
+#endif
+
 }
 /* }}} */
 
@@ -449,19 +503,15 @@ PHP_RINIT_FUNCTION(yod)
 	YOD_G(running)			= 0;
 	YOD_G(forward)			= 0;
 
+#if PHP_YOD_DEBUG
+	MAKE_STD_ZVAL(YOD_G(debugs));
+	array_init(YOD_G(debugs));
+#endif
+
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4))
 	YOD_G(buffer)			= NULL;
 	YOD_G(owrite_handler)	= NULL;
 	YOD_G(buf_nesting)		= 0;
-#endif
-
-
-#if PHP_YOD_DEBUG
-	if (SG(request_info).request_method) {
-		php_printf("<pre>\n<font color=\"red\">Yod is running in debug mode</font>\n<hr>\n");
-	} else {
-		php_printf("\n%s\nYod is running in debug mode:\n%s\n", YOD_DOTLINE, YOD_DOTLINE);
-	}
 #endif
 
 	// spl_autoload_register
@@ -493,15 +543,16 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 	if (YOD_G(yodapp)) {
 		zval_ptr_dtor(&YOD_G(yodapp));
 		YOD_G(yodapp) = NULL;
-	}
 
 #if PHP_YOD_DEBUG
-	if (SG(request_info).request_method) {
-		php_printf("\n<hr>\n[%fms]\n", yod_runmsec(TSRMLS_CC));
-	} else {
-		php_printf("\n%s\n[%fms]\n", YOD_DOTLINE, yod_runmsec(TSRMLS_CC));
-	}
+		yod_debugs(TSRMLS_CC);
 #endif
+
+	}
+
+	zval_ptr_dtor(&YOD_G(debugs));
+	YOD_G(debugs) = NULL;
+
 	return SUCCESS;
 }
 /* }}} */

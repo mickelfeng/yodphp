@@ -72,7 +72,7 @@ void yod_application_init_config(yod_application_t *object, zval *config) {
 	struct dirent *entry = (struct dirent *) &dentry;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_application_init_config()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_application_init_config()");
 #endif
 
 	if(config && Z_TYPE_P(config) == IS_ARRAY) {
@@ -141,7 +141,7 @@ void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC
 	zval *imports;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_application_construct()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_application_construct()");
 #endif
 
 	if (YOD_G(yodapp)) {
@@ -172,12 +172,6 @@ void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC
 	// app
 	zend_update_static_property(yod_application_ce, ZEND_STRL("_app"), YOD_G(yodapp) TSRMLS_CC);
 
-#if PHP_YOD_DEBUG
-	php_printf("%s\n", YOD_DOTLINE);
-	zend_print_zval_r(YOD_G(yodapp), 0 TSRMLS_CC);
-	php_printf("%s\n", YOD_DOTLINE);
-#endif
-
 }
 /* }}} */
 
@@ -187,7 +181,7 @@ void yod_application_run(TSRMLS_DC) {
 	yod_request_t *request;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_application_run()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_application_run()");
 #endif
 
 	if (YOD_G(running)) {
@@ -201,12 +195,6 @@ void yod_application_run(TSRMLS_DC) {
 	request = zend_read_property(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_request"), 1 TSRMLS_CC);
 	yod_request_dispatch(request TSRMLS_CC);
 
-#if PHP_YOD_DEBUG
-	php_printf("%s\n", YOD_DOTLINE);
-	zend_print_zval_r(YOD_G(yodapp), 0 TSRMLS_CC);
-	php_printf("%s\n", YOD_DOTLINE);
-#endif
-
 }
 /* }}} */
 
@@ -216,7 +204,7 @@ int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC) 
 	zval *config;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_application_config(%s)\n", yod_rundate(TSRMLS_CC), name);
+	yod_debugf("yod_application_config(%s)", name ? name : "");
 #endif
 
 	if (!YOD_G(yodapp)) {
@@ -270,7 +258,7 @@ int yod_application_import(char *alias, size_t alias_len TSRMLS_DC) {
 	zend_class_entry **pce = NULL;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_application_import(%s)\n", yod_rundate(TSRMLS_CC), alias);
+	yod_debugf("yod_application_import(%s)", alias ? alias : "");
 #endif
 
 	if (!YOD_G(yodapp) || alias_len == 0) {
@@ -328,7 +316,7 @@ int yod_application_import(char *alias, size_t alias_len TSRMLS_DC) {
 void yod_application_app(zval *config TSRMLS_DC) {
 	
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_application_app()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_application_app()");
 #endif
 
 	if (!YOD_G(yodapp)) {

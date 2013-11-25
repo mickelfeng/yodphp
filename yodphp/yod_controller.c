@@ -102,7 +102,7 @@ void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 	zend_class_entry **pce = NULL;
 	
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_controller_run()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_controller_run()");
 #endif
 
 	action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
@@ -168,14 +168,18 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 	zval *name, *view, *tpl_data;
 	char *cname, *tpl_path;
 
-#if PHP_YOD_DEBUG
-	php_printf("[%s] yod_controller_construct()\n", yod_rundate(TSRMLS_CC));
-#endif
-
 	if (!object) {
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Cannot instantiate abstract class Yod_Controller");
 		return;
 	}
+
+#if PHP_YOD_DEBUG
+	if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
+		yod_debugf("yod_action_construct()");
+	} else {
+		yod_debugf("yod_controller_construct()");
+	}
+#endif
 
 	name = zend_read_property(yod_request_ce, request, ZEND_STRL("controller"), 1 TSRMLS_CC);
 	if (name && Z_TYPE_P(name) == IS_STRING) {
@@ -210,18 +214,19 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 
 #if PHP_YOD_DEBUG
 	if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
-		php_printf("[%s] yod_action_init()\n", yod_rundate(TSRMLS_CC));
+		yod_debugf("yod_action_init()");
 	} else {
-		php_printf("[%s] yod_controller_init()\n", yod_rundate(TSRMLS_CC));
+		yod_debugf("yod_controller_init()");
 	}
 #endif
+
 	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), ZEND_STRS("init"))) {
 		zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "init", NULL);
 	}
 
 #if PHP_YOD_DEBUG
 	if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
-		php_printf("[%s] yod_action_run()\n", yod_rundate(TSRMLS_CC));
+		yod_debugf("yod_action_run()");
 	}
 #endif
 
@@ -230,12 +235,6 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 	} else {
 		yod_controller_run(object TSRMLS_CC);
 	}
-
-#if PHP_YOD_DEBUG
-	php_printf("%s\n", YOD_DOTLINE);
-	zend_print_zval_r(object, 0 TSRMLS_CC);
-	php_printf("%s\n", YOD_DOTLINE);
-#endif
 
 }
 /* }}} */
@@ -246,7 +245,7 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRMLS_DC) {
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_controller_assign()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_controller_assign()");
 #endif
 
 }
@@ -258,7 +257,7 @@ int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRM
 int yod_controller_render(yod_controller_t *object, zval *response, char *view, size_t view_len, zval *data TSRMLS_DC) {
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_controller_render()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_controller_render(%s)", view ? view : "");
 #endif
 
 }
@@ -271,7 +270,7 @@ int yod_controller_display(yod_controller_t *object, char *view, size_t view_len
 	zval *response = NULL;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_controller_display()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_controller_display(%s)", view ? view : "");
 #endif
 
 	if (!SG(headers_sent)) {
@@ -297,7 +296,7 @@ void yod_controller_forward(yod_controller_t *object, char *route, size_t route_
 	yod_request_t *request;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_controller_forward(%s)\n", yod_rundate(TSRMLS_CC), route);
+	yod_debugf("yod_controller_forward(%s)", route ? route : "");
 #endif
 
 	zend_update_static_property_long(yod_controller_ce, ZEND_STRL("_forward"), YOD_G(forward) + 1 TSRMLS_CC);

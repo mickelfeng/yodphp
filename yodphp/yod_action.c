@@ -30,7 +30,6 @@
 #include "ext/standard/php_math.h"
 
 #include "php_yod.h"
-#include "yod_request.h"
 #include "yod_controller.h"
 #include "yod_action.h"
 

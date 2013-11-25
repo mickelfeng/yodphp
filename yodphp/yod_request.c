@@ -30,7 +30,6 @@
 #include "ext/standard/php_math.h"
 
 #include "php_yod.h"
-#include "yod_application.h"
 #include "yod_request.h"
 
 zend_class_entry *yod_request_ce;
@@ -64,7 +63,7 @@ void yod_request_err404_html(TSRMLS_DC) {
 	char *errpath = "";
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_request_err404_html()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_request_err404_html()");
 #endif
 
 	if (!PG(http_globals)[TRACK_VARS_SERVER]) {
@@ -89,7 +88,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 	zval *method;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_request_error404()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_request_error404()");
 #endif
 
 	ctr.response_code = 404;
@@ -117,18 +116,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 		}
 	}
 
-#if PHP_YOD_DEBUG
-	if (SG(request_info).request_method) {
-		php_printf("\n<hr>\n[%fms]\n", yod_runmsec(TSRMLS_CC));
-	} else {
-		php_printf("\n%s\n[%fms]\n", YOD_DOTLINE, yod_runmsec(TSRMLS_CC));
-	}
-#endif
-	
-	YOD_G(exited) = 1;
-	zend_set_memory_limit(PG(memory_limit));
-	zend_objects_store_mark_destructed(&EG(objects_store) TSRMLS_CC);
-	zend_bailout();
+	yod_do_exit(TSRMLS_CC);
 }
 /* }}} */
 
@@ -141,7 +129,7 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 	zend_class_entry **pce = NULL;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_request_erroraction()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_request_erroraction()");
 #endif
 
 	controller = zend_read_property(yod_request_ce, object, ZEND_STRL("controller"), 1 TSRMLS_CC);
@@ -167,7 +155,7 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class 'ErrorAction' not found");
 		}
 	} else {
-		zend_update_property_string(yod_request_ce, object, ZEND_STRL("controller"), "Error" TSRMLS_CC);
+		//zend_update_property_string(yod_request_ce, object, ZEND_STRL("controller"), "Error" TSRMLS_CC);
 		spprintf(&classpath, 0, "%s/actions/ErrorAction.php", yod_runpath(TSRMLS_CC));
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_execute_scripts(classpath, NULL, 1 TSRMLS_CC);
@@ -197,7 +185,7 @@ int yod_request_route(yod_request_t *object, char *route, size_t route_len TSRML
 	uint key_len;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_request_route()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_request_route()");
 #endif
 
 	if (!object || Z_TYPE_P(object) != IS_OBJECT) {
@@ -305,7 +293,7 @@ yod_request_t *yod_request_construct(yod_request_t *object, char *route, size_t 
 	zval *method;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_request_construct()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_request_construct()");
 #endif
 
 	if (object) {
@@ -343,7 +331,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 	zend_class_entry **pce = NULL;
 
 #if PHP_YOD_DEBUG
-	php_printf("[%s] yod_request_dispatch()\n", yod_rundate(TSRMLS_CC));
+	yod_debugf("yod_request_dispatch()");
 #endif
 
 	if (!object || Z_TYPE_P(object) != IS_OBJECT) {
