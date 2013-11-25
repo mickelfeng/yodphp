@@ -403,8 +403,6 @@ abstract class Yod_Controller
 		'tpl_file' => '',
 	);
 
-	protected $_exited = false;
-
 	/**
 	 * __construct
 	 * @access public
@@ -524,7 +522,6 @@ abstract class Yod_Controller
 	 */
 	protected function render($view = null, $data = array())
 	{
-		if ($this->_exited) return;
 		// tpl_file
 		$view = str_replace('..', '', $view);
 		$view = empty($view) ? $this->_request->action : $view;
@@ -559,25 +556,25 @@ abstract class Yod_Controller
 		echo $this->render($view, $data);
 	}
 
-
 	/**
 	 * forward
 	 * @access protected
 	 * @param string $route
 	 * @return void
 	 */
-	protected function forward($route, $exited = true)
+	protected function forward($route, $exited = false)
 	{
 		if (self::$_forward++ > YOD_FORWARD) return;
 
 		if (strpos($route,'/') === false) {
-			$this->run($route);
+			$this->_action = strtolower($route);
+			$this->run();
 		} else {
 			$request = new Yod_Request($route);
 			$request->dispatch();
 		}
 
-		if ($exited) $this->_exited = true;
+		if ($exited) exit;
 	}
 
 	/**
