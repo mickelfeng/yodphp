@@ -25,11 +25,11 @@ if (defined('YOD_RUNPATH')) {
 }
 
 /**
- * __autoload
+ * yod_autoload
  * 
  * @param string $classname
  */
-function __autoload($classname)
+function yod_autoload($classname)
 {
 	$classfile = $classname;
 	// class name with namespace in PHP 5.3
@@ -60,7 +60,7 @@ function __autoload($classname)
 
 	return class_exists($classname, false) || interface_exists($classname, false);
 }
-spl_autoload_register('__autoload');
+spl_autoload_register('yod_autoload');
 
 /**
  * Yod_Application
@@ -273,7 +273,9 @@ final class Yod_Request
 				$route = $_GET[YOD_PATHVAR];
 			}
 		}
-		$route = explode('/', str_replace('//', '/', trim($route, '/')));
+		$route = str_replace('\\', '/', $route);
+		$route = str_replace('//', '/', $route)
+		$route = explode('/', trim($route, '/'));
 
 		$controller = basename($_SERVER['SCRIPT_FILENAME'], '.php');
 		$classname = $controller . 'Controller';
@@ -345,7 +347,6 @@ final class Yod_Request
 			require $classpath;
 			new ErrorAction($this);
 		} else {
-			//$this->controller = 'Error';
 			$classpath = YOD_RUNPATH . '/actions/ErrorAction.php';
 			if (is_file($classpath)) {
 				require $classpath;
@@ -507,7 +508,7 @@ abstract class Yod_Controller
 			foreach ($name as $key => $value) {
 				$this->_view['tpl_data'][$key] = $value;
 			}
-		} else {
+		} elseif(is_string($name)) {
 			$this->_view['tpl_data'][$name] = $value;
 		}
 		return $this;
@@ -523,10 +524,21 @@ abstract class Yod_Controller
 	protected function render($view = null, $data = array())
 	{
 		// tpl_file
-		$view = str_replace('..', '', $view);
 		$view = empty($view) ? $this->_request->action : $view;
+		if ($view) {
+			$view = str_replace('..', '', $view);
+			$view = str_replace('\\', '/', $view);
+			$view = str_replace('//', '/', $view);
+		} else {
+			$view = 'index';
+		}
+
 		if (substr($view, 0, 1) != '/') {
 			$view = '/' . $this->_name . '/' . $view;
+		}
+		if (empty($this->_view['tpl_path']) || !is_string($this->_view['tpl_path'])) {
+			trigger_error('Unavailable property ' . __CLASS__ . '::$_view', E_USER_WARNING);
+			return null;
 		}
 		$this->_view['tpl_file'] = $this->_view['tpl_path'] . strtolower($view) . '.php';
 		// tpl_data
