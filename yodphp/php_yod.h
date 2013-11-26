@@ -45,7 +45,11 @@ extern zend_module_entry yod_module_entry;
 #define YOD_FORWARD					5
 #define YOD_CHARSET					"utf-8"
 #define YOD_PATHVAR					""
+
+#if PHP_YOD_DEBUG
 #define YOD_DOTLINE					"----------------------------------------------------------------------"
+#define YOD_DIVLINE					"======================================================================"
+#endif
 
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 2)) || (PHP_MAJOR_VERSION > 5)
 #define Z_SET_REFCOUNT_P(pz, rc)	  (pz)->refcount = rc
@@ -89,8 +93,6 @@ extern zend_module_entry yod_module_entry;
 #define yod_database_t		zval
 
 #if PHP_YOD_DEBUG
-char *yod_rundate(TSRMLS_DC);
-double yod_runmsec(TSRMLS_DC);
 void yod_debugf(const char *format,...);
 void yod_debugs(TSRMLS_DC);
 #endif
@@ -100,9 +102,11 @@ long yod_forward(TSRMLS_DC);
 char *yod_charset(TSRMLS_DC);
 char *yod_pathvar(TSRMLS_DC);
 char *yod_runpath(TSRMLS_DC);
+int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC);
 
 ZEND_BEGIN_MODULE_GLOBALS(yod)
 	double		runtime;
+	char 		*runpath;
 	zval		*yodapp;
 	int			exited;
 	int			routed;

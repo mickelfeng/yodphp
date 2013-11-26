@@ -136,7 +136,7 @@ void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 		}
 		
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
-			yod_execute_scripts(classpath, NULL, 1 TSRMLS_CC);
+			yod_include(classpath, NULL, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
@@ -266,7 +266,6 @@ int yod_controller_render(yod_controller_t *object, zval *response, char *view, 
 /** {{{ int yod_controller_display(yod_controller_t *object, char *view, size_t view_len, zval *data TSRMLS_DC)
 */
 int yod_controller_display(yod_controller_t *object, char *view, size_t view_len, zval *data TSRMLS_DC) {
-	sapi_header_line ctr = {0};
 	zval *response = NULL;
 
 #if PHP_YOD_DEBUG
@@ -274,10 +273,9 @@ int yod_controller_display(yod_controller_t *object, char *view, size_t view_len
 #endif
 
 	if (!SG(headers_sent)) {
-		ctr.response_code = 200;
+		sapi_header_line ctr = {0};
 		ctr.line_len = spprintf(&(ctr.line), 0, "Content-type: text/html; charset=%s", yod_charset(TSRMLS_CC));
 		sapi_header_op(SAPI_HEADER_REPLACE, &ctr TSRMLS_CC);
-		sapi_send_headers(TSRMLS_C);
 		efree(ctr.line);
 	}
 

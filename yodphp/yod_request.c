@@ -84,13 +84,13 @@ void yod_request_err404_html(TSRMLS_DC) {
 /** {{{ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC)
 */
 void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
-	sapi_header_line ctr = {0};
 	zval *method;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_request_error404()");
 #endif
 
+	sapi_header_line ctr = {0};
 	ctr.response_code = 404;
 	ctr.line = "HTTP/1.0 404 Not Found";
 	ctr.line_len = strlen(ctr.line);
@@ -145,7 +145,7 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 
 	MAKE_STD_ZVAL(error);
 	if (VCWD_ACCESS(classpath, F_OK) == 0) {
-		yod_execute_scripts(classpath, NULL, 1 TSRMLS_CC);
+		yod_include(classpath, NULL, 1 TSRMLS_CC);
 		if (zend_lookup_class_ex(ZEND_STRL("ErrorAction"), 0, &pce TSRMLS_CC) == SUCCESS) {
 			object_init_ex(error, *pce);
 			if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
@@ -158,7 +158,7 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 		//zend_update_property_string(yod_request_ce, object, ZEND_STRL("controller"), "Error" TSRMLS_CC);
 		spprintf(&classpath, 0, "%s/actions/ErrorAction.php", yod_runpath(TSRMLS_CC));
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
-			yod_execute_scripts(classpath, NULL, 1 TSRMLS_CC);
+			yod_include(classpath, NULL, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(ZEND_STRL("ErrorAction"), 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(error, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
@@ -181,11 +181,12 @@ int yod_request_route(yod_request_t *object, char *route, size_t route_len TSRML
 	HashTable *_SERVER, *_GET;
 	zval *method, *params, *pzval, **argv, **ppval;
 	char *controller, *action, *token;
-	char *key, *value;
-	uint key_len;
+	char *classname, *key, *value;
+	size_t classname_len, key_len;
+	zend_class_entry **pce = NULL;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_request_route()");
+	yod_debugf("yod_request_route(%s)", route ? route : "");
 #endif
 
 	if (!object || Z_TYPE_P(object) != IS_OBJECT) {
@@ -232,7 +233,18 @@ int yod_request_route(yod_request_t *object, char *route, size_t route_len TSRML
 
 	route = estrndup(route, route_len);
 	while (*route == '/' || *route == '\\') {
+		route_len--;
 		route++;
+	}
+
+	classname_len = strlen(SG(request_info).path_translated);
+	php_basename(SG(request_info).path_translated, classname_len, ".php", 4, &classname, &classname_len TSRMLS_CC);
+	zend_str_tolower(classname, classname_len);
+	classname_len = spprintf(&classname, 0, "%sController", classname);
+
+	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+		*(classname + classname_len - 10) = '\0';
+		route_len = spprintf(&route, 0, "%s/%s", classname, route);
 	}
 
 	// params
@@ -363,7 +375,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 	} else {
 		spprintf(&classpath, 0, "%s/controllers/%sController.php", yod_runpath(TSRMLS_CC), controller_str);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
-			yod_execute_scripts(classpath, NULL, 1 TSRMLS_CC);
+			yod_include(classpath, NULL, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
@@ -385,7 +397,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 			*controller_str = tolower(*controller_str);
 			spprintf(&classpath, 0, "%s/actions/%s/%sAction.php", yod_runpath(TSRMLS_CC), controller_str, action_str);
 			if (VCWD_ACCESS(classpath, F_OK) == 0) {
-				yod_execute_scripts(classpath, NULL, 1 TSRMLS_CC);
+				yod_include(classpath, NULL, 1 TSRMLS_CC);
 				classname_len = spprintf(&classname, 0, "%sAction", action_str);
 				if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 					object_init_ex(target, *pce);
@@ -398,7 +410,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 			} else {
 				spprintf(&classpath, 0, "%s/controllers/ErrorController.php", yod_runpath(TSRMLS_CC));
 				if (VCWD_ACCESS(classpath, F_OK) == 0) {
-					yod_execute_scripts(classpath, NULL, 1 TSRMLS_CC);
+					yod_include(classpath, NULL, 1 TSRMLS_CC);
 					if (zend_lookup_class_ex(ZEND_STRL("ErrorController"), 0, &pce TSRMLS_CC) == SUCCESS) {
 						object_init_ex(target, *pce);
 						if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
