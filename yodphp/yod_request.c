@@ -155,7 +155,6 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class 'ErrorAction' not found");
 		}
 	} else {
-		//zend_update_property_string(yod_request_ce, object, ZEND_STRL("controller"), "Error" TSRMLS_CC);
 		spprintf(&classpath, 0, "%s/actions/ErrorAction.php", yod_runpath(TSRMLS_CC));
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, NULL, 1 TSRMLS_CC);
@@ -175,9 +174,9 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ int yod_request_route(yod_request_t *object, char *route, size_t route_len TSRMLS_DC)
+/** {{{ int yod_request_route(yod_request_t *object, char *route, uint route_len TSRMLS_DC)
 */
-int yod_request_route(yod_request_t *object, char *route, size_t route_len TSRMLS_DC) {
+int yod_request_route(yod_request_t *object, char *route, uint route_len TSRMLS_DC) {
 	HashTable *_SERVER, *_GET;
 	zval *method, *params, *pzval, **argv, **ppval;
 	char *controller, *action, *token;
@@ -231,8 +230,17 @@ int yod_request_route(yod_request_t *object, char *route, size_t route_len TSRML
 		}
 	}
 
+	// route
 	route = estrndup(route, route_len);
-	while (*route == '/' || *route == '\\') {
+	route = php_str_to_str(route, route_len, "\\", 1, "/", 1, &route_len);
+	while (strstr(route, "//")) {
+		route = php_str_to_str(route, route_len, "//", 2, "/", 1, &route_len);
+	}
+	if (*(route + route_len - 1) == '/') {
+		*(route + route_len - 1) = '\0';
+		route_len--;
+	}
+	while (*route == '/') {
 		route_len--;
 		route++;
 	}

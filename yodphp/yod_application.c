@@ -60,9 +60,9 @@ ZEND_BEGIN_ARG_INFO_EX(yod_application_destruct_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ void yod_application_init_config(yod_application_t *object, zval *config)
+/** {{{ static void yod_application_init_config(yod_application_t *object, zval *config)
 */
-void yod_application_init_config(yod_application_t *object, zval *config) {
+static void yod_application_init_config(yod_application_t *object, zval *config) {
 	zval *result;
 	char *filepath;
 	size_t filepath_len;
@@ -134,9 +134,9 @@ void yod_application_init_config(yod_application_t *object, zval *config) {
 }
 /* }}} */
 
-/** {{{ void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC)
+/** {{{ static void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC)
 */
-void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC) {
+static void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC) {
 	yod_request_t *request;
 	zval *imports;
 

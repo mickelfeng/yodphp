@@ -94,6 +94,7 @@ extern zend_module_entry yod_module_entry;
 
 #if PHP_YOD_DEBUG
 void yod_debugf(const char *format,...);
+void yod_debugl(char *sline);
 void yod_debugs(TSRMLS_DC);
 #endif
 

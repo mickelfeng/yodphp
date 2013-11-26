@@ -79,6 +79,17 @@ void yod_debugf(const char *format,...) {
 }
 /* }}} */
 
+/** {{{ void yod_debugl(char *sline)
+*/
+void yod_debugl(char *sline) {
+	char *buffer;
+
+	spprintf(&buffer, 0, "%s\n", sline ? sline : YOD_DOTLINE);
+	add_next_index_string(YOD_G(debugs), buffer, 1);
+	efree(buffer);
+}
+/* }}} */
+
 /** {{{ void yod_debugs(TSRMLS_DC)
 */
 void yod_debugs(TSRMLS_DC) {
@@ -97,7 +108,7 @@ void yod_debugs(TSRMLS_DC) {
 	if (SG(request_info).request_method) {
 		php_printf("\n<pre><hr><font color=\"red\">Yod is running in debug mode</font>\n%s\n", YOD_DOTLINE);
 	} else {
-		php_printf("\n%s\nYod is running in debug mode:\n%s\n", YOD_DOTLINE, YOD_DOTLINE);
+		php_printf("\n%s\nYod is running in debug mode:\n%s\n", YOD_DIVLINE, YOD_DOTLINE);
 	}
 
 	zend_hash_internal_pointer_reset(Z_ARRVAL_P(YOD_G(debugs)));
@@ -320,15 +331,15 @@ int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ int yod_autoload_register(TSRMLS_DC)
+/** {{{ static int yod_autoload_register(TSRMLS_DC)
  * */
-int yod_autoload_register(TSRMLS_DC) {
+static int yod_autoload_register(TSRMLS_DC) {
 	int result = 1;
 	zval *autoload, *function, *retval = NULL;
 	zval **params[1] = {&autoload};
 
 	MAKE_STD_ZVAL(autoload);
-	ZVAL_STRING(autoload, "__autoload", 1);
+	ZVAL_STRING(autoload, "yod_autoload", 1);
 
 	MAKE_STD_ZVAL(function);
 	ZVAL_STRING(function, "spl_autoload_register", 0);
@@ -359,9 +370,9 @@ int yod_autoload_register(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ int yod_autoload(char *classname, uint classname_len TSRMLS_DC)
+/** {{{ static int yod_autoload(char *classname, uint classname_len TSRMLS_DC)
 */
-int yod_autoload(char *classname, uint classname_len TSRMLS_DC) {
+static int yod_autoload(char *classname, uint classname_len TSRMLS_DC) {
 	zval filepath;
 	char *classfile, *classpath;
 	zend_class_entry **pce = NULL;
@@ -416,7 +427,7 @@ int yod_autoload(char *classname, uint classname_len TSRMLS_DC) {
 
 /* {{{ ZEND_FUNCTION
 */
-ZEND_FUNCTION(__autoload)
+ZEND_FUNCTION(yod_autoload)
 {
 	char *classname;
 	uint classname_len;
@@ -436,7 +447,7 @@ ZEND_FUNCTION(__autoload)
 /* {{{ yod_functions[]
 */
 zend_function_entry yod_functions[] = {
-	ZEND_FE(__autoload, NULL)
+	ZEND_FE(yod_autoload, NULL)
 	{NULL, NULL, NULL}
 };
 /* }}} */
