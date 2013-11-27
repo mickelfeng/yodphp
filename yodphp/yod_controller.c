@@ -383,7 +383,7 @@ int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRM
 */
 int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC) {
 	yod_request_t *request;
-	zval *action, *name, *tpl_view;
+	zval *action, *name, *tpl_view, *buffer;
 	zval **tpl_path, **tpl_data;
 	char *tpl_file, *key;
 	uint tpl_file_len, key_len;
@@ -431,7 +431,6 @@ int yod_controller_render(yod_controller_t *object, zval *response, char *view, 
 	tpl_view = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_view"), 1 TSRMLS_CC);
 	if (!tpl_view || Z_TYPE_P(tpl_view) != IS_ARRAY) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unavailable property %s::$_view", Z_OBJCE_P(object)->name);
-		MAKE_STD_ZVAL(response);
 		ZVAL_NULL(response);
 		return 0;
 	}
@@ -439,7 +438,6 @@ int yod_controller_render(yod_controller_t *object, zval *response, char *view, 
 	if (zend_hash_find(Z_ARRVAL_P(tpl_view), "tpl_path", sizeof("tpl_path"), (void**) &tpl_path) == SUCCESS) {
 		if (!tpl_path || Z_TYPE_PP(tpl_path) != IS_STRING) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unavailable property %s::$_view", Z_OBJCE_P(object)->name);
-			MAKE_STD_ZVAL(response);
 			ZVAL_NULL(response);
 			return 0;
 		}
@@ -451,14 +449,38 @@ int yod_controller_render(yod_controller_t *object, zval *response, char *view, 
 	// tpl_data
 	if (zend_hash_find(Z_ARRVAL_P(tpl_view), "tpl_data", sizeof("tpl_data"), (void**) &tpl_data) == SUCCESS) {
 		if (tpl_data && Z_TYPE_PP(tpl_data) == IS_ARRAY) {
-			yod_extract(*tpl_data TSRMLS_DC);
+			(void)yod_extract(*tpl_data TSRMLS_DC);
 		}
 	}
 
 	if (data && Z_TYPE_P(data) == IS_ARRAY) {
-		yod_extract(data TSRMLS_DC);
+		(void)yod_extract(data TSRMLS_DC);
 	}
 
+	// response
+	if (VCWD_ACCESS(tpl_file, F_OK) == 0) {
+		if (php_start_ob_buffer(NULL, 0, 1 TSRMLS_CC) != SUCCESS) {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "ob_start failed");
+			ZVAL_NULL(response);
+			return 0;
+		}
+
+		yod_include(tpl_file, NULL, 1 TSRMLS_CC);
+
+		if (php_ob_get_buffer(response TSRMLS_CC) != SUCCESS) {
+			ZVAL_NULL(response);
+		}
+
+		if (OG(ob_nesting_level)) {
+			php_end_ob_buffer(0, 0 TSRMLS_CC);
+		}
+
+		return 1;
+	} else {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "View file '%s.php' not found", view);
+		ZVAL_NULL(response);
+		return 0;
+	}
 
 }
 /* }}} */
@@ -479,12 +501,15 @@ int yod_controller_display(yod_controller_t *object, char *view, size_t view_len
 		efree(ctr.line);
 	}
 
+	MAKE_STD_ZVAL(response);
 	if (yod_controller_render(object, response, view, view_len, data TSRMLS_CC)) {
 		if (response && Z_TYPE_P(response) == IS_STRING) {
 			PHPWRITE(Z_STRVAL_P(response), Z_STRLEN_P(response));
 		}
+		return 1;
 	}
 
+	return 0;
 }
 /* }}} */
 
@@ -517,6 +542,7 @@ void yod_controller_forward(yod_controller_t *object, char *route, size_t route_
 		zend_objects_store_mark_destructed(&EG(objects_store) TSRMLS_CC);
 		zend_bailout();
 	}
+
 }
 /* }}} */
 

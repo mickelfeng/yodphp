@@ -172,7 +172,7 @@ long yod_forward(TSRMLS_DC) {
 	}
 	
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_forward():%s", retval);
+	yod_debugf("yod_forward():%d", retval);
 #endif
 	
 	return retval;
