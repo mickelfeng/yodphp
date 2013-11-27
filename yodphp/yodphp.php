@@ -1105,7 +1105,7 @@ class Yod_Database
 	 * @param mixed $config
 	 * @return Yod_Database
 	 */
-	public static function getInstance($config)
+	public static function getInstance($config = null)
 	{
 		if (empty($config)) {
 			$config = Yod_Application::app()->config('db_dsn');
@@ -1152,6 +1152,17 @@ class Yod_Database
 			self::$_db[$md5hash] = new $classname($config);
 		}
 		return self::$_db[$md5hash];
+	}
+
+	/**
+	 * db
+	 * @access public
+	 * @param mixed $config
+	 * @return Yod_Database
+	 */
+	public static function db($config = null)
+	{
+		return self::getInstance($config);
 	}
 
 	/**
