@@ -13,6 +13,7 @@ class DemoController extends Yod_Controller
 	{
 		echo '<pre>';
 		print_r($this);
+
 	}
 
 	public function testerAction()
