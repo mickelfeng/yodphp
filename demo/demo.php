@@ -22,6 +22,11 @@ class DemoController extends Yod_Controller
 		print_r($_GET);
 	}
 
+	public function widgetAction()
+	{
+		$this->widget('demo/test');
+	}
+
 	public function errorAction()
 	{
 		echo '<pre>';

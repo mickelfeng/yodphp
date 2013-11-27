@@ -408,8 +408,8 @@ abstract class Yod_Controller
 	 * __construct
 	 * @access public
 	 * @param Yod_Request $request
-	 * @param array $config
 	 * @param mixed $action
+	 * @param mixed $params
 	 * @return void
 	 */
 	public function __construct($request, $action = null)
@@ -524,7 +524,7 @@ abstract class Yod_Controller
 	protected function render($view = null, $data = array())
 	{
 		// tpl_file
-		$view = empty($view) ? $this->_request->action : $view;
+		$view = empty($view) ? $this->_action : $view;
 		if ($view) {
 			$view = str_replace('..', '', $view);
 			$view = str_replace('\\', '/', $view);
@@ -566,6 +566,41 @@ abstract class Yod_Controller
 	{
 		headers_sent() or header('Content-type: text/html; charset=' . YOD_CHARSET);
 		echo $this->render($view, $data);
+	}
+
+	/**
+	 * widget
+	 * @access protected
+	 * @param string $route
+	 * @return void
+	 */
+	protected function widget($route)
+	{
+		$route = str_replace('\\', '/', $route);
+		$route = str_replace('//', '/', $route);
+		$route = explode('/', trim($route, '/'));
+
+		$widget = empty($route[0]) ? 'Index' : ucfirst(strtolower($route[0]));
+		$action = empty($route[1]) ? 'index' : strtolower($route[1]);
+		$params = array();
+		$count = count($route);
+		for ($i=2; $i<$count; $i+=2) {
+			$params[$route[$i]] = empty($route[$i+1]) ? '' : $route[$i+1];
+		}
+
+		$classname = $widget . 'Widget';
+		if (class_exists($classname, false)) {
+			new $classname($this->_request, $action);
+		} else {
+			$classpath = YOD_RUNPATH . '/widgets/' . $widget . 'Widget.php';
+			if (is_file($classpath)) {
+				require $classpath;
+				new $classname($this->_request, $action);
+			} else {
+				trigger_error("Widget '{$widget}Widget' not found", E_USER_WARNING);
+			}
+		}
+
 	}
 
 	/**
@@ -630,6 +665,46 @@ abstract class Yod_Controller
 abstract class Yod_Action extends Yod_Controller
 {
 	/**
+	 * run
+	 * @access protected
+	 * @return void
+	 */
+	protected function run()
+	{
+
+	}
+}
+
+/**
+ * Yod_Widget
+ * 
+ */
+abstract class Yod_Widget extends Yod_Controller
+{
+	/**
+	 * __construct
+	 * @access public
+	 * @param Yod_Request $request
+	 * @param mixed $action
+	 * @param mixed $params
+	 * @return void
+	 */
+	public function __construct($request, $action = null, $params = null)
+	{
+		parent::__construct($request, $action);
+
+		$this->_view['tpl_path'] = YOD_RUNPATH . '/widgets';
+
+		$this->_action = empty($action) ? 'index' : strtolower($action);
+		$method = $this->_action . 'Action';
+		if (method_exists($this, $method)) {
+			call_user_func(array($this, $method), $params);
+		} else {
+			trigger_error('Unavailable action ' . get_class($this) . '::' . $method . '()', E_USER_WARNING);
+		}
+	}
+
+	/*
 	 * run
 	 * @access protected
 	 * @return void
