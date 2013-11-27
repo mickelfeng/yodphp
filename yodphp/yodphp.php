@@ -274,7 +274,7 @@ final class Yod_Request
 			}
 		}
 		$route = str_replace('\\', '/', $route);
-		$route = str_replace('//', '/', $route)
+		$route = str_replace('//', '/', $route);
 		$route = explode('/', trim($route, '/'));
 
 		$controller = basename($_SERVER['SCRIPT_FILENAME'], '.php');
