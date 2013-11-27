@@ -382,7 +382,6 @@ int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRM
 /** {{{ int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC)
 */
 int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC) {
-	yod_request_t *request;
 	zval *action, *name, *tpl_view, *buffer;
 	zval **tpl_path, **tpl_data;
 	char *tpl_file, *key;
@@ -397,13 +396,10 @@ int yod_controller_render(yod_controller_t *object, zval *response, char *view, 
 	if (view && view_len) {
 		view = estrndup(view, view_len);
 	} else {
-		request = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), 1 TSRMLS_CC);
-		if (request || Z_TYPE_P(request) == IS_OBJECT) {
-			action = zend_read_property(yod_request_ce, request, ZEND_STRL("action"), 1 TSRMLS_CC);
-			if (action || Z_TYPE_P(action) == IS_STRING) {
-				view_len = Z_STRLEN_P(action);
-				view = Z_STRVAL_P(action);
-			}
+		action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
+		if (action || Z_TYPE_P(action) == IS_STRING) {
+			view_len = Z_STRLEN_P(action);
+			view = Z_STRVAL_P(action);
 		}
 	}
 	if (view && view_len) {
