@@ -649,7 +649,7 @@ class Yod_Model
 	protected static $_model = array();
 
 	protected $_db;
-	protected $_dsn;
+	protected $_dsn = 'db_dsn';
 
 	protected $_name;
 	protected $_table;
@@ -667,11 +667,11 @@ class Yod_Model
 	{
 		$this->init();
 
-		if (empty($this->_dsn)) {
-			$this->_dsn = $config;
+		if (empty($config)) {
+			$config = $this->config($this->_dsn);
 		}
 		if (empty($this->_db)) {
-			$this->_db = Yod_Database::getInstance($this->_dsn);
+			$this->_db = Yod_Database::getInstance($config);
 		}
 		if (empty($name)) {
 			if (empty($this->_name)) {
@@ -704,13 +704,14 @@ class Yod_Model
 	public static function getInstance($name, $prefix = '', $config = '')
 	{
 		$classname = $name .'Model';
-		if (isset(self::$_model[$name])) {
-			return self::$_model[$name];
-		} elseif (class_exists($classname)) {
-			return new $classname($name, $prefix, $config);
-		} else {
-			return new Yod_Model($name, $prefix, $config);
+		if (empty(self::$_model[$name])) {
+			if (class_exists($classname)) {
+				self::$_model[$name] = new $classname($name, $prefix, $config);
+			} else {
+				self::$_model[$name] = new Yod_Model($name, $prefix, $config);
+			}
 		}
+		return self::$_model[$name];
 	}
 
 	/**
