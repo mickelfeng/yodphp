@@ -11,9 +11,7 @@ class DemoController extends Yod_Controller
 {
 	public function indexAction()
 	{
-		echo '<pre>';
-		print_r($this);
-
+		$this->display();
 	}
 
 	public function testerAction()
