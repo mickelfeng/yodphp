@@ -172,6 +172,10 @@ SOURCE=.\yod_action.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\yod_widget.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\yod_model.c
 # End Source File
 # Begin Source File

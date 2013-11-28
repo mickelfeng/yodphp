@@ -41,6 +41,7 @@ zend_class_entry *yod_controller_ce;
  */
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_construct_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, route)
+	ZEND_ARG_INFO(0, action)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_init_arginfo, 0, 0, 1)
@@ -78,6 +79,10 @@ ZEND_BEGIN_ARG_INFO_EX(yod_controller_display_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(yod_controller_widget_arginfo, 0, 0, 1)
+	ZEND_ARG_INFO(0, route)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_forward_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, route)
 	ZEND_ARG_INFO(0, exited)
@@ -93,8 +98,9 @@ ZEND_BEGIN_ARG_INFO_EX(yod_controller_error404_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-static int yod_valid_varname(char *varname, int varname_len) /* {{{ */
-{
+/** {{{ static int yod_valid_varname(char *varname, int varname_len)
+*/
+static int yod_valid_varname(char *varname, int varname_len) {
 	int i, ch;
 
 	if (!varname || !varname_len) {
@@ -173,9 +179,9 @@ static int yod_extract(zval *array TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ yod_controller_run(yod_controller_t *object TSRMLS_DC)
+/** {{{ static void yod_controller_run(yod_controller_t *object TSRMLS_DC)
 */
-void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
+static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 	yod_request_t *request;
 	zval *name, *action, *params, *target;
 	char *method, *classname, *classpath;
@@ -243,9 +249,9 @@ void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC)
+/** {{{ static void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC)
 */
-void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC) {
+static void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC) {
 	zval *name, *tpl_view, *tpl_data;
 	char *cname, *tpl_path;
 
@@ -321,9 +327,9 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 /* }}} */
 
 
-/** {{{ int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRMLS_DC)
+/** {{{ static int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRMLS_DC)
 */
-int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRMLS_DC) {
+static int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRMLS_DC) {
 	zval **data, **tpl_data;
 	zval *tpl_view;
 	char *key;
@@ -379,15 +385,22 @@ int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRM
 /* }}} */
 
 
-/** {{{ int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC)
+/** {{{ static int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC)
 */
-int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC) {
+static int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC) {
+	zend_class_entry *scope;
+
 	zval *action, *name, *tpl_view, *buffer;
 	zval **tpl_path, **tpl_data;
+
 	char *tpl_file, *key;
 	uint tpl_file_len, key_len;
+
 	ulong num_key;
 	HashPosition pos;
+
+	
+
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_controller_render(%s)", view ? view : "");
@@ -461,7 +474,12 @@ int yod_controller_render(yod_controller_t *object, zval *response, char *view, 
 			return 0;
 		}
 
+		scope = EG(scope);
+		EG(scope) = Z_OBJCE_P(object);
+
 		yod_include(tpl_file, NULL, 1 TSRMLS_CC);
+
+		EG(scope) = scope;
 
 		if (php_ob_get_buffer(response TSRMLS_CC) != SUCCESS) {
 			ZVAL_NULL(response);
@@ -473,7 +491,7 @@ int yod_controller_render(yod_controller_t *object, zval *response, char *view, 
 
 		return 1;
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "View file '%s.php' not found", view);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "View '%s' not found", view);
 		ZVAL_NULL(response);
 		return 0;
 	}
@@ -481,9 +499,9 @@ int yod_controller_render(yod_controller_t *object, zval *response, char *view, 
 }
 /* }}} */
 
-/** {{{ int yod_controller_display(yod_controller_t *object, char *view, size_t view_len, zval *data TSRMLS_DC)
+/** {{{ static int yod_controller_display(yod_controller_t *object, char *view, size_t view_len, zval *data TSRMLS_DC)
 */
-int yod_controller_display(yod_controller_t *object, char *view, size_t view_len, zval *data TSRMLS_DC) {
+static int yod_controller_display(yod_controller_t *object, char *view, size_t view_len, zval *data TSRMLS_DC) {
 	zval *response = NULL;
 
 #if PHP_YOD_DEBUG
@@ -509,9 +527,130 @@ int yod_controller_display(yod_controller_t *object, char *view, size_t view_len
 }
 /* }}} */
 
-/** {{{ void yod_controller_forward(yod_controller_t *object, char *route, size_t route_len, int exited TSRMLS_DC)
+/** {{{ static void yod_controller_widget(yod_controller_t *object, char *route, uint route_len TSRMLS_DC)
 */
-void yod_controller_forward(yod_controller_t *object, char *route, size_t route_len, int exited TSRMLS_DC) {
+static void yod_controller_widget(yod_controller_t *object, char *route, uint route_len TSRMLS_DC) {
+	yod_request_t *request;
+
+	zval *params, *target, *pzval;
+	zval *method, *argv[3], retval;
+
+	char *widget, *action, *classpath;
+	char *classname, *key, *value, *token;
+	uint classname_len, key_len;
+
+	zend_class_entry **pce = NULL;
+
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_controller_widget(%s)", route ? route : "");
+#endif
+
+	request = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), 1 TSRMLS_CC);
+
+	// route
+	route = estrndup(route, route_len);
+	route = php_str_to_str(route, route_len, "\\", 1, "/", 1, &route_len);
+	while (strstr(route, "//")) {
+		route = php_str_to_str(route, route_len, "//", 2, "/", 1, &route_len);
+	}
+	if (*(route + route_len - 1) == '/') {
+		*(route + route_len - 1) = '\0';
+		route_len--;
+	}
+	while (*route == '/') {
+		route_len--;
+		route++;
+	}
+
+	// widget
+	widget = php_strtok_r(route, "/", &token);
+	if (widget) {
+		zend_str_tolower(widget, strlen(widget));
+		*widget = toupper(*widget);
+	} else {
+		widget = "Index";
+	}
+
+	action = php_strtok_r(NULL, "/", &token);
+	if (action) {
+		zend_str_tolower(action, strlen(action));
+	} else {
+		action = "index";
+	}
+
+	// params
+	MAKE_STD_ZVAL(params);
+	array_init(params);
+
+	while (key = php_strtok_r(NULL, "/", &token)) {
+		key_len = strlen(key);
+		if (key_len) {
+			MAKE_STD_ZVAL(pzval);
+			value = php_strtok_r(NULL, "/", &token);
+			if (value && strlen(value)) {
+				ZVAL_STRING(pzval, value, 1);
+			} else {
+				ZVAL_NULL(pzval);
+			}
+			zend_hash_update(Z_ARRVAL_P(params), key, key_len + 1, (void **)&pzval, sizeof(zval *), NULL);
+			if (HASH_OF(PG(http_globals)[TRACK_VARS_GET])) {
+				zend_hash_update(HASH_OF(PG(http_globals)[TRACK_VARS_GET]), key, key_len + 1, (void **)&pzval, sizeof(zval *), NULL);
+			}
+		}
+	}
+
+	// ctor
+	MAKE_STD_ZVAL(method);
+	ZVAL_STRING(method, ZEND_CONSTRUCTOR_FUNC_NAME, 1);
+
+	// argv
+	MAKE_STD_ZVAL(argv[0]);
+	MAKE_STD_ZVAL(argv[1]);
+	MAKE_STD_ZVAL(argv[2]);
+
+	ZVAL_ZVAL(argv[0] , request, 1, 1);
+	ZVAL_STRING(argv[1], action, 1);
+	ZVAL_ZVAL(argv[2] , params, 1, 1);
+
+	MAKE_STD_ZVAL(target);
+	classname_len = spprintf(&classname, 0, "%sWidget", widget);
+	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+		object_init_ex(target, *pce);
+		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
+			if (call_user_function(NULL, &target, method, &retval, 3, argv TSRMLS_CC) == FAILURE) {
+				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::__construct()", classname);
+			}
+		}
+	} else {
+		spprintf(&classpath, 0, "%s/widgets/%sWidget.php", yod_runpath(TSRMLS_CC), widget);
+		if (VCWD_ACCESS(classpath, F_OK) == 0) {
+			yod_include(classpath, NULL, 1 TSRMLS_CC);
+			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+				object_init_ex(target, *pce);
+				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
+					if (call_user_function(NULL, &target, method, &retval, 3, argv TSRMLS_CC) == FAILURE) {
+						php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::__construct()", classname);
+					}
+				}
+			} else {
+				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
+			}
+		} else {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Widget '%s' not found", classname);
+		}
+	}
+
+	zval_ptr_dtor(&argv[0]);
+	zval_ptr_dtor(&argv[1]);
+	zval_ptr_dtor(&argv[2]);
+	zval_dtor(&retval);
+}
+/* }}} */
+
+/** {{{ static void yod_controller_forward(yod_controller_t *object, char *route, uint route_len, int exited TSRMLS_DC)
+*/
+static void yod_controller_forward(yod_controller_t *object, char *route, uint route_len, int exited TSRMLS_DC) {
 	yod_request_t *request;
 
 #if PHP_YOD_DEBUG
@@ -553,7 +692,7 @@ PHP_METHOD(yod_controller, __construct) {
 		return;
 	}
 
-	yod_controller_construct(getThis(), request, action, action_len TSRMLS_CC);
+	(void)yod_controller_construct(getThis(), request, action, action_len TSRMLS_CC);
 }
 /* }}} */
 
@@ -567,7 +706,7 @@ PHP_METHOD(yod_controller, init) {
 /** {{{ proto protected Yod_Controller::run()
 */
 PHP_METHOD(yod_controller, run) {
-	yod_controller_run(getThis() TSRMLS_CC);
+	(void)yod_controller_run(getThis() TSRMLS_CC);
 }
 /* }}} */
 
@@ -581,7 +720,7 @@ PHP_METHOD(yod_controller, config) {
 		return;
 	}
 
-	yod_application_config(name, name_len, return_value TSRMLS_CC);
+	(void)yod_application_config(name, name_len, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -620,7 +759,7 @@ PHP_METHOD(yod_controller, assign) {
 
 	return_value = getThis();
 
-	yod_controller_assign(return_value, name, value TSRMLS_CC);
+	(void)yod_controller_assign(return_value, name, value TSRMLS_CC);
 }
 /* }}} */
 
@@ -635,7 +774,7 @@ PHP_METHOD(yod_controller, render) {
 		return;
 	}
 
-	yod_controller_render(getThis(), return_value, view, view_len, data TSRMLS_CC);
+	(void)yod_controller_render(getThis(), return_value, view, view_len, data TSRMLS_CC);
 
 }
 /* }}} */
@@ -651,8 +790,22 @@ PHP_METHOD(yod_controller, display) {
 		return;
 	}
 
-	yod_controller_display(getThis(), view, view_len, data TSRMLS_CC);
+	(void)yod_controller_display(getThis(), view, view_len, data TSRMLS_CC);
 
+}
+/* }}} */
+
+/** {{{ proto protected Yod_Controller::widget($route)
+*/
+PHP_METHOD(yod_controller, widget) {
+	char *route;
+	uint route_len;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &route, &route_len) == FAILURE) {
+		return;
+	}
+
+	(void)yod_controller_widget(getThis(), route, route_len TSRMLS_CC);
 }
 /* }}} */
 
@@ -660,14 +813,14 @@ PHP_METHOD(yod_controller, display) {
 */
 PHP_METHOD(yod_controller, forward) {
 	char *route;
-	size_t route_len;
+	uint route_len;
 	int exited = 0;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &route, &route_len, &exited) == FAILURE) {
 		return;
 	}
 
-	yod_controller_forward(getThis(), route, route_len, exited TSRMLS_CC);
+	(void)yod_controller_forward(getThis(), route, route_len, exited TSRMLS_CC);
 }
 /* }}} */
 
@@ -709,7 +862,7 @@ PHP_METHOD(yod_controller, error404) {
 
 	request = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), 1 TSRMLS_CC);
 
-	yod_request_error404(request, html TSRMLS_CC);
+	(void)yod_request_error404(request, html TSRMLS_CC);
 }
 /* }}} */
 
@@ -732,6 +885,7 @@ zend_function_entry yod_controller_methods[] = {
 	PHP_ME(yod_controller, assign,			yod_controller_assign_arginfo,		ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, render,			yod_controller_render_arginfo,		ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, display,			yod_controller_display_arginfo,		ZEND_ACC_PROTECTED)
+	PHP_ME(yod_controller, widget,			yod_controller_widget_arginfo,		ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, forward,			yod_controller_forward_arginfo,		ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, redirect,		yod_controller_redirect_arginfo,	ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, error404,		yod_controller_error404_arginfo,	ZEND_ACC_PROTECTED)

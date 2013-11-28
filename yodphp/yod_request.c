@@ -55,9 +55,9 @@ ZEND_BEGIN_ARG_INFO_EX(yod_request_error404_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ void yod_request_err404_html(TSRMLS_DC)
+/** {{{ static void yod_request_err404_html(TSRMLS_DC)
 */
-void yod_request_err404_html(TSRMLS_DC) {
+static void yod_request_err404_html(TSRMLS_DC) {
 	HashTable *_SERVER;
 	zval **ppval;
 	char *errpath = "";
@@ -174,9 +174,9 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ int yod_request_route(yod_request_t *object, char *route, uint route_len TSRMLS_DC)
+/** {{{ static int yod_request_route(yod_request_t *object, char *route, uint route_len TSRMLS_DC)
 */
-int yod_request_route(yod_request_t *object, char *route, uint route_len TSRMLS_DC) {
+static int yod_request_route(yod_request_t *object, char *route, uint route_len TSRMLS_DC) {
 	HashTable *_SERVER, *_GET;
 	zval *method, *params, *pzval, **argv, **ppval;
 	char *controller, *action, *token;
