@@ -590,12 +590,12 @@ abstract class Yod_Controller
 
 		$classname = $widget . 'Widget';
 		if (class_exists($classname, false)) {
-			new $classname($this->_request, $action);
+			new $classname($this->_request, $action, $params);
 		} else {
 			$classpath = YOD_RUNPATH . '/widgets/' . $widget . 'Widget.php';
 			if (is_file($classpath)) {
 				require $classpath;
-				new $classname($this->_request, $action);
+				new $classname($this->_request, $action, $params);
 			} else {
 				trigger_error("Widget '{$widget}Widget' not found", E_USER_WARNING);
 			}
