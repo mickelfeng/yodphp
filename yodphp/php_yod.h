@@ -89,6 +89,7 @@ extern zend_module_entry yod_module_entry;
 #define yod_request_t		zval
 #define yod_controller_t	zval
 #define yod_action_t		zval
+#define yod_widget_t		zval
 #define yod_model_t			zval
 #define yod_database_t		zval
 

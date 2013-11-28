@@ -23,6 +23,7 @@
 #include "php.h"
 #include "php_ini.h"
 #include "main/SAPI.h"
+#include "Zend/zend_API.h"
 #include "Zend/zend_alloc.h"
 #include "Zend/zend_interfaces.h"
 #include "ext/standard/info.h"
@@ -39,6 +40,7 @@
 #include "yod_request.h"
 #include "yod_controller.h"
 #include "yod_action.h"
+#include "yod_widget.h"
 #include "yod_model.h"
 #include "yod_database.h"
 
@@ -314,16 +316,21 @@ int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC) {
 			zend_rebuild_symbol_table(TSRMLS_C);
 		}
 #endif
-		zend_execute(op_array TSRMLS_CC);
+		zend_try {
+			zend_execute(op_array TSRMLS_CC);
 
-		destroy_op_array(op_array TSRMLS_CC);
-		efree(op_array);
-		if (!EG(exception) && dtor) {
-			if (EG(return_value_ptr_ptr) && *EG(return_value_ptr_ptr)) {
-				zval_ptr_dtor(EG(return_value_ptr_ptr));
+			destroy_op_array(op_array TSRMLS_CC);
+			efree(op_array);
+			
+			if (!EG(exception) && dtor) {
+				if (EG(return_value_ptr_ptr) && *EG(return_value_ptr_ptr)) {
+					zval_ptr_dtor(EG(return_value_ptr_ptr));
+				}
 			}
-		}
+		} zend_end_try();
+
 		YOD_RESTORE_EG_ENVIRON();
+
 	    return 1;
 	}
 
@@ -482,6 +489,7 @@ PHP_MINIT_FUNCTION(yod)
 	PHP_MINIT(yod_request)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_controller)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_action)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(yod_widget)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_model)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_database)(INIT_FUNC_ARGS_PASSTHRU);
 

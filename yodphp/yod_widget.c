@@ -21,6 +21,8 @@
 #endif
 
 #include "php.h"
+#include "Zend/zend_API.h"
+#include "Zend/zend_interfaces.h"
 
 #include "php_yod.h"
 #include "yod_controller.h"
@@ -40,10 +42,86 @@ ZEND_BEGIN_ARG_INFO_EX(yod_widget_run_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ static void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len, zval *params TSRMLS_DC)
+/** {{{ static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, char *action, uint action_len, zval *params TSRMLS_DC)
 */
-static void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len, zval *params TSRMLS_DC) {
+static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, char *action, uint action_len, zval *params TSRMLS_DC) {
+	zval *_action, *tpl_view, *tpl_data;
+	char *cname, *name, *method, *tpl_path;
+	uint cname_len, name_len, method_len;
+	int dupl;
 
+	if (!object) {
+		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Cannot instantiate abstract class Yod_Widget");
+		return;
+	}
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_widget_construct()");
+#endif
+
+	dupl = zend_get_object_classname(object, &cname, &cname_len TSRMLS_CC);
+
+	name = estrndup(cname, cname_len);
+	if (cname_len > 6) {
+		*(name + cname_len - 6) = '\0';
+		name_len = cname_len - 6;
+		zend_str_tolower(name, name_len);
+		zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_name"), name TSRMLS_CC);
+	}
+	
+	if (action_len) {
+		zend_str_tolower(action, action_len);
+	} else {
+		action = "index";
+	}
+	zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_action"), action TSRMLS_CC);
+
+	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), request TSRMLS_CC);
+
+	MAKE_STD_ZVAL(tpl_data);
+	array_init(tpl_data);
+	spprintf(&tpl_path, 0, "%s/widgets", yod_runpath(TSRMLS_CC));
+	MAKE_STD_ZVAL(tpl_view);
+	array_init(tpl_view);
+	add_assoc_zval(tpl_view, "tpl_data", tpl_data);
+	add_assoc_string(tpl_view, "tpl_path", tpl_path, 1);
+	add_assoc_string(tpl_view, "tpl_file", "", 1);
+	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_view"), tpl_view TSRMLS_CC);
+	zval_ptr_dtor(&tpl_view);
+	efree(tpl_path);
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_widget_init()");
+#endif
+
+	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), ZEND_STRS("init"))) {
+		zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "init", NULL);
+	}
+
+	_action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
+	if (_action && Z_TYPE_P(_action) == IS_STRING) {
+		zend_str_tolower(Z_STRVAL_P(_action), Z_STRLEN_P(_action));
+		action = Z_STRVAL_P(_action);
+		action_len = Z_STRLEN_P(_action);
+		method_len = spprintf(&method, 0, "%saction", action);
+		
+	} else {
+		action = "index";
+		action_len = 11;
+		method = "indexaction";
+		method_len = 11;
+	}
+	zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_action"), action TSRMLS_CC);
+
+	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), method, method_len + 1)) {
+		zend_call_method(&object, Z_OBJCE_P(object), NULL, method, method_len, NULL, 1, params, NULL TSRMLS_CC);
+	} else {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unavailable action %s::%sAction()", cname, action);
+	}
+
+	if (!dupl) {
+		efree(cname);
+	}
 }
 /* }}} */
 
@@ -55,11 +133,12 @@ PHP_METHOD(yod_widget, __construct) {
 	char *action = NULL;
 	uint action_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|sz", &request, &action, action_len, &params) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|sz", &request, &action, &action_len, &params) == FAILURE) {
 		return;
 	}
 
 	yod_widget_construct(getThis(), request, action, action_len, params TSRMLS_CC);
+
 }
 /* }}} */
 

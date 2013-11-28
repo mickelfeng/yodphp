@@ -377,18 +377,14 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 	MAKE_STD_ZVAL(target);
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 		object_init_ex(target, *pce);
-		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-			zend_call_method_with_1_params(&target, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, object);
-		}
+		yod_controller_construct(target, object, NULL, 0 TSRMLS_CC);
 	} else {
 		spprintf(&classpath, 0, "%s/controllers/%sController.php", yod_runpath(TSRMLS_CC), controller_str);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, NULL, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(target, *pce);
-				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-					zend_call_method_with_1_params(&target, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, object);
-				}
+				yod_controller_construct(target, object, NULL, 0 TSRMLS_CC);
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 			}
@@ -409,9 +405,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 				classname_len = spprintf(&classname, 0, "%sAction", action_str);
 				if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 					object_init_ex(target, *pce);
-					if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-						zend_call_method_with_1_params(&target, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, object);
-					}
+					yod_controller_construct(target, object, NULL, 0 TSRMLS_CC);
 				} else {
 					php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 				}
@@ -421,12 +415,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 					yod_include(classpath, NULL, 1 TSRMLS_CC);
 					if (zend_lookup_class_ex(ZEND_STRL("ErrorController"), 0, &pce TSRMLS_CC) == SUCCESS) {
 						object_init_ex(target, *pce);
-						if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-							ALLOC_ZVAL(pzval);
-							ZVAL_STRING(pzval,"error", 1);
-							zend_call_method_with_2_params(&target, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, object, pzval);
-							zval_ptr_dtor(&pzval);
-						}
+						yod_controller_construct(target, object, ZEND_STRL("error") TSRMLS_CC);
 					} else {
 						php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class 'ErrorController' not found");
 					}

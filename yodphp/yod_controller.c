@@ -249,9 +249,9 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ static void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC)
+/** {{{ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC)
 */
-static void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC) {
+void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC) {
 	zval *name, *tpl_view, *tpl_data;
 	char *cname, *tpl_path;
 
@@ -478,7 +478,7 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 		EG(scope) = Z_OBJCE_P(object);
 
 		yod_include(tpl_file, NULL, 1 TSRMLS_CC);
-
+		
 		EG(scope) = scope;
 
 		if (php_ob_get_buffer(response TSRMLS_CC) != SUCCESS) {
@@ -491,7 +491,7 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 
 		return 1;
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "View '%s' not found", view);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "View '%s' not found", tpl_file);
 		ZVAL_NULL(response);
 		return 0;
 	}

@@ -16,12 +16,12 @@
 
 /* $Id$ */
 
-#ifndef PHP_YOD_ACTION_H
-#define PHP_YOD_ACTION_H
+#ifndef PHP_YOD_WIDGET_H
+#define PHP_YOD_WIDGET_H
 
-extern zend_class_entry *yod_action_ce;
+extern zend_class_entry *yod_widget_ce;
 
-PHP_MINIT_FUNCTION(yod_action);
+PHP_MINIT_FUNCTION(yod_widget);
 
 #endif
 /*
