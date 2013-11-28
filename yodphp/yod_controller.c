@@ -21,13 +21,9 @@
 #endif
 
 #include "php.h"
-#include "php_ini.h"
 #include "main/SAPI.h"
-#include "Zend/zend_alloc.h"
 #include "Zend/zend_interfaces.h"
-#include "ext/standard/info.h"
 #include "ext/standard/php_string.h"
-#include "ext/standard/php_math.h"
 
 #include "php_yod.h"
 #include "yod_application.h"

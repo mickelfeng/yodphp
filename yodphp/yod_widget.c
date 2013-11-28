@@ -21,7 +21,6 @@
 #endif
 
 #include "php.h"
-#include "Zend/zend_API.h"
 #include "Zend/zend_interfaces.h"
 
 #include "php_yod.h"

@@ -23,12 +23,15 @@
 #include "php.h"
 #include "php_ini.h"
 #include "main/SAPI.h"
-#include "Zend/zend_API.h"
+#include "Zend/zend_interfaces.h"
+
+/*
 #include "Zend/zend_alloc.h"
 #include "Zend/zend_interfaces.h"
 #include "ext/standard/info.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_math.h"
+*/
 
 
 #ifdef HAVE_SYS_TIME_H
