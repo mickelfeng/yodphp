@@ -691,16 +691,20 @@ abstract class Yod_Widget extends Yod_Controller
 	 */
 	public function __construct($request, $action = null, $params = null)
 	{
-		$this->_name = strtolower(substr(get_class($this), 0, -6));
+		$name = get_class($this);
+		$this->_name = strtolower(substr($name, 0, -6));
 		$this->_action = empty($action) ? 'index' : strtolower($action);
 		$this->_request = $request;
 		$this->_view['tpl_path'] = YOD_RUNPATH . '/widgets';
 
+		$this->init();
+
+		$this->_action = empty($this->_action) ? 'index' : strtolower($this->_action);
 		$method = $this->_action . 'Action';
 		if (method_exists($this, $method)) {
 			call_user_func(array($this, $method), $params);
 		} else {
-			trigger_error('Unavailable action ' . get_class($this) . '::' . $method . '()', E_USER_WARNING);
+			trigger_error('Unavailable action ' . $name . '::' . $method . '()', E_USER_WARNING);
 		}
 	}
 
