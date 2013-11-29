@@ -151,7 +151,7 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class 'ErrorAction' not found");
 		}
 	} else {
-		zend_update_property_string(yod_request_ce, request, ZEND_STRL("controller"), "Error" TSRMLS_CC);
+		zend_update_property_string(yod_request_ce, object, ZEND_STRL("controller"), "Error" TSRMLS_CC);
 		spprintf(&classpath, 0, "%s/actions/ErrorAction.php", yod_runpath(TSRMLS_CC));
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, NULL, 1 TSRMLS_CC);
