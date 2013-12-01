@@ -934,10 +934,10 @@ class Yod_Model
 	 * @access public
 	 * @return Yod_Model
 	 */
-	public function join($table, $where, $left = 'LEFT')
+	public function join($table, $where, $mode = 'LEFT')
 	{
 		$alias = 't' . (count($this->_query['JOIN']) + 2);
-		$this->_query['JOIN'][] = "{$left} JOIN `{$this->_prefix}{$table}` AS `{$alias}` ON {$where}";
+		$this->_query['JOIN'][] = "{$mode} JOIN `{$this->_prefix}{$table}` AS `{$alias}` ON {$where}";
 		return $this;
 	}
 
@@ -1133,7 +1133,7 @@ class Yod_Model
  * Yod_Database
  * 
  */
-class Yod_Database
+abstract class Yod_Database
 {
 	protected static $_db = array();
 
@@ -1235,17 +1235,6 @@ class Yod_Database
 	}
 
 	/**
-	 * db
-	 * @access public
-	 * @param mixed $config
-	 * @return Yod_Database
-	 */
-	public static function db($config = null)
-	{
-		return self::getInstance($config);
-	}
-
-	/**
 	 * config
 	 * @access public
 	 * @param void
@@ -1341,7 +1330,7 @@ class Yod_Database
 				$params[$name] = $value;
 			}
 		}
-		$query = ($replace ? 'REPLACE' : 'INSERT') .' INTO '. $table .' ('. implode(',', $fields) .') VALUES ('. implode(',', $values) .')';
+		$query = ($replace ? 'REPLACE' : 'INSERT') .' INTO `'. $table .'` ('. implode(',', $fields) .') VALUES ('. implode(',', $values) .')';
 		return $this->execute($query, $params);
 	}
 
@@ -1362,7 +1351,7 @@ class Yod_Database
 			}
 		}
 		$params = array_merge($params1, $params);
-		$query = 'UPDATE '. $table. ' SET '.implode(',', $update) . (empty($where) ? '' : ' WHERE '. $where);
+		$query = 'UPDATE `'. $table. '` SET '.implode(',', $update) . (empty($where) ? '' : ' WHERE '. $where);
 		return $this->execute($query, $params);
 	}
 
@@ -1387,4 +1376,16 @@ class Yod_Database
 	{
 		return $this->_lastquery;
 	}
+
+	/**
+	 * db
+	 * @access public
+	 * @param mixed $config
+	 * @return Yod_Database
+	 */
+	public static function db($config = null)
+	{
+		return self::getInstance($config);
+	}
+
 }
