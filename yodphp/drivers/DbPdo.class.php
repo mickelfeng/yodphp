@@ -37,14 +37,14 @@ class Yod_DbPdo extends Yod_Database
 		if (empty($config)) {
 			$config = $this->_config;
 		}
-		if ($this->_pconnect) {
-			$config['params'][PDO::ATTR_PERSISTENT] = true;
+		if (empty($config['dsn'])) {
+			return false;
 		}
-		if (empty($config['pdodsn'])) {
-			$config['pdodsn'] = $this->_create_dsn($config);
+		if ($this->_pconnect) {
+			$config['options'][PDO::ATTR_PERSISTENT] = true;
 		}
 		try{
-			$this->_linkids[$linknum] = new PDO($config['pdodsn'], $config['user'], $config['pass'], $config['params']);
+			$this->_linkids[$linknum] = new PDO($config['dsn'], $config['user'], $config['pass'], $config['options']);
 		}catch (PDOException $e) {
 			trigger_error($e->getMessage(), E_USER_WARNING);
 			return false;
@@ -266,23 +266,5 @@ class Yod_DbPdo extends Yod_Database
 		} else {
 			return false;
 		}
-	}
-
-	private function _create_dsn($config){
-		$pdodsn = array();
-		$dbtype = substr($config['type'], 4);
-		switch ($dbtype) {
-			case 'mysql':
-				$pdodsn[] = 'host=' . $config['host'];
-				if ($config['port']) {
-					$pdodsn[] = 'port=' . $config['port'];
-				}
-				$pdodsn[] = 'dbname=' . $config['dbname'];
-				break;
-			case 'sqlite':
-				$pdodsn[] = $config['dbname'];
-				break;
-		}
-		return $dbtype . ':' .implode(';', $pdodsn);
 	}
 }

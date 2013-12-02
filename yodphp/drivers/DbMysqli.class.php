@@ -171,6 +171,20 @@ class Yod_DbMysqli extends Yod_Database
 	}
 
 	/**
+	 * fetchAll
+	 * @access public
+	 * @return mixed
+	 */
+	public function fetchAll($result = null)
+	{
+		$data = array();
+		while ($fetch = $this->fetch($result)){
+			$data[] = $fetch;
+		}
+		return $data;
+	}
+
+	/**
 	 * free
 	 * @access public
 	 * @return mixed
