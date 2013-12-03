@@ -767,8 +767,6 @@ class Yod_Model
 			$this->_prefix = $this->_db->config('prefix');
 		}
 
-		$this->initQuery();
-
 		self::$_model[$this->_name] = $this;
 	}
 
@@ -779,30 +777,18 @@ class Yod_Model
 	 */
 	public function __call($method, $args)
 	{
-		if ($this->_db && method_exists($this->_db, $method)) {
-			return call_user_func_array(array($this->_db, $method), $args);
+		$args[0] = empty($args[0]) ? null : $args[0];
+		$args[1] = empty($args[1]) ? array() : $args[1];
+		switch ($method) {
+			case 'select':
+				$this->_db->select($args[0], $args[1], false);
+				break;
+			case 'from':
+				$this->_db->select($args[0], $args[1], false);
+				break;
+			default:
+				break;
 		}
-		return false;
-	}
-
-	/**
-	 * getInstance
-	 * @access public
-	 * @param mixed $config
-	 * @return Yod_Model
-	 */
-	public static function getInstance($name, $config = '')
-	{
-		$classname = ucfirst(strtolower($name)) .'Model';
-		if (empty(self::$_model[$name])) {
-			$classpath = YOD_RUNPATH . '/models/' . $classname . '.php';
-			if (class_exists($classname, false)) {
-				self::$_model[$name] = new $classname($name, $config);
-			} else {
-				self::$_model[$name] = new self($name, $config);
-			}
-		}
-		return self::$_model[$name];
 	}
 
 	/**
@@ -817,6 +803,25 @@ class Yod_Model
 	}
 
 	/**
+	 * getInstance
+	 * @access public
+	 * @param mixed $config
+	 * @return Yod_Model
+	 */
+	public static function getInstance($name, $config = '')
+	{
+		$classname = ucfirst(strtolower($name)) .'Model';
+		if (empty(self::$_model[$name])) {
+			if (class_exists($classname, false)) {
+				self::$_model[$name] = new $classname($name, $config);
+			} else {
+				self::$_model[$name] = new self($name, $config);
+			}
+		}
+		return self::$_model[$name];
+	}
+
+	/**
 	 * find
 	 * @access public
 	 * @return mixed
@@ -827,12 +832,11 @@ class Yod_Model
 			$params = $where;
 			$where = null;
 		}
-		$this->_db->from($this->table);
-		empty($where) or $this->_db->where($where);
-		if ($result = $this->_db->query($params)) {
-			$data = $this->_db->fetch($result);
-			$this->_db->free($result);
-			return $data;
+		$this->_db->from($this->_table)->where($where)->limit('1');
+		if ($data = $this->_db->select()) {
+			if (isset($data[0])) {
+				return $data[0];
+			}	
 		}
 		return false;
 	}
@@ -848,10 +852,8 @@ class Yod_Model
 			$params = $where;
 			$where = null;
 		}
-		empty($where) or $this->_db->where($where);
-		if ($result = $this->_db->query($query, $params)) {
-			$data = $this->_db->fetchAll($result);
-			$this->_db->free($result);
+		$this->_db->from($this->_table)->where($where);
+		if ($data = $this->_db->select()) {
 			return $data;
 		}
 		return false;
@@ -868,16 +870,10 @@ class Yod_Model
 			$params = $where;
 			$where = null;
 		}
-		$this->_db->select('COUNT(*)');
-		empty($where) or $this_db->where($where);
-		$this->_db->limit('1');
-		$this->_query['LIMIT'] = 1;
-		$query = $this->parseQuery();
-		$params = array_merge($this->_params, $params);
-		$this->initQuery();
-		if ($result = $this->_db->query($query, $params)) {
+		$this->_db->select('COUNT(*)')->from($this->_table)->where($where)->limit('1');
+		if ($result = $this->_db->query($params)) {
 			if ($data = $this->_db->fetch($result)) {
-				$this->_db->free($result);
+				 $this->_db->free($result);
 				return current($data);
 			}
 		}
@@ -970,10 +966,9 @@ abstract class Yod_Database
 	protected $_result;
 	protected $_linkid;
 	protected $_linkids = array();
-	protected $_activeid = 0;
 	protected $_lastquery = '';
 
-
+	protected $_table;
 	protected $_query = array();
 	protected $_params = array();
 
@@ -1003,10 +998,10 @@ abstract class Yod_Database
 	 * @param mixed $config
 	 * @return Yod_Database
 	 */
-	public static function getInstance($config = null, $pconnect = false)
+	public static function getInstance($config = 'db_dsn', $pconnect = false)
 	{
-		if (empty($config)) {
-			$config = Yod_Application::app()->config(YOD_DSNCONF);
+		if (is_string($config)) {
+			$config = Yod_Application::app()->config($config);
 		}
 
 		if (empty($config['type'])) {
@@ -1016,6 +1011,7 @@ abstract class Yod_Database
 		} else {
 			$classname = 'Yod_Db'.ucwords($config['type']);
 		}
+
 		$md5hash = md5(serialize($config));
 		if (empty(self::$_db[$md5hash])) {
 			if (!class_exists($classname, false)) {
@@ -1057,42 +1053,24 @@ abstract class Yod_Database
 	}
 
 	/**
-	 * active
+	 * create
 	 * @access public
 	 * @return mixed
 	 */
-	public function active($linknum)
+	public function create($query, $params = array())
 	{
-		if ($linknum == $this->_activeid) {
-			return $this;
-		}
-		if (isset($this->_linkids[$linknum])) {
-			$this->_linkid = $this->_linkids[$linknum];
-			$this->_activeid = $linknum;
-		} elseif($this->_activeid != 0) {
-			$this->_linkid = $this->_linkids[0];
-		}
-		
-		return $this;
-	}
-
-	/**
-	 * create
-	 * @access public
-	 * @return void
-	 */
-	public function create($query, $params)
-	{
-		return $this->active(0)->execute($query, $params);
+		return $this->execute($query, $params = array());
 	}
 
 	/**
 	 * insert
 	 * @access public
-	 * @return void
+	 * @return mixed
 	 */
-	public function insert($data, $table, $replace=false) {
+	public function insert($data, $table, $replace=false)
+	{
 		if (empty($data) || empty($table)) return false;
+
 		$values = $fields = $params = array();
 		foreach ($data as $key => $value){
 			if(is_scalar($value) || is_null($value)) {
@@ -1104,71 +1082,103 @@ abstract class Yod_Database
 		}
 		$query = ($replace ? 'REPLACE' : 'INSERT') . ' INTO `' . $this->_prefix . $table . '` (' . implode(',', $fields) . ') VALUES (' . implode(',', $values) . ')';
 
-		return $this->active(0)->execute($query, $params);
+		return $this->execute($query, $params);
 	}
 
 	/**
 	 * update
 	 * @access public
-	 * @return void
+	 * @return integer
 	 */
 	public function update($data, $table, $where = null, $params = array())
 	{
 		if (empty($data) || empty($table)) return false;
-		$update = $params1 = array();
+
+		$update = array();
 		foreach ($data as $key => $value){
 			if(is_scalar($value) || is_null(($value))) {
 				$name = ':'. md5($key);
 				$update[] = $key.'='.$name;
-				$params1[$name] = $value;
+				$params[$name] = $value;
 			}
 		}
-		$params = array_merge($params1, $params);
-		$query = 'UPDATE `' . $this->_prefix . $table . '` SET ' .implode(',', $update) . (empty($where) ? '' : ' WHERE ' . $where);
-		return $this->active(0)->execute($query, $params);
+		$params = $this->params($params)->_params;
+		$where = $this->where($where)->_query['WHERE'];
+
+		$query = 'UPDATE `' . $this->_prefix . $table . '` SET ' .implode(', ', $update) . (empty($where) ? '' : ' WHERE ' . $where);
+
+		return $this->execute($query, $params);
 	}
 
 	/**
 	 * delete
 	 * @access public
-	 * @return void
+	 * @return integer
 	 */
 	public function delete($table, $where = null, $params = array())
 	{
 		if (empty($table)) return false;
+
+		$params = $this->params($params)->_params;
+		$where = $this->where($where)->_query['WHERE'];
+
 		$query = 'DELETE FROM `' . $this->_prefix . $table . '`' . (empty($where) ? '' : ' WHERE ' . $where);
-		return $this->active(0)->execute($query, $params);
+
+		return $this->execute($query, $params);
 	}
 
 	/**
 	 * select
 	 * @access public
-	 * @return Yod_Model
+	 * @return mixed
 	 */
-	public function select($select)
+	public function select($select = null, $where = null, $table = null, $params = array(), $result = true)
 	{
-		if (is_array($select)) {
-			$select = implode(', ', $select);
+		if ($select) {
+			if (is_array($select)) {
+				foreach ($select as $key => $value) {
+					if (is_string($key)) {
+						$select[$key] = "`{$key}` AS `{$value}`"; 
+					}
+				}
+				$select = implode(', ', $select);
+			}
+			$this->_query['SELECT'] = $select;
 		}
-		$this->_query['SELECT'] = $select;
+		$this->from($table)->where($where)->params($params);
+
+		if ($result) {
+			$data = array();
+			$query = $this->parseQuery();
+			if ($this->_result = $this->query($query, $this->_params)) {
+				$data = $this->fetchAll($this->_result);
+				$this->free($this->_result);
+			}
+			$this->initQuery();
+			return $data;
+		}
+
 		return $this;
 	}
 
 	/**
 	 * from
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
 	public function from($table)
 	{
-		$this->_query['FROM'] = "`{$this->_prefix}{$table}` AS `t1`";
+		if ($table) {
+			$this->_table = $table;
+			$this->_query['FROM'] = "`{$this->_prefix}{$table}` AS `t1`";
+		}
 		return $this;
 	}
 
 	/**
 	 * join
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
 	public function join($table, $where, $mode = 'LEFT')
 	{
@@ -1180,21 +1190,23 @@ abstract class Yod_Database
 	/**
 	 * where
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
-	public function where($where)
+	public function where($where, $mode = 'AND')
 	{
-		if ($this->_query['WHERE']) {
-			$where = "({$this->_query['WHERE']}) AND ({$where})";
+		if ($where) {
+			if ($this->_query['WHERE']) {
+				$where = "({$this->_query['WHERE']}) {$mode} ({$where})";
+			}
+			$this->_query['WHERE'] = $where;
 		}
-		$this->_query['WHERE'] = $where;
 		return $this;
 	}
 
 	/**
 	 * group
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
 	public function group($group)
 	{
@@ -1205,7 +1217,7 @@ abstract class Yod_Database
 	/**
 	 * having
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
 	public function having($having)
 	{
@@ -1216,7 +1228,7 @@ abstract class Yod_Database
 	/**
 	 * order
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
 	public function order($order)
 	{
@@ -1227,7 +1239,7 @@ abstract class Yod_Database
 	/**
 	 * limit
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
 	public function limit($limit)
 	{
@@ -1238,7 +1250,7 @@ abstract class Yod_Database
 	/**
 	 * union
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
 	public function union($union)
 	{
@@ -1249,7 +1261,7 @@ abstract class Yod_Database
 	/**
 	 * comment
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
 	public function comment($comment)
 	{
@@ -1260,44 +1272,27 @@ abstract class Yod_Database
 	/**
 	 * params
 	 * @access public
-	 * @return Yod_Model
+	 * @return Yod_Database
 	 */
 	public function params($params)
 	{
-		$this->_params = empty($params) ? array() : $params;
+		if (is_array($params)) {
+			if (is_array($this->_params)) {
+				$params = array_merge($this->_params, $params);
+			}
+			$this->_params = $params;
+		}
 		return $this;
 	}
 
 	/**
 	 * lastQuery
 	 * @access public
-	 * @return void
+	 * @return string
 	 */
 	public function lastQuery()
 	{
 		return $this->_lastquery;
-	}
-
-	/**
-	 * initQuery
-	 * @access protected
-	 * @return string
-	 */
-	protected function initQuery()
-	{
-		$this->_query = array(
-			'SELECT' => '*',
-			'FROM' => '',
-			'JOIN' => array(),
-			'WHERE' => '',
-			'GROUP BY' => '',
-			'HAVING' => '',
-			'ORDER BY' => '',
-			'LIMIT' => '',
-			'UNION' => '',
-			'COMMENT' => '',
-		);
-		$this->_params = array();
 	}
 
 	/**
@@ -1331,6 +1326,30 @@ abstract class Yod_Database
 	}
 
 	/**
+	 * initQuery
+	 * @access protected
+	 * @return string
+	 */
+	protected function initQuery()
+	{
+		$this->_query = array(
+			'SELECT' => '*',
+			'FROM' => '',
+			'JOIN' => array(),
+			'WHERE' => '',
+			'GROUP BY' => '',
+			'HAVING' => '',
+			'ORDER BY' => '',
+			'LIMIT' => '',
+			'UNION' => '',
+			'COMMENT' => '',
+		);
+		$this->_params = array();
+
+		return $this;
+	}
+
+	/**
 	 * connect
 	 * @access public
 	 * @param array $config
@@ -1349,8 +1368,10 @@ abstract class Yod_Database
 	 */
 	abstract public function query($query, $params = array())
 	{
-		$query = $this->parseQuery();
 		$params = array_merge($this->_params, $params);
+
+		$query = $this->parseQuery();
+		
 		$this->initQuery();
 	}
 
