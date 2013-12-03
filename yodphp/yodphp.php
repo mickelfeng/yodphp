@@ -771,27 +771,6 @@ class Yod_Model
 	}
 
 	/**
-	 * __call
-	 * @access public
-	 * @return void
-	 */
-	public function __call($method, $args)
-	{
-		$args[0] = empty($args[0]) ? null : $args[0];
-		$args[1] = empty($args[1]) ? array() : $args[1];
-		switch ($method) {
-			case 'select':
-				$this->_db->select($args[0], $args[1], false);
-				break;
-			case 'from':
-				$this->_db->select($args[0], $args[1], false);
-				break;
-			default:
-				break;
-		}
-	}
-
-	/**
 	 * init
 	 * @access protected
 	 * @param void
@@ -811,13 +790,18 @@ class Yod_Model
 	public static function getInstance($name, $config = '')
 	{
 		$classname = ucfirst(strtolower($name)) .'Model';
+
 		if (empty(self::$_model[$name])) {
+			if (!class_exists($classname, false)) {
+				include YOD_EXTPATH . '/models/' . $classname . '.class.php';
+			}
 			if (class_exists($classname, false)) {
 				self::$_model[$name] = new $classname($name, $config);
 			} else {
 				self::$_model[$name] = new self($name, $config);
 			}
 		}
+
 		return self::$_model[$name];
 	}
 
@@ -832,12 +816,14 @@ class Yod_Model
 			$params = $where;
 			$where = null;
 		}
-		$this->_db->from($this->_table)->where($where)->limit('1');
+
+		$this->_db->table($this->_table)->where($where, $params)->limit('1');
 		if ($data = $this->_db->select()) {
 			if (isset($data[0])) {
 				return $data[0];
-			}	
+			}
 		}
+
 		return false;
 	}
 
@@ -852,10 +838,12 @@ class Yod_Model
 			$params = $where;
 			$where = null;
 		}
-		$this->_db->from($this->_table)->where($where);
+
+		$this->_db->table($this->_table)->where($where, $params);
 		if ($data = $this->_db->select()) {
 			return $data;
 		}
+
 		return false;
 	}
 
@@ -870,13 +858,14 @@ class Yod_Model
 			$params = $where;
 			$where = null;
 		}
-		$this->_db->select('COUNT(*)')->from($this->_table)->where($where)->limit('1');
-		if ($result = $this->_db->query($params)) {
-			if ($data = $this->_db->fetch($result)) {
-				 $this->_db->free($result);
-				return current($data);
+
+		$this->_db->table($this->_table)->where($where, $params)->limit('1');
+		if ($data = $this->_db->select('COUNT(*)')) {
+			if (isset($data[0])) {
+				return current($data[0]);
 			}
 		}
+
 		return 0;
 	}
 
@@ -888,11 +877,13 @@ class Yod_Model
 	public function save($data, $where = null, $params = array())
 	{
 		if (empty($data)) return false;
-		empty($where) or $this->where($where);
-		if (empty($this->_query['WHERE'])) {
-			return $this->_db->insert($data, $this->_table);
+
+		$this->_db->table($this->_table)->where($where, $params);
+		$where = $this->_db->where();
+		if (empty($where)) {
+			return $this->_db->insert($data);
 		} else {
-			return $this->_db->update($data, $this->_table, $this->_query['WHERE'], $params);
+			return $this->_db->update($data);
 		}
 	}
 
@@ -903,8 +894,7 @@ class Yod_Model
 	 */
 	public function remove($where, $params = array())
 	{
-		empty($where) or $this->where($where);
-		return $this->_db->delete($this->_table, $this->_query['WHERE'], $params);
+		return $this->_db->table($this->_table)->where($where, $params)->delete();
 	}
 
 	/**
@@ -1057,9 +1047,18 @@ abstract class Yod_Database
 	 * @access public
 	 * @return mixed
 	 */
-	public function create($query, $params = array())
+	public function create($fields, $table = null)
 	{
-		return $this->execute($query, $params = array());
+		if (empty($fields)) return false;
+
+		foreach ($fields as $key => $value) {
+			$fields[$key] = $key . ' ' . $value;
+		}
+		$this->table($table);
+		$query = 'CREATE TABLE ' . $this->_prefix . $this->_table . ' (' . implode(', ', $fields) . ')';
+		$this->initQuery();
+
+		return $this->execute($query);
 	}
 
 	/**
@@ -1067,12 +1066,12 @@ abstract class Yod_Database
 	 * @access public
 	 * @return mixed
 	 */
-	public function insert($data, $table, $replace=false)
+	public function insert($data, $table = null, $replace=false)
 	{
-		if (empty($data) || empty($table)) return false;
+		if (empty($data)) return false;
 
 		$values = $fields = $params = array();
-		foreach ($data as $key => $value){
+		foreach ($data as $key => $value) {
 			if(is_scalar($value) || is_null($value)) {
 				$name = ':'. md5($key);
 				$fields[] =  $key;
@@ -1080,7 +1079,9 @@ abstract class Yod_Database
 				$params[$name] = $value;
 			}
 		}
-		$query = ($replace ? 'REPLACE' : 'INSERT') . ' INTO `' . $this->_prefix . $table . '` (' . implode(',', $fields) . ') VALUES (' . implode(',', $values) . ')';
+		$this->table($table);
+		$query = ($replace ? 'REPLACE' : 'INSERT') . ' INTO ' . $this->_prefix . $this->_table . ' (' . implode(', ', $fields) . ') VALUES (' . implode(',', $values) . ')';
+		$this->initQuery();
 
 		return $this->execute($query, $params);
 	}
@@ -1090,22 +1091,22 @@ abstract class Yod_Database
 	 * @access public
 	 * @return integer
 	 */
-	public function update($data, $table, $where = null, $params = array())
+	public function update($data, $table = null, $where = null, $params = array())
 	{
-		if (empty($data) || empty($table)) return false;
+		if (empty($data)) return false;
 
 		$update = array();
-		foreach ($data as $key => $value){
+		foreach ($data as $key => $value) {
 			if(is_scalar($value) || is_null(($value))) {
 				$name = ':'. md5($key);
 				$update[] = $key.'='.$name;
 				$params[$name] = $value;
 			}
 		}
-		$params = $this->params($params)->_params;
-		$where = $this->where($where)->_query['WHERE'];
-
-		$query = 'UPDATE `' . $this->_prefix . $table . '` SET ' .implode(', ', $update) . (empty($where) ? '' : ' WHERE ' . $where);
+		$this->table($table)->where($where, $params);
+		$query = 'UPDATE ' . $this->_prefix . $this->_table . ' SET ' .implode(', ', $update) . (empty($this->_query['WHERE']) ? '' : ' WHERE ' . $this->_query['WHERE']);
+		$params = $this->_params;
+		$this->initQuery();
 
 		return $this->execute($query, $params);
 	}
@@ -1115,14 +1116,12 @@ abstract class Yod_Database
 	 * @access public
 	 * @return integer
 	 */
-	public function delete($table, $where = null, $params = array())
+	public function delete($table = null, $where = null, $params = array())
 	{
-		if (empty($table)) return false;
-
-		$params = $this->params($params)->_params;
-		$where = $this->where($where)->_query['WHERE'];
-
-		$query = 'DELETE FROM `' . $this->_prefix . $table . '`' . (empty($where) ? '' : ' WHERE ' . $where);
+		$this->table($table)->where($where, $params);
+		$query = 'DELETE FROM ' . $this->_prefix . $this->_table . (empty($this->_query['WHERE']) ? '' : ' WHERE ' . $this->_query['WHERE']);
+		$params = $this->_params;
+		$this->initQuery();
 
 		return $this->execute($query, $params);
 	}
@@ -1138,14 +1137,14 @@ abstract class Yod_Database
 			if (is_array($select)) {
 				foreach ($select as $key => $value) {
 					if (is_string($key)) {
-						$select[$key] = "`{$key}` AS `{$value}`"; 
+						$select[$key] = "{$key} AS {$value}"; 
 					}
 				}
 				$select = implode(', ', $select);
 			}
 			$this->_query['SELECT'] = $select;
 		}
-		$this->from($table)->where($where)->params($params);
+		$this->from($table)->where($where, $params);
 
 		if ($result) {
 			$data = array();
@@ -1162,17 +1161,22 @@ abstract class Yod_Database
 	}
 
 	/**
-	 * from
+	 * table
 	 * @access public
-	 * @return Yod_Database
+	 * @return mixed
 	 */
-	public function from($table)
+	public function table($table = null)
 	{
-		if ($table) {
-			$this->_table = $table;
-			$this->_query['FROM'] = "`{$this->_prefix}{$table}` AS `t1`";
+		if (func_num_args()) {
+			if ($table) {
+				$this->_table = $table;
+				$this->_query['FROM'] = "{$this->_prefix}{$table} AS t1";
+			}
+
+			return $this;
 		}
-		return $this;
+
+		return $this->_table;
 	}
 
 	/**
@@ -1183,7 +1187,7 @@ abstract class Yod_Database
 	public function join($table, $where, $mode = 'LEFT')
 	{
 		$alias = 't' . (count($this->_query['JOIN']) + 2);
-		$this->_query['JOIN'][] = "{$mode} JOIN `{$this->_prefix}{$table}` AS `{$alias}` ON {$where}";
+		$this->_query['JOIN'][] = "{$mode} JOIN {$this->_prefix}{$table} AS {$alias} ON {$where}";
 		return $this;
 	}
 
@@ -1192,15 +1196,24 @@ abstract class Yod_Database
 	 * @access public
 	 * @return Yod_Database
 	 */
-	public function where($where, $mode = 'AND')
+	public function where($where = null, $params = array(), $mode = 'AND')
 	{
-		if ($where) {
-			if ($this->_query['WHERE']) {
-				$where = "({$this->_query['WHERE']}) {$mode} ({$where})";
+		if (func_num_args()) {
+			if ($where) {
+				if (is_string($params)) {
+					$mode = $params;
+				} else {
+					$this->params($params);
+				}
+				if ($this->_query['WHERE']) {
+					$where = "({$this->_query['WHERE']}) {$mode} ({$where})";
+				}
+				$this->_query['WHERE'] = $where;
 			}
-			$this->_query['WHERE'] = $where;
+			return $this;
 		}
-		return $this;
+
+		return $this->_query['WHERE'];
 	}
 
 	/**
@@ -1305,7 +1318,7 @@ abstract class Yod_Database
 		$parse = array();
 		$query = empty($query) ? $this->_query : $query;
 		if (empty($query['FROM'])) {
-			$query['FROM'] = "`{$this->_prefix}{$this->_table}` AS `t1`";
+			$query['FROM'] = "{$this->_prefix}{$this->_table} AS t1";
 		}
 		foreach ($query as $key => $value) {
 			if (empty($value)) {
@@ -1362,17 +1375,23 @@ abstract class Yod_Database
 	}
 
 	/**
+	 * execute
+	 * @access public
+	 * @return mixed
+	 */
+	abstract public function execute($query, $params = array())
+	{
+		
+	}
+
+	/**
 	 * query
 	 * @access public
 	 * @return mixed
 	 */
 	abstract public function query($query, $params = array())
 	{
-		$params = array_merge($this->_params, $params);
-
-		$query = $this->parseQuery();
 		
-		$this->initQuery();
 	}
 
 	/**
