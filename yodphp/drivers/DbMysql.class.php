@@ -63,7 +63,7 @@ class Yod_DbMysql extends Yod_Database
 		if($dbversion >'5.0.1'){
 			mysql_query("SET sql_mode=''", $this->_linkids[$linknum]);
 		}
-		return $this->_linkids[$linknum];
+		return $this->_linkid = $this->_linkids[$linknum];
 	}
 
 	/**
@@ -95,34 +95,24 @@ class Yod_DbMysql extends Yod_Database
 	 */
 	public function query($query, $params = array())
 	{
-		if (empty($params)) {
-			return $this->exec($query);
-		}
-		return $this->execute($query, $params);
-	}
+		$this->connect($this->_config, 1);
 
-	/**
-	 * execute
-	 * @access public
-	 * @return boolean
-	 */
-	public function execute($query, $params = array())
-	{
-		if (empty($params)) {
-			return $this->exec($query);
-		}
-		if (empty($this->_linkid)) {
-			$this->_linkid = $this->connect();
-		}
 		$this->_lastquery = $query;
-		foreach ($params as $key => $value) {
-			if (strstr($query, $key)) {
-				$value = mysql_real_escape_string($value);
-				$query = str_replace($key, "'{$value}'", $query);
+		if (!empty($params)) {
+			foreach ($params as $key => $value) {
+				if (strstr($query, $key)) {
+					$value = mysql_real_escape_string($value);
+					$query = str_replace($key, "'{$value}'", $query);
+				}
 			}
 		}
-		if ($this->_result = mysql_query($query, $this->_linkid)) {
-			return $this->_result;
+		if ($result = mysql_query($query, $this->_linkid)) {
+			if (is_resource($result)) {
+				$this->_result = $result;
+			} else {
+				$result = mysql_affected_rows($this->_linkid);
+			}
+			return $result;
 		}
 		if (error_reporting()) {
 			if ($error = mysql_error($this->_linkid)) {
@@ -133,18 +123,25 @@ class Yod_DbMysql extends Yod_Database
 	}
 
 	/**
-	 * exec
+	 * execute
 	 * @access public
 	 * @return boolean
 	 */
-	public function exec($query)
+	public function execute($query, $params = array())
 	{
-		if (empty($this->_linkid)) {
-			$this->_linkid = $this->connect();
-		}
+		$this->connect($this->_config, 0);
+
 		$this->_lastquery = $query;
-		if ($this->_result = mysql_query($query, $this->_linkid)) {
-			return $this->_result;
+		if (!empty($params)) {
+			foreach ($params as $key => $value) {
+				if (strstr($query, $key)) {
+					$value = mysql_real_escape_string($value);
+					$query = str_replace($key, "'{$value}'", $query);
+				}
+			}
+		}
+		if (mysql_query($query, $this->_linkid)) {
+			return mysql_affected_rows($this->_linkid);
 		}
 		if (error_reporting()) {
 			if ($error = mysql_error($this->_linkid)) {
