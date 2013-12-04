@@ -24,7 +24,7 @@
 
 #include "php_yod.h"
 #include "yod_application.h"
-#include "yod_model.h"
+#include "yod_dbpdo.h"
 #include "yod_database.h"
 
 zend_class_entry *yod_model_ce;
@@ -50,27 +50,20 @@ ZEND_BEGIN_ARG_INFO_EX(yod_request_error404_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ yod_model_methods[]
+/** {{{ yod_dbpdo_methods[]
 */
-zend_function_entry yod_model_methods[] = {
+zend_function_entry yod_dbpdo_methods[] = {
   {NULL, NULL, NULL}
 };
 /* }}} */
 
 /** {{{ PHP_MINIT_FUNCTION
 */
-PHP_MINIT_FUNCTION(yod_model) {
+PHP_MINIT_FUNCTION(yod_dbpdo) {
 	zend_class_entry ce;
 
-	INIT_CLASS_ENTRY(ce, "Yod_Model", yod_model_methods);
-	yod_model_ce = zend_register_internal_class(&ce TSRMLS_CC);
-
-	zend_declare_property_null(yod_model_ce, ZEND_STRL("_model"), ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
-	zend_declare_property_null(yod_model_ce, ZEND_STRL("_db"), ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(yod_model_ce, ZEND_STRL("_dsn"), ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(yod_model_ce, ZEND_STRL("_name"), ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(yod_model_ce, ZEND_STRL("_table"), ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(yod_model_ce, ZEND_STRL("_prefix"), ZEND_ACC_PROTECTED TSRMLS_CC);
+	INIT_CLASS_ENTRY(ce, "Yod_DbPdo", yod_dbpdo_methods);
+	yod_dbpdo_ce = zend_register_internal_class(&ce TSRMLS_CC);
 
 	return SUCCESS;
 }
