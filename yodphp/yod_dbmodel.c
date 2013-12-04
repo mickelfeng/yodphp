@@ -27,7 +27,7 @@
 #include "yod_dbmodel.h"
 #include "yod_database.h"
 
-zend_class_entry *yod_model_ce;
+zend_class_entry *yod_dbmodel_ce;
 
 /** {{{ ARG_INFO
  * /
