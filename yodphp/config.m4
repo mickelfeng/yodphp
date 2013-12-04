@@ -42,5 +42,5 @@ if test "$PHP_YOD" != "no"; then
 		AC_MSG_RESULT([$php_version, ok])
 	fi
 
-	PHP_NEW_EXTENSION(yod, yod.c yod_application.c yod_request.c yod_controller.c yod_action.c yod_widget.c yod_model.c yod_database.c, $ext_shared)
+	PHP_NEW_EXTENSION(yod, yod.c yod_application.c yod_request.c yod_controller.c yod_action.c yod_widget.c yod_model.c yod_dbmodel.c yod_database.c yod_dbpdo.c, $ext_shared)
 fi
