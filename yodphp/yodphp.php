@@ -1009,9 +1009,10 @@ class Yod_DbModel extends Yod_Model
 	public function find($where = '', $params = array(), $select = '*')
 	{
 		$query = $this->select($select)->where($where, $params)->parseQuery();
-		if ($result = $this->_db->query($query, $params)) {
+		if ($result = $this->_db->query($query, $this->_params)) {
 			$data = $this->_db->fetch($result);
 			$this->_db->free($result);
+			$this->initQuery();
 			return $data;
 		}
 
@@ -1029,9 +1030,10 @@ class Yod_DbModel extends Yod_Model
 	public function findAll($where = '', $params = array(), $select = '*')
 	{
 		$query = $this->select($select)->where($where, $params)->parseQuery();
-		if ($result = $this->_db->query($query, $params)) {
+		if ($result = $this->_db->query($query, $this->_params)) {
 			$data = $this->_db->fetchAll($result);
 			$this->_db->free($result);
+			$this->initQuery();
 			return $data;
 		}
 
@@ -1054,6 +1056,7 @@ class Yod_DbModel extends Yod_Model
 				$count = current($data);
 			}
 			$this->_db->free($result);
+			$this->initQuery();
 			return $count;
 		}
 
@@ -1074,6 +1077,7 @@ class Yod_DbModel extends Yod_Model
 		} else {
 			$result = $this->_db->update($data, $this->_table, $this->_query['WHERE'], $this->_params);
 		}
+		$this->initQuery();
 		return $result;
 	}
 
@@ -1512,6 +1516,39 @@ abstract class Yod_Database
 	}
 
 	/**
+	 * dbconfig
+	 * @access protected
+	 * @return void
+	 */
+	protected function dbconfig($config, $linknum = 0)
+	{
+
+		if (empty($config)) {
+			$config = $this->_config;
+		}
+		if ($this->_islocked) {
+			$linknum = 0;
+		}
+		if ($linknum == 1) {
+			if (empty($this->_config['slaves'])) {
+				$linknum = 0;
+			} elseif(is_array($this->_config['slaves'])) {
+				if (isset($this->_config['slaves']['dsn'])) {
+					$slaves = $this->_config['slaves'];
+				} else {
+					$k_rand = array_rand($this->_config['slaves'], 1);
+					$slaves = $this->_config['slaves'][$k_rand];
+				}
+				$config = array_merge($config, $slaves);
+			}
+		}
+		if (is_array($config)) {
+			$config['linknum'] = $linknum;
+		}
+		return $config;
+	}
+
+	/**
 	 * connect
 	 * @access public
 	 * @param array $config
@@ -1625,25 +1662,8 @@ class Yod_DbPdo extends Yod_Database
 	 */
 	public function connect($config = null, $linknum = 0)
 	{
-		if (empty($config)) {
-			$config = $this->_config;
-		}
-		if ($this->_islocked) {
-			$linknum = 0;
-		}
-		if ($linknum == 1) {
-			if (empty($this->_config['slaves'])) {
-				$linknum = 0;
-			} elseif(is_array($this->_config['slaves'])) {
-				if (isset($this->_config['slaves']['dsn'])) {
-					$slaves = $this->_config['slaves'];
-				} else {
-					$k_rand = array_rand($this->_config['slaves'], 1);
-					$slaves = $this->_config['slaves'][$k_rand];
-				}
-				$config = array_merge($config, $slaves);
-			}
-		}
+		$config = $this->dbconfig($config, $linknum);
+		$linknum = isset($config['linknum']) ? $config['linknum'] : 0;
 		if (isset($this->_linkids[$linknum])) {
 			return $this->_linkid = $this->_linkids[$linknum];
 		}
@@ -1653,7 +1673,7 @@ class Yod_DbPdo extends Yod_Database
 		}
 		$config['user'] = empty($config['user']) ? null : $config['user'];
 		$config['pass'] = empty($config['pass']) ? null : $config['pass'];
-		$config['charset'] = empty($config['options']) ? 'utf8' : $config['charset'];
+		$config['charset'] = empty($config['charset']) ? 'utf8' : $config['charset'];
 		$config['options'] = empty($config['options']) ? array() : $config['options'];
 		if (isset($config['pconnect']) && $config['pconnect'] == true) {
 			$config['options'][PDO::ATTR_PERSISTENT] = true;
@@ -1670,6 +1690,28 @@ class Yod_DbPdo extends Yod_Database
 			$this->_linkids[$linknum]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
 		}
 		return $this->_linkid = $this->_linkids[$linknum];
+	}
+
+	/**
+	* fields
+	* @access public
+	* @return array
+	*/
+	public function fields($table) {
+		$fields = array();
+		if ($result = $this->query('SHOW COLUMNS FROM '.$table)) {
+			foreach ($result as $key => $value) {
+				$fields[$value['Field']] = array(
+					'name'    => $val['Field'],
+					'type'    => $val['Type'],
+					'notnull' => (bool) ($val['Null'] === ''), // not null is empty, null is yes
+					'default' => $val['Default'],
+					'primary' => (strtolower($val['Key']) == 'pri'),
+					'autoinc' => (strtolower($val['Extra']) == 'auto_increment'),
+				);
+			}
+		}
+		return $fields;
 	}
 
 	/**

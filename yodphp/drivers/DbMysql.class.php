@@ -33,16 +33,28 @@ class Yod_DbMysql extends Yod_Database
 	 */
 	public function connect($config = null, $linknum = 0)
 	{
-		if (empty($config)) {
-			$config = $this->_config;
+		$config = $this->dbconfig($config, $linknum);
+		$linknum = isset($config['linknum']) ? $config['linknum'] : 0;
+		if (isset($this->_linkids[$linknum])) {
+			return $this->_linkid = $this->_linkids[$linknum];
 		}
+		if (empty($config['dbname'])) {
+			trigger_error('Database DSN configure error', E_USER_ERROR);
+			return false;
+		}
+		$config['host'] = empty($config['host']) ? 'localhost' : $config['host'];
+		$config['user'] = empty($config['user']) ? '' : $config['user'];
+		$config['pass'] = empty($config['pass']) ? '' : $config['pass'];
+		$config['port'] = empty($config['port']) ? 3306 : intval($config['port']);
+		$config['charset'] = empty($config['charset']) ? 'utf8' : $config['charset'];
+
 		$server = $config['host'] . (empty($config['port']) ? '' : ":{$config['port']}");
-		if ($this->_pconnect) {
-			$this->_linkids[$linknum] = mysql_pconnect($server, $config['user'], $config['pass']);
-		} else {
+		if (empty($config['pconnect'])) {
 			$this->_linkids[$linknum] = mysql_connect($server, $config['user'], $config['pass']);
+		} else {
+			$this->_linkids[$linknum] = mysql_pconnect($server, $config['user'], $config['pass']);
 		}
-		if (!$this->_linkids[$linknum] || (!empty($config['dbname']) && !mysql_select_db($config['dbname'], $this->_linkids[$linknum])) ) {
+		if (!$this->_linkids[$linknum] || (!mysql_select_db($config['dbname'], $this->_linkids[$linknum])) ) {
 			trigger_error(mysql_error(), E_USER_WARNING);
 			return false;
 		}
