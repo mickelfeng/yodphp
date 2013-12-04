@@ -491,14 +491,28 @@ abstract class Yod_Controller
 	 * @param string $name
 	 * @return array
 	 */
-	protected function model($name = '', $prefix = '', $config = '')
+	protected function model($name = '', $config = '')
 	{
 		if (empty($name)) {
 			$name = ucfirst($this->_name);
 		}
-		return Yod_Model::getInstance($name, $prefix, $config);
+		return Yod_Model::getInstance($name, $config);
 	}
-	
+
+	/**
+	 * dbmodel
+	 * @access protected
+	 * @param string $name
+	 * @return array
+	 */
+	protected function dbmodel($name = '', $config = '')
+	{
+		if (empty($name)) {
+			$name = ucfirst($this->_name);
+		}
+		return Yod_DbModel::getInstance($name, $config);
+	}
+
 	/**
 	 * assign
 	 * @access protected
@@ -750,7 +764,7 @@ class Yod_Model
 
 		if (empty($name)) {
 			if (empty($this->_name)) {
-				if (get_class($this) == __CLASS__) {
+				if (get_class($this) == get_called_class()) {
 					$this->_name = '';
 				} else {
 					$this->_name = substr(get_class($this), 0, -5);
@@ -769,8 +783,6 @@ class Yod_Model
 		if ($this->_db = Yod_Database::getInstance($config)) {
 			$this->_prefix = $this->_db->config('prefix');
 		}
-
-		self::$_model[$this->_name] = $this;
 	}
 
 	/**
@@ -793,23 +805,23 @@ class Yod_Model
 	 */
 	public static function getInstance($name, $config = '')
 	{
-		$classname = ucfirst(strtolower($name)) .'Model';
-
-		if (empty(self::$_model[$name])) {
+		$modelname = get_called_class();
+		$classname = ucfirst(strtolower($name)) . (($modelname == __CLASS__) ? 'Model' : 'DbModel');
+		if (empty(self::$_model[$classname])) {
 			$classpath = YOD_EXTPATH . '/models/' . $classname . '.class.php';
 			if (is_file($classpath)) {
 				include $classpath;
-				self::$_model[$name] = new $classname($name, $config);
+				self::$_model[$classname] = new $classname($name, $config);
 			} else {
 				if (class_exists($classname, false)) {
-					self::$_model[$name] = new $classname($name, $config);
+					self::$_model[$classname] = new $classname($name, $config);
 				} else {
-					self::$_model[$name] = new self($name, $config);
+					self::$_model[$classname] = new $modelname($name, $config);
 				}
 			}
 		}
 
-		return self::$_model[$name];
+		return self::$_model[$classname];
 	}
 
 	/**
@@ -975,12 +987,124 @@ class Yod_DbModel extends Yod_Model
 	protected $_params = array();
 
 	/**
+	 * __construct
+	 * @access public
+	 * @return void
+	 */
+	public function __construct($name = '', $config = '')
+	{
+		parent::__construct($name, $config);
+
+		$this->initQuery();
+	}
+
+	/**
+	 * find
+	 * @access public
+	 * @param string	$where
+	 * @param array		$params
+	 * @param mixed		$select
+	 * @return mixed
+	 */
+	public function find($where = '', $params = array(), $select = '*')
+	{
+		$query = $this->select($select)->where($where, $params)->parseQuery();
+		if ($result = $this->_db->query($query, $params)) {
+			$data = $this->_db->fetch($result);
+			$this->_db->free($result);
+			return $data;
+		}
+
+		return false;
+	}
+
+	/**
+	 * findAll
+	 * @access public
+	 * @param string	$where
+	 * @param array		$params
+	 * @param mixed		$select
+	 * @return mixed
+	 */
+	public function findAll($where = '', $params = array(), $select = '*')
+	{
+		$query = $this->select($select)->where($where, $params)->parseQuery();
+		if ($result = $this->_db->query($query, $params)) {
+			$data = $this->_db->fetchAll($result);
+			$this->_db->free($result);
+			return $data;
+		}
+
+		return false;
+	}
+
+	/**
+	 * count
+	 * @access public
+	 * @param string	$where
+	 * @param array		$params
+	 * @return integer
+	 */
+	public function count($where = '', $params = array())
+	{
+		$query = $this->select('COUNT(*)')->where($where, $params)->parseQuery();
+		if ($result = $this->_db->query($query, $this->_params)) {
+			$count = 0;
+			if ($data = $this->_db->fetch($result)) {
+				$count = current($data);
+			}
+			$this->_db->free($result);
+			return $count;
+		}
+
+		return 0;
+	}
+
+	/**
+	 * save
+	 * @access public
+	 * @return boolean
+	 */
+	public function save($data, $where = '', $params = array())
+	{
+		if (empty($data)) return false;
+		$this->where($where, $params);
+		if (empty($this->_query['WHERE'])) {
+			$result = $this->_db->insert($data, $this->_table);
+		} else {
+			$result = $this->_db->update($data, $this->_table, $this->_query['WHERE'], $this->_params);
+		}
+		return $result;
+	}
+
+	/**
+	 * remove
+	 * @access public
+	 * @return boolean
+	 */
+	public function remove($where, $params = array())
+	{
+		$this->where($where, $params);
+		$result = $this->_db->delete($this->_table, $this->_query['WHERE'], $this->_params);
+		$this->initQuery();
+		return $result;
+	}
+
+	/**
 	 * select
 	 * @access public
 	 * @return Yod_DbModel
 	 */
 	public function select($select)
 	{
+		if (is_array($select)) {
+			foreach ($select as $key => $value) {
+				if (is_string($key)) {
+					$select[$key] = "{$key} AS {$value}"; 
+				}
+			}
+			$select = implode(', ', $select);
+		}
 		if ($select) {
 			$this->_query['SELECT'] = $select;
 		}
