@@ -1839,9 +1839,7 @@ class Yod_DbPdo extends Yod_Database
 	public function transaction()
 	{
 		$this->_islocked = true;
-
 		$this->connect($this->_config, 0);
-
 		return $this->_linkid->beginTransaction();
 	}
 

@@ -260,9 +260,8 @@ class Yod_DbMysqli extends Yod_Database
 	 */
 	public function transaction()
 	{
-		if (empty($this->_linkid)) {
-			$this->_linkid = $this->connect();
-		}
+		$this->_islocked = true;
+		$this->connect($this->_config, 0);
 		return $this->_linkid->begin_transaction();
 	}
 
@@ -273,9 +272,8 @@ class Yod_DbMysqli extends Yod_Database
 	 */
 	public function commit()
 	{
-		if (empty($this->_linkid)) {
-			$this->_linkid = $this->connect();
-		}
+		$this->_islocked = false;
+		$this->connect($this->_config, 0);
 		return $this->_linkid->commit();
 	}
 
@@ -286,9 +284,8 @@ class Yod_DbMysqli extends Yod_Database
 	 */
 	public function rollback()
 	{
-		if (empty($this->_linkid)) {
-			$this->_linkid = $this->connect();
-		}
+		$this->_islocked = false;
+		$this->connect($this->_config, 0);
 		return $this->_linkid->rollback();
 	}
 

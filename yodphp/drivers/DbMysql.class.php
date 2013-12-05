@@ -216,11 +216,15 @@ class Yod_DbMysql extends Yod_Database
 	 */
 	public function transaction()
 	{
-		if (empty($this->_linkid)) {
-			$this->_linkid = $this->connect();
-		}
+		$this->_islocked = true;
+		$this->connect($this->_config, 0);
 		if (mysql_query('START TRANSACTION', $this->_linkid)) {
 			return true;
+		}
+		if (error_reporting()) {
+			if ($error = mysql_error($this->_linkid)) {
+				trigger_error($error, E_USER_WARNING);
+			}
 		}
 		return false;
 	}
@@ -232,11 +236,15 @@ class Yod_DbMysql extends Yod_Database
 	 */
 	public function commit()
 	{
-		if (empty($this->_linkid)) {
-			$this->_linkid = $this->connect();
-		}
+		$this->_islocked = false;
+		$this->connect($this->_config, 0);
 		if (mysql_query('COMMIT', $this->_linkid)) {
 			return true;
+		}
+		if (error_reporting()) {
+			if ($error = mysql_error($this->_linkid)) {
+				trigger_error($error, E_USER_WARNING);
+			}
 		}
 		return false;
 	}
@@ -248,11 +256,15 @@ class Yod_DbMysql extends Yod_Database
 	 */
 	public function rollback()
 	{
-		if (empty($this->_linkid)) {
-			$this->_linkid = $this->connect();
-		}
+		$this->_islocked = false;
+		$this->connect($this->_config, 0);
 		if (mysql_query('ROLLBACK', $this->_linkid)) {
 			return true;
+		}
+		if (error_reporting()) {
+			if ($error = mysql_error($this->_linkid)) {
+				trigger_error($error, E_USER_WARNING);
+			}
 		}
 		return false;
 	}
