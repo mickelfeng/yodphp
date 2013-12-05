@@ -11,6 +11,8 @@ class DemoController extends Yod_Controller
 {
 	public function indexAction()
 	{
+		$model = $this->model('DemoUser');
+
 		$this->display();
 	}
 
