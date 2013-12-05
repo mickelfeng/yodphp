@@ -763,7 +763,7 @@ class Yod_Model
 			$this->_table = strtolower(trim(preg_replace('/[A-Z]/', '_\\0', $this->_name), '_'));
 		}
 
-		if (empty($config)) {
+		if (empty($config) && $this->_dsn) {
 			$config = $this->config($this->_dsn);
 		}
 		if ($this->_db = Yod_Database::getInstance($config)) {
