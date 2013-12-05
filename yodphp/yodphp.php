@@ -500,20 +500,6 @@ abstract class Yod_Controller
 	}
 
 	/**
-	 * dbmodel
-	 * @access protected
-	 * @param string $name
-	 * @return array
-	 */
-	protected function dbmodel($name = '', $config = '')
-	{
-		if (empty($name)) {
-			$name = ucfirst($this->_name);
-		}
-		return Yod_DbModel::getInstance($name, $config);
-	}
-
-	/**
 	 * assign
 	 * @access protected
 	 * @param mixed $name
@@ -764,7 +750,7 @@ class Yod_Model
 
 		if (empty($name)) {
 			if (empty($this->_name)) {
-				if (get_class($this) == get_called_class()) {
+				if (substr(get_class($this), 0, 4) == 'Yod_') {
 					$this->_name = '';
 				} else {
 					$this->_name = substr(get_class($this), 0, -5);
@@ -805,23 +791,22 @@ class Yod_Model
 	 */
 	public static function getInstance($name, $config = '')
 	{
-		$modelname = get_called_class();
-		$classname = ucfirst(strtolower($name)) . (($modelname == __CLASS__) ? 'Model' : 'DbModel');
-		if (empty(self::$_model[$classname])) {
+		$classname = ucfirst(strtolower($name)) . 'Model';
+		if (empty(self::$_model[$name])) {
 			$classpath = YOD_EXTPATH . '/models/' . $classname . '.class.php';
 			if (is_file($classpath)) {
 				include $classpath;
-				self::$_model[$classname] = new $classname($name, $config);
+				self::$_model[$name] = new $classname($name, $config);
 			} else {
 				if (class_exists($classname, false)) {
-					self::$_model[$classname] = new $classname($name, $config);
+					self::$_model[$name] = new $classname($name, $config);
 				} else {
-					self::$_model[$classname] = new $modelname($name, $config);
+					self::$_model[$name] = new self($name, $config);
 				}
 			}
 		}
 
-		return self::$_model[$classname];
+		return self::$_model[$name];
 	}
 
 	/**
@@ -974,6 +959,7 @@ class Yod_Model
 		if (empty($name)) return $this;
 		return self::getInstance($name, $config);
 	}
+
 }
 
 /**
@@ -982,6 +968,7 @@ class Yod_Model
  */
 class Yod_DbModel extends Yod_Model
 {
+	protected static $_model = array();
 
 	protected $_query = array();
 	protected $_params = array();
@@ -996,6 +983,59 @@ class Yod_DbModel extends Yod_Model
 		parent::__construct($name, $config);
 
 		$this->initQuery();
+
+		self::$_model[$name] = $this;
+	}
+
+	/**
+	 * dm
+	 * @access public
+	 * @param mixed $config
+	 * @return Yod_DbModel
+	 */
+	public static function dm($name = '', $config = '')
+	{
+		return self::getInstance($name, $config = '');
+	}
+
+	/**
+	 * getInstance
+	 * @access public
+	 * @param string	$name
+	 * @param mixed		$config
+	 * @return Yod_DbModel
+	 */
+	public static function getInstance($name, $config = '')
+	{
+		$classname = ucfirst(strtolower($name)) . 'Model';
+		if (empty(self::$_model[$name])) {
+			$classpath = YOD_EXTPATH . '/models/' . $classname . '.class.php';
+			if (is_file($classpath)) {
+				include $classpath;
+				self::$_model[$name] = new $classname($name, $config);
+			} else {
+				if (class_exists($classname, false)) {
+					self::$_model[$name] = new $classname($name, $config);
+				} else {
+					self::$_model[$name] = new self($name, $config);
+				}
+			}
+		}
+
+		return self::$_model[$name];
+	}
+
+	/**
+	 * table
+	 * @access public
+	 * @return Yod_DbModel
+	 */
+	public function table($table = null)
+	{
+		if ($table) {
+			$this->_table = $table;
+		}
+		return $this;
 	}
 
 	/**
@@ -1071,6 +1111,10 @@ class Yod_DbModel extends Yod_Model
 	public function save($data, $where = '', $params = array())
 	{
 		if (empty($data)) return false;
+		if (empty($this->_table)) {
+			trigger_error('You have an error in your SQL syntax: table name is empty', E_USER_WARNING);
+			return false;
+		}
 		$this->where($where, $params);
 		if (empty($this->_query['WHERE'])) {
 			$result = $this->_db->insert($data, $this->_table);
@@ -1088,6 +1132,10 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public function remove($where, $params = array())
 	{
+		if (empty($this->_table)) {
+			trigger_error('You have an error in your SQL syntax: table name is empty', E_USER_WARNING);
+			return false;
+		}
 		$this->where($where, $params);
 		$result = $this->_db->delete($this->_table, $this->_query['WHERE'], $this->_params);
 		$this->initQuery();
@@ -1246,13 +1294,17 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * parseQuery
 	 * @access protected
-	 * @return string
+	 * @return mixed
 	 */
 	protected function parseQuery($query = null)
 	{
 		$parse = array();
 		$query = empty($query) ? $this->_query : $query;
 		if (empty($query['FROM'])) {
+			if (empty($this->_table)) {
+				trigger_error('You have an error in your SQL syntax: table name is empty', E_USER_WARNING);
+				return false;
+			}
 			$query['FROM'] = "{$this->_prefix}{$this->_table} AS t1";
 		}
 		foreach ($query as $key => $value) {
@@ -1419,12 +1471,10 @@ abstract class Yod_Database
 	public function create($fields, $table, $extend = '')
 	{
 		if (empty($fields) || empty($table)) return false;
-
 		foreach ($fields as $key => $value) {
 			$fields[$key] = $key . ' ' . $value;
 		}
 		$query = 'CREATE TABLE ' . $this->_prefix . $table . ' (' . implode(', ', $fields) . ')' . $extend;
-
 		return $this->execute($query);
 	}
 
@@ -1436,7 +1486,6 @@ abstract class Yod_Database
 	public function insert($data, $table, $replace=false)
 	{
 		if (empty($data) || empty($table)) return false;
-
 		$values = $fields = $params = array();
 		foreach ($data as $key => $value) {
 			if(is_scalar($value) || is_null($value)) {
@@ -1458,7 +1507,6 @@ abstract class Yod_Database
 	public function update($data, $table, $where = null, $params = array())
 	{
 		if (empty($data) || empty($table)) return false;
-
 		$update = array();
 		foreach ($data as $key => $value) {
 			if(is_scalar($value) || is_null(($value))) {
@@ -1479,7 +1527,6 @@ abstract class Yod_Database
 	public function delete($table, $where = null, $params = array())
 	{
 		if (empty($table)) return false;
-
 		$query = 'DELETE FROM ' . $this->_prefix . $table . (empty($where) ? '' : ' WHERE ' . $where);
 		return $this->execute($query, $params);
 	}
@@ -1491,8 +1538,7 @@ abstract class Yod_Database
 	 */
 	public function select($select = '*', $table, $where = null, $params = array())
 	{
-		if (empty($table)) return false;
-
+		if (empty($table))  return false;
 		if (is_array($select)) {
 			foreach ($select as $key => $value) {
 				if (is_string($key)) {
