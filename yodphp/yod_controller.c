@@ -181,7 +181,7 @@ static int yod_extract(zval *array TSRMLS_DC) {
 */
 static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 	yod_request_t *request;
-	zval *name, *action, *params, *target;
+	zval *p_name, *p_action, *p_params, *target;
 	char *method, *classname, *classpath;
 	size_t method_len, classname_len;
 	zend_class_entry **pce = NULL;
@@ -190,12 +190,12 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 	yod_debugf("yod_controller_run()");
 #endif
 
-	action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
-	if (action && Z_TYPE_P(action) == IS_STRING) {
-		zend_str_tolower(Z_STRVAL_P(action), Z_STRLEN_P(action));
-		method_len = spprintf(&method, 0, "%saction", Z_STRVAL_P(action));
-		classname_len = spprintf(&classname, 0, "%sAction", Z_STRVAL_P(action));
-		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), action TSRMLS_CC);
+	p_action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
+	if (p_action && Z_TYPE_P(p_action) == IS_STRING) {
+		zend_str_tolower(Z_STRVAL_P(p_action), Z_STRLEN_P(p_action));
+		method_len = spprintf(&method, 0, "%saction", Z_STRVAL_P(p_action));
+		classname_len = spprintf(&classname, 0, "%sAction", Z_STRVAL_P(p_action));
+		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), p_action TSRMLS_CC);
 	} else {
 		method_len = 11;
 		method = "indexaction";
@@ -205,16 +205,16 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 	}
 
 	request = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), 1 TSRMLS_CC);
-	params = zend_read_property(yod_request_ce, request, ZEND_STRL("params"), 1 TSRMLS_CC);
+	p_params = zend_read_property(yod_request_ce, request, ZEND_STRL("params"), 1 TSRMLS_CC);
 
 	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), method, method_len + 1)) {
-		zend_call_method(&object, Z_OBJCE_P(object), NULL, method, method_len, NULL, 1, params, NULL TSRMLS_CC);
+		zend_call_method(&object, Z_OBJCE_P(object), NULL, method, method_len, NULL, 1, p_params, NULL TSRMLS_CC);
 	} else {
-		name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
-		if (name && Z_TYPE_P(name) == IS_STRING) {
-			zend_str_tolower(Z_STRVAL_P(name), Z_STRLEN_P(name));
-			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), name TSRMLS_CC);
-			spprintf(&classpath, 0, "%s/actions/%s/%s.php", yod_runpath(TSRMLS_CC), Z_STRVAL_P(name), classname);
+		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
+		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
+			zend_str_tolower(Z_STRVAL_P(p_name), Z_STRLEN_P(p_name));
+			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), p_name TSRMLS_CC);
+			spprintf(&classpath, 0, "%s/actions/%s/%s.php", yod_runpath(TSRMLS_CC), Z_STRVAL_P(p_name), classname);
 		} else {
 			zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_name"), "index" TSRMLS_CC);
 			spprintf(&classpath, 0, "%s/actions/index/%s.php", yod_runpath(TSRMLS_CC), classname);
@@ -226,14 +226,14 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
 					zend_call_method_with_1_params(&target, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request);
-					zend_call_method_with_1_params(&target, *pce, NULL, "run", NULL, params);
+					zend_call_method_with_1_params(&target, *pce, NULL, "run", NULL, p_params);
 				}
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 			}
 		} else {
 			if (zend_hash_exists(&(Z_OBJCE_P(object))->function_table, ZEND_STRS("erroraction"))) {
-				zend_call_method_with_1_params(&object, Z_OBJCE_P(object), NULL, "erroraction", NULL, params);
+				zend_call_method_with_1_params(&object, Z_OBJCE_P(object), NULL, "erroraction", NULL, p_params);
 			} else {
 				yod_request_erroraction(request TSRMLS_CC);
 			}
@@ -250,8 +250,8 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 /** {{{ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC)
 */
 void yod_controller_construct(yod_controller_t *object, yod_request_t *request, char *action, uint action_len TSRMLS_DC) {
-	zval *name, *tpl_view, *tpl_data;
-	char *cname, *tpl_path;
+	zval *p_name, *p_action, *tpl_view, *tpl_data;
+	char *name, *tpl_path;
 
 	if (!object) {
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Cannot instantiate abstract class Yod_Controller");
@@ -266,20 +266,20 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 	}
 #endif
 
-	name = zend_read_property(yod_request_ce, request, ZEND_STRL("controller"), 1 TSRMLS_CC);
-	if (name && Z_TYPE_P(name) == IS_STRING) {
-		cname = estrndup(Z_STRVAL_P(name), Z_STRLEN_P(name));
-		zend_str_tolower(cname, Z_STRLEN_P(name));
-		zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_name"), cname TSRMLS_CC);
+	p_name = zend_read_property(yod_request_ce, request, ZEND_STRL("controller"), 1 TSRMLS_CC);
+	if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
+		name = estrndup(Z_STRVAL_P(p_name), Z_STRLEN_P(p_name));
+		zend_str_tolower(name, Z_STRLEN_P(p_name));
+		zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_name"), name TSRMLS_CC);
 	}
 
 	if (action_len) {
 		zend_update_property_stringl(Z_OBJCE_P(object), object, ZEND_STRL("_action"), action, action_len TSRMLS_CC);
 	} else {
-		zval *action = zend_read_property(yod_request_ce, request, ZEND_STRL("action"), 1 TSRMLS_CC);
-		if (action && Z_TYPE_P(action) == IS_STRING) {
-			zend_str_tolower(Z_STRVAL_P(action), Z_STRLEN_P(action));
-			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), action TSRMLS_CC);
+		p_action = zend_read_property(yod_request_ce, request, ZEND_STRL("action"), 1 TSRMLS_CC);
+		if (p_action && Z_TYPE_P(p_action) == IS_STRING) {
+			zend_str_tolower(Z_STRVAL_P(p_action), Z_STRLEN_P(p_action));
+			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), p_action TSRMLS_CC);
 		}
 	}
 
@@ -393,7 +393,7 @@ static int yod_controller_assign(yod_controller_t *object, zval *name, zval *val
 static int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC) {
 	zend_class_entry *scope;
 
-	zval *action, *name, *tpl_view, *buffer;
+	zval *p_action, *p_name, *tpl_view, *buffer;
 	zval **tpl_path, **tpl_data;
 
 	char *tpl_file, *key;
@@ -415,10 +415,10 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	if (view && view_len) {
 		view = estrndup(view, view_len);
 	} else {
-		action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
-		if (action || Z_TYPE_P(action) == IS_STRING) {
-			view_len = Z_STRLEN_P(action);
-			view = Z_STRVAL_P(action);
+		p_action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
+		if (p_action || Z_TYPE_P(p_action) == IS_STRING) {
+			view_len = Z_STRLEN_P(p_action);
+			view = Z_STRVAL_P(p_action);
 		}
 	}
 	if (view && view_len) {
@@ -433,9 +433,9 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	}
 
 	if (view[0] != '/') {
-		name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
-		if (name && Z_TYPE_P(name) == IS_STRING) {
-			view_len = spprintf(&view, 0, "/%s/%s", Z_STRVAL_P(name), view);
+		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
+		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
+			view_len = spprintf(&view, 0, "/%s/%s", Z_STRVAL_P(p_name), view);
 		} else {
 			view_len = spprintf(&view, 0, "/%s", view);
 		}
@@ -771,7 +771,7 @@ PHP_METHOD(yod_controller, model) {
 	yod_controller_t *object;
 	char *name = NULL;
 	uint name_len = 0;
-	zval *cname, *config = NULL;
+	zval *p_name, *config = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &name, &name_len, &config) == FAILURE) {
 		return;
@@ -780,10 +780,10 @@ PHP_METHOD(yod_controller, model) {
 	object = getThis();
 
 	if (name_len == 0) {
-		cname = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
-		if (cname && Z_TYPE_P(cname) == IS_STRING) {
-			name_len = Z_STRLEN_P(cname);
-			name = estrndup(Z_STRVAL_P(cname), name_len);
+		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
+		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
+			name_len = Z_STRLEN_P(p_name);
+			name = estrndup(Z_STRVAL_P(p_name), name_len);
 			*name = toupper(*name);
 		}
 	}

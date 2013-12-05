@@ -44,7 +44,7 @@ ZEND_END_ARG_INFO()
 /** {{{ static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, char *action, uint action_len, zval *params TSRMLS_DC)
 */
 static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, char *action, uint action_len, zval *params TSRMLS_DC) {
-	zval *paction, *tpl_view, *tpl_data;
+	zval *p_action, *tpl_view, *tpl_data;
 	char *cname, *name, *method, *tpl_path;
 	uint cname_len, name_len, method_len;
 	int dupl;
@@ -97,11 +97,11 @@ static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, c
 		zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "init", NULL);
 	}
 
-	paction = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
-	if (paction && Z_TYPE_P(paction) == IS_STRING) {
-		zend_str_tolower(Z_STRVAL_P(paction), Z_STRLEN_P(paction));
-		action = Z_STRVAL_P(paction);
-		action_len = Z_STRLEN_P(paction);
+	p_action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
+	if (p_action && Z_TYPE_P(p_action) == IS_STRING) {
+		zend_str_tolower(Z_STRVAL_P(p_action), Z_STRLEN_P(p_action));
+		action = Z_STRVAL_P(p_action);
+		action_len = Z_STRLEN_P(p_action);
 		method_len = spprintf(&method, 0, "%saction", action);
 	} else {
 		action = "index";
