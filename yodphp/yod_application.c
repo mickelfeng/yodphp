@@ -56,7 +56,7 @@ ZEND_END_ARG_INFO()
 /** {{{ static void yod_application_init_config(yod_application_t *object, zval *config)
 */
 static void yod_application_init_config(yod_application_t *object, zval *config) {
-	zval *result;
+	zval *result, **ppval;
 	char *filepath;
 	size_t filepath_len;
 
@@ -101,14 +101,13 @@ static void yod_application_init_config(yod_application_t *object, zval *config)
 							if (entry_len == 15 && strncmp(entry->d_name, "base", 4) == 0) {
 								php_array_merge(Z_ARRVAL_P(result), Z_ARRVAL_P(value), 0 TSRMLS_DC);
 							} else {
-								zval **ppval;
 								uint key_len = entry_len - 11;
 								char *key = estrndup(entry->d_name, key_len);
 
-								if (zend_hash_find(Z_ARRVAL_P(result), key, key_len + 1, (void **)&ppval) == SUCCESS) {
-									if (Z_TYPE_PP(ppval) == IS_ARRAY) {
-										php_array_merge(Z_ARRVAL_P(value), Z_ARRVAL_PP(ppval), 0 TSRMLS_DC);
-									}
+								if (zend_hash_find(Z_ARRVAL_P(result), key, key_len + 1, (void **)&ppval) == SUCCESS &&
+									Z_TYPE_PP(ppval) == IS_ARRAY
+								) {
+									php_array_merge(Z_ARRVAL_P(value), Z_ARRVAL_PP(ppval), 0 TSRMLS_DC);
 								}
 								add_assoc_zval_ex(result, key, key_len + 1, value);
 								efree(key);
@@ -122,6 +121,12 @@ static void yod_application_init_config(yod_application_t *object, zval *config)
 		}
 		efree(filepath);
 	}
+	if (zend_hash_find(&EG(symbol_table), "config", sizeof("config"), (void **) &ppval) == SUCCESS &&
+		Z_TYPE_PP(ppval) == IS_ARRAY
+	) {
+		php_array_merge(Z_ARRVAL_P(result), Z_ARRVAL_PP(ppval), 0 TSRMLS_DC);
+	}
+
 	zend_update_property(yod_application_ce, object, ZEND_STRL("_config"), result TSRMLS_CC);
 	zval_ptr_dtor(&result);
 }

@@ -30,6 +30,9 @@
 #include "yod_request.h"
 #include "yod_controller.h"
 #include "yod_action.h"
+#include "yod_widget.h"
+#include "yod_model.h"
+#include "yod_dbmodel.h"
 
 zend_class_entry *yod_controller_ce;
 
@@ -56,7 +59,6 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_model_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, name)
-	ZEND_ARG_INFO(0, prefix)
 	ZEND_ARG_INFO(0, config)
 ZEND_END_ARG_INFO()
 
@@ -322,7 +324,6 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 }
 /* }}} */
 
-
 /** {{{ static int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRMLS_DC)
 */
 static int yod_controller_assign(yod_controller_t *object, zval *name, zval *value TSRMLS_DC) {
@@ -334,7 +335,13 @@ static int yod_controller_assign(yod_controller_t *object, zval *name, zval *val
 	HashPosition pos;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_controller_assign()");
+	if (instanceof_function(Z_OBJCE_P(object), yod_widget_ce TSRMLS_CC)) {
+		yod_debugf("yod_widget_assign()");
+	} else if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
+		yod_debugf("yod_action_assign()");
+	} else {
+		yod_debugf("yod_controller_assign()");
+	}
 #endif
 
 	if (!name) {
@@ -395,11 +402,14 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	ulong num_key;
 	HashPosition pos;
 
-	
-
-
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_controller_render(%s)", view ? view : "");
+	if (instanceof_function(Z_OBJCE_P(object), yod_widget_ce TSRMLS_CC)) {
+		yod_debugf("yod_widget_render(%s)", view ? view : "");
+	} else if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
+		yod_debugf("yod_action_render(%s)", view ? view : "");
+	} else {
+		yod_debugf("yod_controller_render(%s)", view ? view : "");
+	}
 #endif
 
 	if (view && view_len) {
@@ -501,7 +511,13 @@ static int yod_controller_display(yod_controller_t *object, char *view, size_t v
 	zval *response = NULL;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_controller_display(%s)", view ? view : "");
+	if (instanceof_function(Z_OBJCE_P(object), yod_widget_ce TSRMLS_CC)) {
+		yod_debugf("yod_widget_display(%s)", view ? view : "");
+	} else if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
+		yod_debugf("yod_action_display(%s)", view ? view : "");
+	} else {
+		yod_debugf("yod_controller_display(%s)", view ? view : "");
+	}
 #endif
 
 	if (!SG(headers_sent)) {
@@ -539,7 +555,13 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_controller_widget(%s)", route ? route : "");
+	if (instanceof_function(Z_OBJCE_P(object), yod_widget_ce TSRMLS_CC)) {
+		yod_debugf("yod_widget_widget(%s)", route ? route : "");
+	} else if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
+		yod_debugf("yod_action_widget(%s)", route ? route : "");
+	} else {
+		yod_debugf("yod_controller_widget(%s)", route ? route : "");
+	}
 #endif
 
 	request = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), 1 TSRMLS_CC);
@@ -650,7 +672,13 @@ static void yod_controller_forward(yod_controller_t *object, char *route, uint r
 	yod_request_t *request;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_controller_forward(%s)", route ? route : "");
+	if (instanceof_function(Z_OBJCE_P(object), yod_widget_ce TSRMLS_CC)) {
+		yod_debugf("yod_widget_forward(%s)", route ? route : "");
+	} else if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
+		yod_debugf("yod_action_forward(%s)", route ? route : "");
+	} else {
+		yod_debugf("yod_controller_forward(%s)", route ? route : "");
+	}
 #endif
 
 	zend_update_static_property_long(yod_controller_ce, ZEND_STRL("_forward"), YOD_G(forward) + 1 TSRMLS_CC);
@@ -737,10 +765,30 @@ PHP_METHOD(yod_controller, import) {
 }
 /* }}} */
 
-/** {{{ proto protected Yod_Controller::model($name = '', $prefix = '', $config = '')
+/** {{{ proto protected Yod_Controller::model($name = '', $config = '')
 */
 PHP_METHOD(yod_controller, model) {
-	
+	yod_controller_t *object;
+	char *name = NULL;
+	uint name_len = 0;
+	zval *cname, *config = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &name, &name_len, &config) == FAILURE) {
+		return;
+	}
+
+	object = getThis();
+
+	if (name_len == 0) {
+		cname = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
+		if (cname && Z_TYPE_P(cname) == IS_STRING) {
+			name_len = Z_STRLEN_P(cname);
+			name = estrndup(Z_STRVAL_P(cname), name_len);
+			*name = toupper(*name);
+		}
+	}
+
+	yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
 }
 /* }}} */
 
