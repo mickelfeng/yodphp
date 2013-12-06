@@ -28,11 +28,7 @@ class DemoController extends Yod_Controller
 {
 	public function indexAction()
 	{
-		$model = Yod_Model::getInstance();
-		$demo = $this->model('demo');
-
-		echo '<pre>';
-		print_r($model);
+		$model = $this->model('DemoUser');
 
 		$this->display();
 	}
