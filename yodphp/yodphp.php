@@ -791,9 +791,9 @@ class Yod_Model
 	 */
 	public static function getInstance($name, $config = '')
 	{
-		$classname = ucfirst(strtolower($name)) . 'Model';
+		$classname = $name . 'Model';
 		if (empty(self::$_model[$name])) {
-			$classpath = YOD_EXTPATH . '/models/' . $classname . '.class.php';
+			$classpath = YOD_RUNPATH . '/models/' . $classname . '.class.php';
 			if (is_file($classpath)) {
 				include $classpath;
 				self::$_model[$name] = new $classname($name, $config);
@@ -1007,9 +1007,9 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public static function getInstance($name, $config = '')
 	{
-		$classname = ucfirst(strtolower($name)) . 'Model';
+		$classname = $name . 'Model';
 		if (empty(self::$_model[$name])) {
-			$classpath = YOD_EXTPATH . '/models/' . $classname . '.class.php';
+			$classpath = YOD_RUNPATH . '/models/' . $classname . '.class.php';
 			if (is_file($classpath)) {
 				include $classpath;
 				self::$_model[$name] = new $classname($name, $config);
