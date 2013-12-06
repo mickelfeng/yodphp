@@ -50,6 +50,13 @@ ZEND_BEGIN_ARG_INFO_EX(yod_request_error404_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
+/** {{{ void yod_dbmodel_getinstance(yod_model_t *object, char *name, uint name_len, zval *config, zval *result TSRMLS_DC)
+*/
+void yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *result TSRMLS_DC) {
+  
+}
+/* }}} */
+
 /** {{{ yod_dbmodel_methods[]
 */
 zend_function_entry yod_dbmodel_methods[] = {
