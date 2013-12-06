@@ -93,7 +93,9 @@ ZEND_END_ARG_INFO()
 */
 yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *config TSRMLS_DC) {
 	yod_model_t *retval;
-	zval *pname;
+	zval *p_name, *p_table, *p_dsn;
+	char *table;
+	uint table_len;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_model_construct(%s)", name ? name : "");
@@ -107,8 +109,11 @@ yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len,
 	}
 
 	if (name_len == 0) {
-		pname = zend_read_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_name"), 1 TSRMLS_CC);
-		if (!(pname && Z_TYPE_P(pname) == IS_STRING && Z_STRLEN_P(pname))) {
+		p_name = zend_read_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_name"), 1 TSRMLS_CC);
+		if (p_name && Z_TYPE_P(p_name) == IS_STRING && Z_STRLEN_P(p_name) > 0) {
+			name_len = Z_STRLEN_P(p_name);
+			name = estrndup(Z_STRVAL_P(p_name), name_len);
+		} else {
 			name_len = strlen(Z_OBJCE_P(retval)->name) - 5;
 			if (name_len > 0) {
 				name = estrndup(Z_OBJCE_P(retval)->name, name_len);
@@ -116,10 +121,49 @@ yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len,
 				name_len = 0;
 				name = "";
 			}
-			zend_update_property_stringl(Z_OBJCE_P(retval), retval, ZEND_STRL("_name"), name, name_len TSRMLS_CC);
+		}
+	}
+	zend_update_property_stringl(Z_OBJCE_P(retval), retval, ZEND_STRL("_name"), name, name_len TSRMLS_CC);
+
+	p_table = zend_read_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_table"), 1 TSRMLS_CC);
+	if (!p_table || Z_TYPE_P(p_table) != IS_STRING || Z_STRLEN_P(p_table) == 0) {
+		if (name_len > 0) {
+			table = emalloc(name_len + 1);
+			*table = tolower(*name);
+			table_len = 1;
+			table++;
+			name++;
+			while (*name != '\0') {
+				if (isupper(*name)) {
+					*table = '_';
+					table_len++;
+					table++;
+				}
+				*table = tolower(*name);
+				table_len++;
+				table++;
+				name++;
+			}
+			*table = '\0';
+			table = table - table_len;
+			zend_update_property_stringl(Z_OBJCE_P(retval), retval, ZEND_STRL("_table"), table, table_len TSRMLS_CC);
+			efree(table);
 		}
 	}
 
+	if (!config) {
+		p_dsn = zend_read_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_dsn"), 1 TSRMLS_CC);
+		if (p_dsn && Z_TYPE_P(p_dsn) == IS_STRING || Z_STRLEN_P(p_dsn) > 0) {
+			MAKE_STD_ZVAL(config);
+			yod_application_config(Z_STRVAL_P(p_dsn), Z_STRLEN_P(p_dsn), config);
+		}
+	}
+
+/*
+	if ($this->_db = Yod_Database::getInstance($config)) {
+		$this->_prefix = $this->_db->config('prefix');
+	}
+*/
 	php_printf("<pre>");
 
 	if (EG(called_scope)) {
