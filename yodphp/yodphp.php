@@ -488,15 +488,27 @@ abstract class Yod_Controller
 	/**
 	 * model
 	 * @access protected
-	 * @param string $name
+	 * @param mixed $name
+	 * @param mixed $config
+	 * @param boolean $dbmod
 	 * @return array
 	 */
-	protected function model($name = '', $config = '')
+	protected function model($name = '', $config = '', $dbmod = false)
 	{
+		if (is_bool($name)) {
+			$dbmod = $name;
+			$name = '';
+		} elseif(is_bool($config)) {
+			$dbmod = $config;
+			$config = '';
+		}
 		if (empty($name)) {
 			$name = ucfirst($this->_name);
 		}
-		return Yod_Model::getInstance($name, $config);
+		if ($dbmod) {
+			return Yod_DbModel::getInstance($name, $config);
+		}
+		return Yod_Model::getInstance($name, $config) 
 	}
 
 	/**
@@ -954,10 +966,19 @@ class Yod_Model
 	 * @param string $name
 	 * @return array
 	 */
-	protected function model($name = '', $config = '')
+	protected function model($name = '', $config = '', $dbmod = false)
 	{
-		if (empty($name)) return $this;
-		return self::getInstance($name, $config);
+		if (empty($name)) {
+			return $this;
+		}
+		if(is_bool($config)) {
+			$dbmod = $config;
+			$config = '';
+		}
+		if ($dbmod) {
+			return Yod_DbModel::getInstance($name, $config);
+		}
+		return Yod_Model::getInstance($name, $config);
 	}
 
 }
@@ -985,17 +1006,6 @@ class Yod_DbModel extends Yod_Model
 		$this->initQuery();
 
 		self::$_model[$name] = $this;
-	}
-
-	/**
-	 * dm
-	 * @access public
-	 * @param mixed $config
-	 * @return Yod_DbModel
-	 */
-	public static function dm($name = '', $config = '')
-	{
-		return self::getInstance($name, $config = '');
 	}
 
 	/**
