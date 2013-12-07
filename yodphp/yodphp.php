@@ -1423,21 +1423,27 @@ abstract class Yod_Database
 			$config = Yod_Application::app()->config($config);
 		}
 
-		if (empty($config['type'])) {
+		if (!is_array($config)) {
 			return false;
-		} elseif ($config['type'] == 'pdo') {
-			$classname = 'Yod_DbPdo';
-		} else {
-			$classname = 'Yod_Db'.ucwords($config['type']);
+		}
+
+		if (empty($config['type']) || !is_string($config['type'])) {
+			$config['type'] = 'pdo';
 		}
 
 		$md5hash = md5(serialize($config));
 		if (empty(self::$_db[$md5hash])) {
+			if ($config['type'] == 'pdo') {
+				$classname = 'Yod_DbPdo';
+			} else {
+				$classname = 'Yod_Db'.ucwords($config['type']);
+			}
 			if (!class_exists($classname, false)) {
 				include YOD_EXTPATH . '/drivers/' . substr($classname, 4) . '.class.php';
 			}
 			self::$_db[$md5hash] = new $classname($config);
 		}
+
 		return self::$_db[$md5hash];
 	}
 
