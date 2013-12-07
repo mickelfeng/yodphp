@@ -196,6 +196,9 @@ void yod_model_getinstance(char *name, uint name_len, zval *config, zval *result
 	p_model = zend_read_static_property(yod_model_ce, ZEND_STRL("_model"), 0 TSRMLS_CC);
 	if (p_model && Z_TYPE_P(p_model) == IS_ARRAY) {
 		if (zend_hash_find(Z_ARRVAL_P(p_model), name, name_len + 1, (void **)&ppval) == SUCCESS) {
+			object = *ppval;
+			ZVAL_ZVAL(result, object, 1, 1);
+			return;
 		}
 	} else {
 		MAKE_STD_ZVAL(p_model);
@@ -332,9 +335,7 @@ PHP_METHOD(yod_model, find) {
 		return;
 	}
 
-	if (!yod_model_find(where, where_len, params, select, return_value TSRMLS_CC)) {
-		RETURN_FALSE;
-	}
+	yod_model_find(where, where_len, params, select, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -349,9 +350,7 @@ PHP_METHOD(yod_model, findAll) {
 		return;
 	}
 
-	if (!yod_model_findall(where, where_len, params, select, return_value TSRMLS_CC)) {
-		RETURN_FALSE;
-	}
+	yod_model_findall(where, where_len, params, select, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -381,9 +380,7 @@ PHP_METHOD(yod_model, save) {
 		return;
 	}
 
-	if (!yod_model_save(data, where, where_len, params, return_value TSRMLS_CC)) {
-		RETURN_FALSE;
-	}
+	yod_model_save(data, where, where_len, params, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -398,9 +395,7 @@ PHP_METHOD(yod_model, remove) {
 		return;
 	}
 
-	if (!yod_model_remove(where, where_len, params, return_value TSRMLS_CC)) {
-		RETURN_FALSE;
-	}
+	yod_model_remove(where, where_len, params, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -415,9 +410,9 @@ PHP_METHOD(yod_model, lastQuery) {
 	p_db = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (p_db && Z_TYPE_P(p_db) == IS_OBJECT) {
 		zend_call_method_with_0_params(&p_db, Z_OBJCE_P(p_db), NULL, "lastQuery", &return_value);
-		return;
+	} else {
+		RETURN_NULL();
 	}
-	RETURN_NULL();
 }
 /* }}} */
 

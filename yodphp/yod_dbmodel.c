@@ -284,9 +284,7 @@ PHP_METHOD(yod_dbmodel, find) {
 		return;
 	}
 
-	if (!yod_dbmodel_find(where, where_len, params, select, return_value TSRMLS_CC)) {
-		RETURN_FALSE;
-	}
+	yod_dbmodel_find(where, where_len, params, select, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -301,9 +299,7 @@ PHP_METHOD(yod_dbmodel, findAll) {
 		return;
 	}
 
-	if (!yod_dbmodel_findall(where, where_len, params, select, return_value TSRMLS_CC)) {
-		RETURN_FALSE;
-	}
+	yod_dbmodel_findall(where, where_len, params, select, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -333,9 +329,7 @@ PHP_METHOD(yod_dbmodel, save) {
 		return;
 	}
 
-	if (!yod_dbmodel_save(data, where, where_len, params, return_value TSRMLS_CC)) {
-		RETURN_FALSE;
-	}
+	yod_dbmodel_save(data, where, where_len, params, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -350,9 +344,7 @@ PHP_METHOD(yod_dbmodel, remove) {
 		return;
 	}
 
-	if (!yod_dbmodel_remove(where, where_len, params, return_value TSRMLS_CC)) {
-		RETURN_FALSE;
-	}
+	yod_dbmodel_remove(where, where_len, params, return_value TSRMLS_CC);
 }
 /* }}} */
 

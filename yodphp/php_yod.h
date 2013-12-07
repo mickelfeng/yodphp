@@ -104,6 +104,7 @@ void yod_do_exit(TSRMLS_DC);
 long yod_forward(TSRMLS_DC);
 char *yod_charset(TSRMLS_DC);
 char *yod_pathvar(TSRMLS_DC);
+char *yod_extpath(TSRMLS_DC);
 char *yod_runpath(TSRMLS_DC);
 int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC);
 
