@@ -71,7 +71,8 @@ class Yod_DbMysql extends Yod_Database
 	* @access public
 	* @return array
 	*/
-	public function fields($table) {
+	public function fields($table)
+	{
 		$fields = array();
 		if ($result = $this->query('SHOW COLUMNS FROM '.$table)) {
 			foreach ($result as $key => $value) {
@@ -86,6 +87,35 @@ class Yod_DbMysql extends Yod_Database
 			}
 		}
 		return $fields;
+	}
+
+	/**
+	 * execute
+	 * @access public
+	 * @return boolean
+	 */
+	public function execute($query, $params = array())
+	{
+		$this->connect($this->_config, 0);
+
+		$this->_lastquery = $query;
+		if (!empty($params)) {
+			foreach ($params as $key => $value) {
+				if (strstr($query, $key)) {
+					$value = mysql_real_escape_string($value);
+					$query = str_replace($key, "'{$value}'", $query);
+				}
+			}
+		}
+		if (mysql_query($query, $this->_linkid)) {
+			return mysql_affected_rows($this->_linkid);
+		}
+		if (error_reporting()) {
+			if ($error = mysql_error($this->_linkid)) {
+				trigger_error($error, E_USER_WARNING);
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -113,35 +143,6 @@ class Yod_DbMysql extends Yod_Database
 				$result = mysql_affected_rows($this->_linkid);
 			}
 			return $result;
-		}
-		if (error_reporting()) {
-			if ($error = mysql_error($this->_linkid)) {
-				trigger_error($error, E_USER_WARNING);
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * execute
-	 * @access public
-	 * @return boolean
-	 */
-	public function execute($query, $params = array())
-	{
-		$this->connect($this->_config, 0);
-
-		$this->_lastquery = $query;
-		if (!empty($params)) {
-			foreach ($params as $key => $value) {
-				if (strstr($query, $key)) {
-					$value = mysql_real_escape_string($value);
-					$query = str_replace($key, "'{$value}'", $query);
-				}
-			}
-		}
-		if (mysql_query($query, $this->_linkid)) {
-			return mysql_affected_rows($this->_linkid);
 		}
 		if (error_reporting()) {
 			if ($error = mysql_error($this->_linkid)) {
@@ -216,7 +217,7 @@ class Yod_DbMysql extends Yod_Database
 	 */
 	public function transaction()
 	{
-		$this->_islocked = true;
+		$this->_locked = true;
 		$this->connect($this->_config, 0);
 		if (mysql_query('START TRANSACTION', $this->_linkid)) {
 			return true;
@@ -236,7 +237,7 @@ class Yod_DbMysql extends Yod_Database
 	 */
 	public function commit()
 	{
-		$this->_islocked = false;
+		$this->_locked = false;
 		$this->connect($this->_config, 0);
 		if (mysql_query('COMMIT', $this->_linkid)) {
 			return true;
@@ -256,7 +257,7 @@ class Yod_DbMysql extends Yod_Database
 	 */
 	public function rollback()
 	{
-		$this->_islocked = false;
+		$this->_locked = false;
 		$this->connect($this->_config, 0);
 		if (mysql_query('ROLLBACK', $this->_linkid)) {
 			return true;

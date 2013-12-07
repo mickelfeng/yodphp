@@ -71,7 +71,8 @@ class Yod_DbMysqli extends Yod_Database
 	* @access public
 	* @return array
 	*/
-	public function fields($table) {
+	public function fields($table)
+	{
 		$fields = array();
 		if ($result = $this->query('SHOW COLUMNS FROM '.$table)) {
 			foreach ($result as $key => $value) {
@@ -86,6 +87,49 @@ class Yod_DbMysqli extends Yod_Database
 			}
 		}
 		return $fields;
+	}
+
+	/**
+	 * execute
+	 * @access public
+	 * @return boolean
+	 */
+	public function execute($query, $params = array())
+	{
+		$this->connect($this->_config, 0);
+
+		$this->_lastquery = $query;
+		if (empty($params)) {
+			if ($this->_linkid->query($query)) {
+				return $this->_linkid->affected_rows;
+			}
+		} else {
+			$bind_params = array();
+			$bind_params[0] = '';
+			foreach ($params as $key => $value) {
+				if (strstr($query, $key)) {
+					$bind_params[0] .= 's';
+					$bind_params[strpos($query, $key)] = &$params[$key];
+					$query = str_replace($key, '?', $query);
+				}
+			}
+			ksort($bind_params);
+			if ($mysqli_stmt = $this->_linkid->prepare($query)) {
+				if (count($bind_params) > 1) {
+					call_user_func_array(array($mysqli_stmt, 'bind_param'), $bind_params);
+				}
+				if ($mysqli_stmt->execute()) {
+					$result = $mysqli_stmt->affected_rows;
+					$mysqli_stmt->close();
+					return $result;
+				}
+				$this->_errno = $mysqli_stmt->errno();
+				$this->_error = $mysqli_stmt->error();
+				$mysqli_stmt->close();
+			}
+		}
+		
+		return false;
 	}
 
 	/**
@@ -147,49 +191,6 @@ class Yod_DbMysqli extends Yod_Database
 			}
 		}
 
-		return false;
-	}
-
-	/**
-	 * execute
-	 * @access public
-	 * @return boolean
-	 */
-	public function execute($query, $params = array())
-	{
-		$this->connect($this->_config, 0);
-
-		$this->_lastquery = $query;
-		if (empty($params)) {
-			if ($this->_linkid->query($query)) {
-				return $this->_linkid->affected_rows;
-			}
-		} else {
-			$bind_params = array();
-			$bind_params[0] = '';
-			foreach ($params as $key => $value) {
-				if (strstr($query, $key)) {
-					$bind_params[0] .= 's';
-					$bind_params[strpos($query, $key)] = &$params[$key];
-					$query = str_replace($key, '?', $query);
-				}
-			}
-			ksort($bind_params);
-			if ($mysqli_stmt = $this->_linkid->prepare($query)) {
-				if (count($bind_params) > 1) {
-					call_user_func_array(array($mysqli_stmt, 'bind_param'), $bind_params);
-				}
-				if ($mysqli_stmt->execute()) {
-					$result = $mysqli_stmt->affected_rows;
-					$mysqli_stmt->close();
-					return $result;
-				}
-				$this->_errno = $mysqli_stmt->errno();
-				$this->_error = $mysqli_stmt->error();
-				$mysqli_stmt->close();
-			}
-		}
-		
 		return false;
 	}
 
@@ -260,7 +261,7 @@ class Yod_DbMysqli extends Yod_Database
 	 */
 	public function transaction()
 	{
-		$this->_islocked = true;
+		$this->_locked = true;
 		$this->connect($this->_config, 0);
 		return $this->_linkid->begin_transaction();
 	}
@@ -272,7 +273,7 @@ class Yod_DbMysqli extends Yod_Database
 	 */
 	public function commit()
 	{
-		$this->_islocked = false;
+		$this->_locked = false;
 		$this->connect($this->_config, 0);
 		return $this->_linkid->commit();
 	}
@@ -284,7 +285,7 @@ class Yod_DbMysqli extends Yod_Database
 	 */
 	public function rollback()
 	{
-		$this->_islocked = false;
+		$this->_locked = false;
 		$this->connect($this->_config, 0);
 		return $this->_linkid->rollback();
 	}
