@@ -129,9 +129,9 @@ ZEND_BEGIN_ARG_INFO_EX(yod_dbmodel_initquery_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ void yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *result TSRMLS_DC)
+/** {{{ int yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *result TSRMLS_DC)
 */
-void yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *result TSRMLS_DC) {
+int yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *result TSRMLS_DC) {
 	yod_model_t *object;
 	zval *p_model, **ppval;
 	char *classname, *classpath;
@@ -142,11 +142,17 @@ void yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *resu
 	yod_debugf("yod_dbmodel_getinstance(%s)", name ? name : "");
 #endif
 
-	classname_len = spprintf(&classname, 0, "%sModel", name);
+	if (name_len == 0) {
+		classname_len = spprintf(&classname, 0, "Yod_DbModel");
+	} else {
+		classname_len = spprintf(&classname, 0, "%sModel", name);
+	}
 
 	p_model = zend_read_static_property(yod_dbmodel_ce, ZEND_STRL("_model"), 0 TSRMLS_CC);
 	if (p_model && Z_TYPE_P(p_model) == IS_ARRAY) {
 		if (zend_hash_find(Z_ARRVAL_P(p_model), name, name_len + 1, (void **)&ppval) == SUCCESS) {
+			ZVAL_ZVAL(result, *ppval, 1, 0);
+			return 1;
 		}
 	} else {
 		MAKE_STD_ZVAL(p_model);
@@ -163,6 +169,7 @@ void yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *resu
 			object = yod_model_construct(object, name, name_len, config TSRMLS_CC);
 		} else {
 			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
+			return 0;
 		}
 	} else {
 		if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
@@ -174,10 +181,11 @@ void yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *resu
 		}
 	}
 
-	ZVAL_ZVAL(result, object, 1, 1);
-
-	add_assoc_zval_ex(p_model, name, name_len + 1, result);
+	add_assoc_zval_ex(p_model, name, name_len + 1, object);
 	zend_update_static_property(yod_dbmodel_ce, ZEND_STRL("_model"), p_model TSRMLS_CC);
+
+	ZVAL_ZVAL(result, object, 1, 0);
+	return 1;
 }
 /* }}} */
 

@@ -22,7 +22,7 @@
 extern zend_class_entry *yod_application_ce;
 
 int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC);
-int yod_application_import(char *alias, size_t alias_len TSRMLS_DC);
+int yod_application_import(char *alias, size_t alias_len, int isclass TSRMLS_DC);
 void yod_application_app(zval *config TSRMLS_DC);
 
 PHP_MINIT_FUNCTION(yod_application);

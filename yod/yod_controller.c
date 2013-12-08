@@ -749,17 +749,18 @@ PHP_METHOD(yod_controller, config) {
 }
 /* }}} */
 
-/** {{{ proto protected Yod_Controller::import($alias)
+/** {{{ proto protected Yod_Controller::import($alias, $isclass = true)
 */
 PHP_METHOD(yod_controller, import) {
 	char *alias = NULL;
 	uint alias_len = 0;
+	int isclass = 1;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &alias, &alias_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &alias, &alias_len, &isclass) == FAILURE) {
 		return;
 	}
 
-	if (yod_application_import(alias, alias_len TSRMLS_CC)) {
+	if (yod_application_import(alias, alias_len, isclass TSRMLS_CC)) {
 		RETURN_TRUE;
 	}
 	RETURN_FALSE;
