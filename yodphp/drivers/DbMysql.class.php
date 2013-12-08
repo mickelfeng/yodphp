@@ -55,7 +55,7 @@ class Yod_DbMysql extends Yod_Database
 			$this->_linkids[$linknum] = mysql_pconnect($server, $config['user'], $config['pass']);
 		}
 		if (!$this->_linkids[$linknum] || (!mysql_select_db($config['dbname'], $this->_linkids[$linknum])) ) {
-			trigger_error(mysql_error(), E_USER_WARNING);
+			trigger_error(mysql_error(), E_USER_ERROR);
 			return false;
 		}
 		$dbversion = mysql_get_server_info($this->_linkids[$linknum]);

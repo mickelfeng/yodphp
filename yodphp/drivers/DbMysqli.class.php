@@ -52,7 +52,7 @@ class Yod_DbMysqli extends Yod_Database
 		$config['charset'] = empty($config['charset']) ? 'utf8' : $config['charset'];
 		$this->_linkids[$linknum] = new mysqli($config['host'], $config['user'], $config['pass'], $config['dbname'], $config['port']);
 		if (mysqli_connect_errno()) {
-			trigger_error(mysqli_connect_error(), E_USER_WARNING);
+			trigger_error(mysqli_connect_error(), E_USER_ERROR);
 			return false;
 		}
 		$dbversion = $this->_linkids[$linknum]->server_version;

@@ -181,15 +181,16 @@ final class Yod_Application
 	 * import
 	 * @access public
 	 * @param string $alias
+	 * @param boolean $isclass
 	 * @return boolean
 	 */
-	public function import($alias)
+	public function import($alias, $isclass = true)
 	{
 		$classfile = trim(str_replace('\\', '/', str_replace('.', '/', $alias)), '/');
 		$classname = basename($classfile);
 
 		if (empty($this->_imports[$alias])) {
-			$classpath = YOD_RUNPATH . '/extends/' . $classfile . '.class.php';
+			$classpath = YOD_RUNPATH . '/extends/' . $classfile . ($isclass ? '.class.php' : '.php');
 			if (is_file($classpath)) include $classpath;
 			$this->_imports[$alias] = $classpath;
 		}
@@ -478,11 +479,12 @@ abstract class Yod_Controller
 	 * import
 	 * @access protected
 	 * @param string $alias
+	 * @param boolean $isclass
 	 * @return boolean
 	 */
-	protected function import($alias)
+	protected function import($alias, $isclass = true)
 	{
-		return Yod_Application::app()->import($alias);
+		return Yod_Application::app()->import($alias, $isclass);
 	}
 
 	/**
@@ -508,7 +510,7 @@ abstract class Yod_Controller
 		if ($dbmod) {
 			return Yod_DbModel::getInstance($name, $config);
 		}
-		return Yod_Model::getInstance($name, $config) 
+		return Yod_Model::getInstance($name, $config);
 	}
 
 	/**
@@ -803,7 +805,11 @@ class Yod_Model
 	 */
 	public static function getInstance($name, $config = '')
 	{
-		$classname = $name . 'Model';
+		if (empty($name)) {
+			$classname = 'Yod_Model';
+		} else {
+			$classname = $name . 'Model';
+		}
 		if (empty(self::$_model[$name])) {
 			$classpath = YOD_RUNPATH . '/models/' . $classname . '.class.php';
 			if (is_file($classpath)) {
@@ -953,11 +959,12 @@ class Yod_Model
 	 * import
 	 * @access protected
 	 * @param string $alias
+	 * @param boolean $isclass
 	 * @return boolean
 	 */
-	protected function import($alias)
+	protected function import($alias, $isclass = true)
 	{
-		return Yod_Application::app()->import($alias);
+		return Yod_Application::app()->import($alias, $isclass);
 	}
 
 	/**
@@ -1017,7 +1024,11 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public static function getInstance($name, $config = '')
 	{
-		$classname = $name . 'Model';
+		if (empty($name)) {
+			$classname = 'Yod_DbModel';
+		} else {
+			$classname = $name . 'Model';
+		}
 		if (empty(self::$_model[$name])) {
 			$classpath = YOD_RUNPATH . '/models/' . $classname . '.class.php';
 			if (is_file($classpath)) {
@@ -1527,7 +1538,7 @@ abstract class Yod_Database
 		foreach ($data as $key => $value) {
 			if(is_scalar($value) || is_null(($value))) {
 				$name = ':'. md5($key);
-				$update[] = $key.'='.$name;
+				$update[] = $key.' = '.$name;
 				$params[$name] = $value;
 			}
 		}
