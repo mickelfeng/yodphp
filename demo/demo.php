@@ -78,6 +78,14 @@ class DemoController extends Yod_Controller
 		$this->widget('demo/test');
 	}
 
+	public function pdoAction()
+	{
+		echo '<pre>';
+		$db = Yod_Database::db();
+		$db->connect();
+		echo '<br>db:'; print_r($db);
+	}
+
 	public function dbAction()
 	{
 		echo '<pre>';
