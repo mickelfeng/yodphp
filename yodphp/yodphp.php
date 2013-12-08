@@ -488,15 +488,27 @@ abstract class Yod_Controller
 	/**
 	 * model
 	 * @access protected
-	 * @param string $name
+	 * @param mixed $name
+	 * @param mixed $config
+	 * @param boolean $dbmod
 	 * @return array
 	 */
-	protected function model($name = '', $config = '')
+	protected function model($name = '', $config = '', $dbmod = false)
 	{
+		if (is_bool($name)) {
+			$dbmod = $name;
+			$name = '';
+		} elseif(is_bool($config)) {
+			$dbmod = $config;
+			$config = '';
+		}
 		if (empty($name)) {
 			$name = ucfirst($this->_name);
 		}
-		return Yod_Model::getInstance($name, $config);
+		if ($dbmod) {
+			return Yod_DbModel::getInstance($name, $config);
+		}
+		return Yod_Model::getInstance($name, $config) 
 	}
 
 	/**
@@ -954,10 +966,19 @@ class Yod_Model
 	 * @param string $name
 	 * @return array
 	 */
-	protected function model($name = '', $config = '')
+	protected function model($name = '', $config = '', $dbmod = false)
 	{
-		if (empty($name)) return $this;
-		return self::getInstance($name, $config);
+		if (empty($name)) {
+			return $this;
+		}
+		if(is_bool($config)) {
+			$dbmod = $config;
+			$config = '';
+		}
+		if ($dbmod) {
+			return Yod_DbModel::getInstance($name, $config);
+		}
+		return Yod_Model::getInstance($name, $config);
 	}
 
 }
@@ -985,17 +1006,6 @@ class Yod_DbModel extends Yod_Model
 		$this->initQuery();
 
 		self::$_model[$name] = $this;
-	}
-
-	/**
-	 * dm
-	 * @access public
-	 * @param mixed $config
-	 * @return Yod_DbModel
-	 */
-	public static function dm($name = '', $config = '')
-	{
-		return self::getInstance($name, $config = '');
 	}
 
 	/**
@@ -1030,7 +1040,7 @@ class Yod_DbModel extends Yod_Model
 	 * @access public
 	 * @return Yod_DbModel
 	 */
-	public function table($table = null)
+	public function table($table)
 	{
 		if ($table) {
 			$this->_table = $table;
@@ -1168,7 +1178,7 @@ class Yod_DbModel extends Yod_Model
 	 * @access public
 	 * @return Yod_DbModel
 	 */
-	public function from($table = null)
+	public function from($table)
 	{
 		if ($table) {
 			$this->_query['FROM'] = "{$this->_prefix}{$table} AS t1";
@@ -1179,7 +1189,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * join
 	 * @access public
-	 * @return Yod_Database
+	 * @return Yod_DbModel
 	 */
 	public function join($table, $where, $mode = 'LEFT')
 	{
@@ -1191,7 +1201,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * where
 	 * @access public
-	 * @return Yod_Database
+	 * @return Yod_DbModel
 	 */
 	public function where($where, $params = array(), $mode = 'AND')
 	{
@@ -1212,7 +1222,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * group
 	 * @access public
-	 * @return Yod_Database
+	 * @return Yod_DbModel
 	 */
 	public function group($group)
 	{
@@ -1223,7 +1233,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * having
 	 * @access public
-	 * @return Yod_Database
+	 * @return Yod_DbModel
 	 */
 	public function having($having)
 	{
@@ -1234,7 +1244,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * order
 	 * @access public
-	 * @return Yod_Database
+	 * @return Yod_DbModel
 	 */
 	public function order($order)
 	{
@@ -1245,7 +1255,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * limit
 	 * @access public
-	 * @return Yod_Database
+	 * @return Yod_DbModel
 	 */
 	public function limit($limit)
 	{
@@ -1256,7 +1266,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * union
 	 * @access public
-	 * @return Yod_Database
+	 * @return Yod_DbModel
 	 */
 	public function union($union)
 	{
@@ -1267,7 +1277,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * comment
 	 * @access public
-	 * @return Yod_Database
+	 * @return Yod_DbModel
 	 */
 	public function comment($comment)
 	{
@@ -1278,7 +1288,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * params
 	 * @access public
-	 * @return Yod_Database
+	 * @return Yod_DbModel
 	 */
 	public function params($params)
 	{
@@ -1365,7 +1375,7 @@ abstract class Yod_Database
 	protected $_result;
 	protected $_linkid;
 	protected $_linkids = array();
-	protected $_islocked = false;
+	protected $_locked = false;
 	protected $_lastquery = '';
 
 
@@ -1413,21 +1423,27 @@ abstract class Yod_Database
 			$config = Yod_Application::app()->config($config);
 		}
 
-		if (empty($config['type'])) {
+		if (!is_array($config)) {
 			return false;
-		} elseif ($config['type'] == 'pdo') {
-			$classname = 'Yod_DbPdo';
-		} else {
-			$classname = 'Yod_Db'.ucwords($config['type']);
+		}
+
+		if (empty($config['type']) || !is_string($config['type'])) {
+			$config['type'] = 'pdo';
 		}
 
 		$md5hash = md5(serialize($config));
 		if (empty(self::$_db[$md5hash])) {
+			if ($config['type'] == 'pdo') {
+				$classname = 'Yod_DbPdo';
+			} else {
+				$classname = 'Yod_Db'.ucwords($config['type']);
+			}
 			if (!class_exists($classname, false)) {
 				include YOD_EXTPATH . '/drivers/' . substr($classname, 4) . '.class.php';
 			}
 			self::$_db[$md5hash] = new $classname($config);
 		}
+
 		return self::$_db[$md5hash];
 	}
 
@@ -1536,7 +1552,7 @@ abstract class Yod_Database
 	 * @access public
 	 * @return mixed
 	 */
-	public function select($select = '*', $table, $where = null, $params = array())
+	public function select($select, $table, $where = null, $params = array())
 	{
 		if (empty($table))  return false;
 		if (is_array($select)) {
@@ -1572,7 +1588,7 @@ abstract class Yod_Database
 		if (empty($config)) {
 			$config = $this->_config;
 		}
-		if ($this->_islocked) {
+		if ($this->_locked) {
 			$linknum = 0;
 		}
 		if ($linknum == 1) {
@@ -1602,6 +1618,13 @@ abstract class Yod_Database
 	 * @return mixed
 	 */
 	abstract public function connect($config = null, $linknum = 0);
+
+	/**
+	* fields
+	* @access public
+	* @return array
+	*/
+	abstract public function fields($table);
 
 	/**
 	 * execute
@@ -1682,7 +1705,10 @@ abstract class Yod_Database
 
 }
 
-
+/**
+ * Yod_DbPdo
+ * 
+ */
 class Yod_DbPdo extends Yod_Database
 {
 	/**
@@ -1743,7 +1769,8 @@ class Yod_DbPdo extends Yod_Database
 	* @access public
 	* @return array
 	*/
-	public function fields($table) {
+	public function fields($table)
+	{
 		$fields = array();
 		if ($result = $this->query('SHOW COLUMNS FROM '.$table)) {
 			foreach ($result as $key => $value) {
@@ -1758,6 +1785,32 @@ class Yod_DbPdo extends Yod_Database
 			}
 		}
 		return $fields;
+	}
+
+	/**
+	 * execute
+	 * @access public
+	 * @return boolean
+	 */
+	public function execute($query, $params = array())
+	{
+		$this->connect($this->_config, 0);
+
+		$this->_lastquery = $query;
+		if (empty($params)) {
+			return $this->_linkid->exec($query);
+		}
+		$bind_params = array();
+		foreach ($params as $key => $value) {
+			if (strstr($query, $key)) {
+				$bind_params[$key] = $value;
+			}
+		}
+		if ($this->_result = $this->_linkid->prepare($query)) {
+			$this->_result->execute($bind_params);
+			return $this->_result->rowCount();
+		}
+		return false;
 	}
 
 	/**
@@ -1785,32 +1838,6 @@ class Yod_DbPdo extends Yod_Database
 			}
 		}
 
-		return false;
-	}
-
-	/**
-	 * execute
-	 * @access public
-	 * @return boolean
-	 */
-	public function execute($query, $params = array())
-	{
-		$this->connect($this->_config, 0);
-
-		$this->_lastquery = $query;
-		if (empty($params)) {
-			return $this->_linkid->exec($query);
-		}
-		$bind_params = array();
-		foreach ($params as $key => $value) {
-			if (strstr($query, $key)) {
-				$bind_params[$key] = $value;
-			}
-		}
-		if ($this->_result = $this->_linkid->prepare($query)) {
-			$this->_result->execute($bind_params);
-			return $this->_result->rowCount();
-		}
 		return false;
 	}
 
@@ -1847,6 +1874,62 @@ class Yod_DbPdo extends Yod_Database
 	}
 
 	/**
+	 * transaction
+	 * @access public
+	 * @return boolean 
+	 */
+	public function transaction()
+	{
+		$this->_locked = true;
+		$this->connect($this->_config, 0);
+		return $this->_linkid->beginTransaction();
+	}
+
+	/**
+	 * commit
+	 * @access public
+	 * @return boolean 
+	 */
+	public function commit()
+	{
+		$this->_locked = false;
+		$this->connect($this->_config, 0);
+		return $this->_linkid->commit();
+	}
+
+	/**
+	 * rollback
+	 * @access public
+	 * @return boolean 
+	 */
+	public function rollback()
+	{
+		$this->_locked = false;
+		$this->connect($this->_config, 0);
+		return $this->_linkid->rollBack();
+	}
+
+	/**
+	 * insertid
+	 * @access public
+	 * @return integer
+	 */
+	public function insertid()
+	{
+		return $this->_linkid->lastInsertId();
+	}
+
+	/**
+	 * quote
+	 * @access public
+	 * @return string
+	 */
+	public function quote($string)
+	{
+		return $this->_linkid->quote($string);
+	}
+
+	/**
 	 * free
 	 * @access public
 	 * @return mixed
@@ -1875,62 +1958,6 @@ class Yod_DbPdo extends Yod_Database
 		if ($this->_linkid) {
 			$this->_linkid = null;
 		}
-	}
-
-	/**
-	 * transaction
-	 * @access public
-	 * @return boolean 
-	 */
-	public function transaction()
-	{
-		$this->_islocked = true;
-		$this->connect($this->_config, 0);
-		return $this->_linkid->beginTransaction();
-	}
-
-	/**
-	 * commit
-	 * @access public
-	 * @return boolean 
-	 */
-	public function commit()
-	{
-		$this->_islocked = false;
-		$this->connect($this->_config, 0);
-		return $this->_linkid->commit();
-	}
-
-	/**
-	 * rollback
-	 * @access public
-	 * @return boolean 
-	 */
-	public function rollback()
-	{
-		$this->_islocked = false;
-		$this->connect($this->_config, 0);
-		return $this->_linkid->rollBack();
-	}
-
-	/**
-	 * insertid
-	 * @access public
-	 * @return integer
-	 */
-	public function insertid()
-	{
-		return $this->_linkid->lastInsertId();
-	}
-
-	/**
-	 * quote
-	 * @access public
-	 * @return string
-	 */
-	public function quote($string)
-	{
-		return $this->_linkid->quote($string);
 	}
 
 	/**

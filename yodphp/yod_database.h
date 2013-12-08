@@ -21,6 +21,9 @@
 
 extern zend_class_entry *yod_database_ce;
 
+int yod_database_getinstance(zval *config, zval *result TSRMLS_DC);
+zval *yod_database_config(yod_database_t *object, char *name, uint name_len, zval *value TSRMLS_DC);
+
 PHP_MINIT_FUNCTION(yod_database);
 
 #endif

@@ -60,6 +60,7 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_model_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, name)
 	ZEND_ARG_INFO(0, config)
+	ZEND_ARG_INFO(0, dbmod)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_assign_arginfo, 0, 0, 1)
@@ -765,20 +766,34 @@ PHP_METHOD(yod_controller, import) {
 }
 /* }}} */
 
-/** {{{ proto protected Yod_Controller::model($name = '', $config = '')
+/** {{{ proto protected Yod_Controller::model($name = '', $config = '', $dbmod = false)
 */
 PHP_METHOD(yod_controller, model) {
 	yod_controller_t *object;
+	zval *p_name, *z_name, *config = NULL;
 	char *name = NULL;
 	uint name_len = 0;
-	zval *p_name, *config = NULL;
+	int dbmod = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &name, &name_len, &config) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|zzb", &z_name, &config, &dbmod) == FAILURE) {
 		return;
 	}
 
 	object = getThis();
 
+	if (z_name) {
+		if (Z_TYPE_P(z_name) == IS_BOOL) {
+			dbmod = Z_BVAL_P(z_name);
+		} else if (Z_TYPE_P(z_name) == IS_STRING) {
+			name_len = Z_STRLEN_P(z_name);
+			name = estrndup(Z_STRVAL_P(z_name), name_len);
+		}
+	}
+	if (config && Z_TYPE_P(config) == IS_BOOL) {
+		dbmod = Z_BVAL_P(config);
+		ZVAL_NULL(config);
+	}
+	
 	if (name_len == 0) {
 		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
 		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
@@ -788,6 +803,10 @@ PHP_METHOD(yod_controller, model) {
 		}
 	}
 
+	if (dbmod) {
+		yod_dbmodel_getinstance(name, name_len, config, return_value TSRMLS_CC);
+		return;
+	}
 	yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
 }
 /* }}} */

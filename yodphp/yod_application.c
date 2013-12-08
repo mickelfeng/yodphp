@@ -230,10 +230,9 @@ int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC) 
 			ZVAL_ZVAL(result, p_config, 1, 0);
 			skey = php_strtok_r(name, ".", &token);
 			while (skey) {
-				if (zend_hash_find(Z_ARRVAL_P(result), skey, strlen(skey) + 1, (void **)&ppval) == SUCCESS){
+				if (zend_hash_find(Z_ARRVAL_P(result), skey, strlen(skey) + 1, (void **)&ppval) == SUCCESS) {
 					ZVAL_ZVAL(result, *ppval, 1, 1);
 				} else {
-					zval_ptr_dtor(ppval);
 					ZVAL_NULL(result);
 					return 0;
 				}

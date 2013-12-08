@@ -91,7 +91,6 @@ extern zend_module_entry yod_module_entry;
 #define yod_action_t		zval
 #define yod_widget_t		zval
 #define yod_model_t			zval
-#define yod_dbmodel_t		zval
 #define yod_database_t		zval
 #define yod_dbpdo_t			zval
 
@@ -105,6 +104,7 @@ void yod_do_exit(TSRMLS_DC);
 long yod_forward(TSRMLS_DC);
 char *yod_charset(TSRMLS_DC);
 char *yod_pathvar(TSRMLS_DC);
+char *yod_extpath(TSRMLS_DC);
 char *yod_runpath(TSRMLS_DC);
 int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC);
 
