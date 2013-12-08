@@ -112,7 +112,7 @@ static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, c
 	zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_action"), action TSRMLS_CC);
 
 	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), method, method_len + 1)) {
-		zend_call_method(&object, Z_OBJCE_P(object), NULL, method, method_len, NULL, 1, params, NULL TSRMLS_CC);
+		zend_call_method_with_1_params(&object, Z_OBJCE_P(object), NULL, method, NULL, params);
 	} else {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unavailable action %s::%sAction()", cname, action);
 	}

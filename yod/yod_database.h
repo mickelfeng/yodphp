@@ -21,6 +21,7 @@
 
 extern zend_class_entry *yod_database_ce;
 
+void yod_database_construct(yod_database_t *object, zval *config TSRMLS_DC);
 int yod_database_getinstance(zval *config, zval *result TSRMLS_DC);
 zval *yod_database_config(yod_database_t *object, char *name, uint name_len, zval *value TSRMLS_DC);
 

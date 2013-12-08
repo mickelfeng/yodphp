@@ -546,7 +546,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	yod_request_t *request;
 
 	zval *params, *target, *pzval;
-	zval *method, *argv[3], retval;
+	zval *ctor, *argv[3], retval;
 
 	char *widget, *action, *classpath;
 	char *classname, *key, *value, *token;
@@ -620,8 +620,8 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	}
 
 	// ctor
-	MAKE_STD_ZVAL(method);
-	ZVAL_STRING(method, ZEND_CONSTRUCTOR_FUNC_NAME, 1);
+	MAKE_STD_ZVAL(ctor);
+	ZVAL_STRING(ctor, ZEND_CONSTRUCTOR_FUNC_NAME, 1);
 
 	// argv
 	MAKE_STD_ZVAL(argv[0]);
@@ -637,7 +637,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 		object_init_ex(target, *pce);
 		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-			if (call_user_function(NULL, &target, method, &retval, 3, argv TSRMLS_CC) == FAILURE) {
+			if (call_user_function(NULL, &target, ctor, &retval, 3, argv TSRMLS_CC) == FAILURE) {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::__construct()", classname);
 			}
 		}
@@ -648,7 +648,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-					if (call_user_function(NULL, &target, method, &retval, 3, argv TSRMLS_CC) == FAILURE) {
+					if (call_user_function(NULL, &target, ctor, &retval, 3, argv TSRMLS_CC) == FAILURE) {
 						php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::__construct()", classname);
 					}
 				}

@@ -186,42 +186,36 @@ char *yod_database_md5hash(zval **data TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ yod_database_t *yod_database_construct(yod_database_t *object, zval *config TSRMLS_DC)
+/** {{{ void yod_database_construct(yod_database_t *object, zval *config TSRMLS_DC)
 */
-yod_database_t *yod_database_construct(yod_database_t *object, zval *config TSRMLS_DC) {
-	yod_database_t *retval;
+void yod_database_construct(yod_database_t *object, zval *config TSRMLS_DC) {
 	zval *linkids, **ppval;
-
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_database_construct()");
 #endif
 
-	if (object) {
-		retval = object;
-	} else {
-		MAKE_STD_ZVAL(retval);
-		object_init_ex(retval, yod_database_ce);
+	if (!object) {
+		MAKE_STD_ZVAL(object);
+		object_init_ex(object, yod_database_ce);
 	}
 
 	// linkids
 	MAKE_STD_ZVAL(linkids);
 	array_init(linkids);
-	zend_update_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_linkids"), linkids TSRMLS_CC);
+	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkids"), linkids TSRMLS_CC);
 	zval_ptr_dtor(&linkids);
 
 	if (config) {
-		zend_update_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_config"), config TSRMLS_CC);
+		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_config"), config TSRMLS_CC);
 
 		if (Z_TYPE_P(config) == IS_ARRAY &&
 			zend_hash_find(Z_ARRVAL_P(config), ZEND_STRS("prefix"), (void **)&ppval) == SUCCESS &&
 			Z_TYPE_PP(ppval) == IS_STRING
 		) {
-			zend_update_property_stringl(Z_OBJCE_P(retval), retval, ZEND_STRL("_prefix"), Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval) TSRMLS_CC);
+			zend_update_property_stringl(Z_OBJCE_P(object), object, ZEND_STRL("_prefix"), Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval) TSRMLS_CC);
 		}
 	}
-
-	return retval;
 }
 /* }}} */
 
@@ -431,7 +425,7 @@ PHP_METHOD(yod_database, __construct) {
 		return;
 	}
 
-	(void)yod_database_construct(getThis(), config TSRMLS_CC);
+	yod_database_construct(getThis(), config TSRMLS_CC);
 }
 /* }}} */
 
