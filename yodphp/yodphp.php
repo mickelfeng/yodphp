@@ -1811,13 +1811,13 @@ class Yod_DbPdo extends Yod_Database
 		if (empty($params)) {
 			return $this->_linkid->exec($query);
 		}
-		$bind_params = array();
-		foreach ($params as $key => $value) {
-			if (strstr($query, $key)) {
-				$bind_params[$key] = $value;
-			}
-		}
 		if ($this->_result = $this->_linkid->prepare($query)) {
+			$bind_params = array();
+			foreach ($params as $key => $value) {
+				if (strstr($query, $key)) {
+					$bind_params[$key] = $params[$key];
+				}
+			}
 			$this->_result->execute($bind_params);
 			return $this->_result->rowCount();
 		}
@@ -1837,13 +1837,13 @@ class Yod_DbPdo extends Yod_Database
 		if (empty($params)) {
 			return $this->_result = $this->_linkid->query($query);
 		} else {
-			$bind_params = array();
-			foreach ($params as $key => $value) {
-				if (strstr($query, $key)) {
-					$bind_params[$key] = $value;
-				}
-			}
 			if ($this->_result = $this->_linkid->prepare($query)) {
+				$bind_params = array();
+				foreach ($params as $key => $value) {
+					if (strstr($query, $key)) {
+						$bind_params[$key] = $value;
+					}
+				}
 				$this->_result->execute($bind_params);
 				return $this->_result;
 			}
@@ -1988,7 +1988,7 @@ class Yod_DbPdo extends Yod_Database
 	}
 
 	/**
-	 * errer
+	 * error
 	 * @access public
 	 * @return mixed
 	 */
