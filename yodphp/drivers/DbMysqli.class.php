@@ -74,17 +74,20 @@ class Yod_DbMysqli extends Yod_Database
 	public function fields($table)
 	{
 		$fields = array();
-		if ($result = $this->query('SHOW COLUMNS FROM '.$table)) {
-			foreach ($result as $key => $value) {
-				$fields[$value['Field']] = array(
-					'name'    => $val['Field'],
-					'type'    => $val['Type'],
-					'notnull' => (bool) ($val['Null'] === ''), // not null is empty, null is yes
-					'default' => $val['Default'],
-					'primary' => (strtolower($val['Key']) == 'pri'),
-					'autoinc' => (strtolower($val['Extra']) == 'auto_increment'),
-				);
+		if ($result = $this->query('SHOW COLUMNS FROM ' . $this->_prefix . $table)) {
+			if ($data = $this->fetchAll($result)) {
+				foreach ($data as $key => $value) {
+					$fields[$value['Field']] = array(
+						'name'    => $value['Field'],
+						'type'    => $value['Type'],
+						'notnull' => (bool) ($value['Null'] === ''), // not null is empty, null is yes
+						'default' => $value['Default'],
+						'primary' => (strtolower($value['Key']) == 'pri'),
+						'autoinc' => (strtolower($value['Extra']) == 'auto_increment'),
+					);
+				}	
 			}
+
 		}
 		return $fields;
 	}
