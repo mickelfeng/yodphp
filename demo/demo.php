@@ -93,16 +93,19 @@ class DemoController extends Yod_Controller
 		$query = 'UPDATE yod_demo SET updated = :updated WHERE id = :id';
 		$params = array(':updated' => time(), ':id' => 2);
 		//echo '<br>execute:'; echo $db->execute($query, $params);
-		$query = 'SELECT * FROM yod_demo WHERE id = 2';
-		$db->query($query);
-		echo '<br>fetch:'; print_r($db->fetch());
-
 		$query = 'SELECT * FROM yod_demo WHERE id = :id';
 		$params = array(':id' => 2);
-		$result = $db->query($query, $params);
-		$data = $db->fetchAll($result);
-		echo '<br>fetchAll:'; print_r($data);
+		$db->query($query, $params);
+		//echo '<br>fetch:'; print_r($db->fetch());
 
+		$query = 'SELECT * FROM yod_demo';
+		$result = $db->query($query);
+		$data = $db->fetchAll($result);
+		//echo '<br>fetchAll:'; print_r($data);
+
+		$fields = $db->fields('demo');
+		echo '<br>fields:'; print_r($fields);
+		//echo '<br>fetchAll:'; print_r($data);
 		//echo '<br>errno:'; echo $db->errno();
 		//echo '<br>error:'; echo $db->error();
 		//echo '<br>transaction:'; echo $db->transaction();
@@ -143,6 +146,7 @@ class DemoController extends Yod_Controller
 			'created' => time(),
 		);
 
+		//echo $db->insert($data, 'demo');
 		//$db1->insert($data, 'demo');
 
 		$data = array(
