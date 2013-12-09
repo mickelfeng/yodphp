@@ -52,7 +52,7 @@ $config = array(
 	),
 );
 
-class_exists('Yod_Application', false) or require YOD_EXTPATH . '/yodphp.php';
+class_exists('Yod_Application', false) or require dirname(__FILE__) . '/yodphp.php';
 
 class DemoController extends Yod_Controller
 {
@@ -81,9 +81,35 @@ class DemoController extends Yod_Controller
 	public function pdoAction()
 	{
 		echo '<pre>';
+		//print_r(Yod_Application::app());
 		$db = Yod_Database::db();
 		$db->connect();
 		echo '<br>db:'; print_r($db);
+		$query = 'UPDATE yod_demo SET updated = '.time().' WHERE id = 2';
+		//echo '<br>execute:'; echo $db->execute($query);
+		$query = 'UPDATE yod_demo SET updated = '.time().' WHERE id = :id';
+		$params = array(':id' => 2);
+		//echo '<br>execute:'; echo $db->execute($query, $params);
+		$query = 'UPDATE yod_demo SET updated = :updated WHERE id = :id';
+		$params = array(':updated' => time(), ':id' => 2);
+		//echo '<br>execute:'; echo $db->execute($query, $params);
+		$query = 'SELECT * FROM yod_demo WHERE id = 2';
+		$db->query($query);
+		echo '<br>fetch:'; print_r($db->fetch());
+
+		$query = 'SELECT * FROM yod_demo WHERE id = :id';
+		$params = array(':id' => 2);
+		$result = $db->query($query, $params);
+		$data = $db->fetchAll($result);
+		echo '<br>fetchAll:'; print_r($data);
+
+		//echo '<br>errno:'; echo $db->errno();
+		//echo '<br>error:'; echo $db->error();
+		//echo '<br>transaction:'; echo $db->transaction();
+		//echo '<br>commit:'; echo $db->commit();
+		//echo '<br>rollback:'; echo $db->rollback();
+		//echo '<br>quote:'; $db->quote("'quote'");
+		//echo '<br>close:'; echo $db->close();
 	}
 
 	public function dbAction()
@@ -129,7 +155,7 @@ class DemoController extends Yod_Controller
 
 		//$db1->delete('demo', 'id = :id', array(':id' => 1));
 
-		$db1->select('*', 'demo', 'id = :id', array(':id' => 2));
+		//$db1->select('*', 'demo', 'id = :id', array(':id' => 2));
 
 		echo '<br>fetchAll:'; print_r($db1->fetchAll());
 		echo '<br>db1:'; print_r($db1);
