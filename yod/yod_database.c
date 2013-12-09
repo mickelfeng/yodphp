@@ -874,7 +874,11 @@ PHP_METHOD(yod_database, dbconfig) {
 /** {{{ proto public Yod_Database::__destruct()
 */
 PHP_METHOD(yod_database, __destruct) {
+	yod_database_t *object;
 
+	object = getThis();
+
+	zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "close", NULL);
 }
 /* }}} */
 
