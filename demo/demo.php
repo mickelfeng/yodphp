@@ -78,6 +78,25 @@ class DemoController extends Yod_Controller
 		$this->widget('demo/test');
 	}
 
+	public function modelAction()
+	{
+		echo '<pre>';
+		$model = $this->model();
+		print_r($model);
+		//echo '<br>find:'; print_r($model->find());
+		//echo '<br>findAll:'; print_r($model->findAll());
+		//echo '<br>count:'; print_r($model->count());
+		$data = array(
+			'title' => 'Demo',
+			'content' => base64_encode(json_encode(var_export($this, true))),
+			'created' => time(),
+		);
+		//echo '<br>save:'; print_r($model->save($data));
+		echo '<br>save:'; print_r($model->save($data, 'id = :id', array(':id' => 1)));
+		echo '<br>remove:'; print_r($model->remove('id = :id', array(':id' => 1)));
+		echo '<br>lastQuery:'; print_r($model->lastQuery());
+	}
+
 	public function pdoAction()
 	{
 		echo '<pre>';
