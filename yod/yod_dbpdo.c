@@ -363,6 +363,7 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, zval *retv
 
 					if (zend_hash_get_current_key_ex(Z_ARRVAL_P(params), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
 						if (strstr(Z_STRVAL_P(query), str_key)) {
+							Z_ADDREF_PP(ppval);
 							add_assoc_zval_ex(bindparams, str_key, key_len, *ppval);
 						}
 					}
@@ -378,11 +379,11 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, zval *retv
 					return 1;
 				}
 			} else {
-				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function execute() on a non-object");
 			}
 		}
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function execute() on a non-object");
 	}
 
 	if (retval) {
@@ -438,6 +439,7 @@ int yod_dbpdo_query(yod_dbpdo_t *object, zval *query, zval *params, zval *retval
 
 					if (zend_hash_get_current_key_ex(Z_ARRVAL_P(params), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
 						if (strstr(Z_STRVAL_P(query), str_key)) {
+							Z_ADDREF_PP(ppval);
 							add_assoc_zval_ex(bindparams, str_key, key_len, *ppval);
 						}
 					}
@@ -452,11 +454,11 @@ int yod_dbpdo_query(yod_dbpdo_t *object, zval *query, zval *params, zval *retval
 					return 1;
 				}
 			} else {
-				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function query() on a non-object");
 			}
 		}
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function query() on a non-object");
 	}
 
 	if (retval) {
@@ -500,7 +502,7 @@ int yod_dbpdo_fetch(yod_dbpdo_t *object, zval *result, zval *retval TSRMLS_DC) {
 			return 1;
 		}
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function fetch() on a non-object");
 	}
 
 	if (retval) {
@@ -544,7 +546,7 @@ int yod_dbpdo_fetchall(yod_dbpdo_t *object, zval *result, zval *retval TSRMLS_DC
 			return 1;
 		}
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function fetchAll() on a non-object");
 	}
 
 	if (retval) {
@@ -567,12 +569,12 @@ int yod_dbpdo_free(yod_dbpdo_t *object, zval *result TSRMLS_DC) {
 	}
 
 	if (result) {
-		zval_ptr_dtor(&result);
+		ZVAL_NULL(result);
 	}
 
 	result = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_result"), 1 TSRMLS_CC);
 	if (result) {
-		zval_ptr_dtor(&result);
+		ZVAL_NULL(result);
 	}
 
 	return 1;
@@ -781,7 +783,7 @@ PHP_METHOD(yod_dbpdo, transaction) {
 			RETURN_ZVAL(retval, 1, 1);
 		}
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function begintransaction() on a non-object");
 	}
 
 	RETURN_FALSE;
@@ -810,7 +812,7 @@ PHP_METHOD(yod_dbpdo, commit) {
 			RETURN_ZVAL(retval, 1, 1);
 		}
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function commit() on a non-object");
 	}
 
 	RETURN_FALSE;
@@ -839,7 +841,7 @@ PHP_METHOD(yod_dbpdo, rollback) {
 			RETURN_ZVAL(retval, 1, 1);
 		}
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function rollBack() on a non-object");
 	}
 
 	RETURN_FALSE;
@@ -865,7 +867,7 @@ PHP_METHOD(yod_dbpdo, insertid) {
 			RETURN_ZVAL(retval, 1, 1);
 		}
 	} else {
-		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function quote() on a non-object");
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function lastInsertId() on a non-object");
 	}
 
 	RETURN_NULL();
