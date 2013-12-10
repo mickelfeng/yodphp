@@ -837,22 +837,11 @@ class Yod_Model
 	 */
 	public function find($where = '', $params = array(), $select = '*')
 	{
-		if (is_array($select)) {
-			foreach ($select as $key => $value) {
-				if (is_string($key)) {
-					$select[$key] = "{$key} AS {$value}"; 
-				}
-			}
-			$select = implode(', ', $select);
-		}
-
-		$query = 'SELECT ' . (empty($select) ? '*' : $select) . ' FROM ' . $this->_prefix . $this->_table . (empty($where) ? '' : ' WHERE ' . $where);
-		if ($result = $this->_db->query($query, $params)) {
+		if ($result = $this->_db->select($select, $this->_table, $where, $params, "LIMIT 1")) {
 			$data = $this->_db->fetch($result);
 			$this->_db->free($result);
 			return $data;
 		}
-
 		return false;
 	}
 
@@ -866,23 +855,11 @@ class Yod_Model
 	 */
 	public function findAll($where = '', $params = array(), $select = '*')
 	{
-
-		if (is_array($select)) {
-			foreach ($select as $key => $value) {
-				if (is_string($key)) {
-					$select[$key] = "{$key} AS {$value}"; 
-				}
-			}
-			$select = implode(', ', $select);
-		}
-
-		$query = 'SELECT ' . (empty($select) ? '*' : $select) . ' FROM ' . $this->_prefix . $this->_table . (empty($where) ? '' : ' WHERE ' . $where);
-		if ($result = $this->_db->query($query, $params)) {
+		if ($result = $this->_db->select($select, $this->_table, $where, $params)) {
 			$data = $this->_db->fetchAll($result);
 			$this->_db->free($result);
 			return $data;
 		}
-
 		return false;
 	}
 
@@ -895,17 +872,14 @@ class Yod_Model
 	 */
 	public function count($where = '', $params = array())
 	{
-		$query = 'SELECT COUNT(*) FROM ' . $this->_prefix . $this->_table . (empty($where) ? '' : ' WHERE ' . $where);
-		if ($result = $this->_db->query($query, $params)) {
-			$count = 0;
+		$count = 0;
+		if ($result = $this->_db->select('COUNT(*)', $this->_table, $where, $params, "LIMIT 1")) {
 			if ($data = $this->_db->fetch($result)) {
 				$count = current($data);
 			}
 			$this->_db->free($result);
-			return $count;
 		}
-
-		return 0;
+		return $count;
 	}
 
 	/**
@@ -1563,7 +1537,7 @@ abstract class Yod_Database
 	 * @access public
 	 * @return mixed
 	 */
-	public function select($select, $table, $where = null, $params = array())
+	public function select($select, $table, $where = null, $params = array(), $extend = null)
 	{
 		if (empty($table))  return false;
 		if (is_array($select)) {
@@ -1574,7 +1548,7 @@ abstract class Yod_Database
 			}
 			$select = implode(', ', $select);
 		}
-		$query = 'SELECT ' . (empty($select) ? '*' : $select) . ' FROM ' . $this->_prefix . $table . (empty($where) ? '' : ' WHERE ' . $where);
+		$query = 'SELECT ' . (empty($select) ? '*' : $select) . ' FROM ' . $this->_prefix . $table . (empty($where) ? '' : ' WHERE ' . $where) . (empty($extend) ? '' : ' ' . $extend;
 		return $this->query($query, $params);
 	}
 
