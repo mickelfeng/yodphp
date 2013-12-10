@@ -950,7 +950,7 @@ PHP_METHOD(yod_dbpdo, close) {
 
 /** {{{ proto public Yod_DbPdo::errno()
 */
-PHP_METHOD(yod_dbpdo, errno) {
+PHP_METHOD(yod_dbpdo, Errno) {
 	yod_dbpdo_t *object;
 	zval *linkid, *errcode;
 
@@ -1019,7 +1019,7 @@ zend_function_entry yod_dbpdo_methods[] = {
 	PHP_ME(yod_dbpdo, quote,		yod_dbpdo_quote_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbpdo, free,			yod_dbpdo_free_arginfo,				ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbpdo, close,		yod_dbpdo_close_arginfo,			ZEND_ACC_PUBLIC)
-	PHP_ME(yod_dbpdo, errno,		yod_dbpdo_errno_arginfo,			ZEND_ACC_PUBLIC)
+	PHP_ME(yod_dbpdo, Errno,		yod_dbpdo_errno_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbpdo, error,		yod_dbpdo_error_arginfo,			ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
