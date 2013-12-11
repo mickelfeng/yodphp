@@ -22,6 +22,7 @@
 extern zend_class_entry *yod_model_ce;
 
 yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *config TSRMLS_DC);
+int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval TSRMLS_DC);
 
 PHP_MINIT_FUNCTION(yod_model);
 

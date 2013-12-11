@@ -71,7 +71,7 @@ void yod_debugf(const char *format,...) {
 		vspprintf(&buffer, 0, format, args);
 		va_end(args);
 
-		spprintf(&buffer, 0, "[%s %06d] %s\n", Z_STRVAL_P(retdata), tp.tv_usec, buffer);
+		spprintf(&buffer, 0, "[%s %06d] (%dk) %s\n", Z_STRVAL_P(retdata), tp.tv_usec, zend_memory_usage(1 TSRMLS_CC) / 1024, buffer);
 /*
 		spprintf(&buffer, 0, "%s%s\n", buffer, YOD_DOTLINE);
 
@@ -522,7 +522,6 @@ PHP_RINIT_FUNCTION(yod)
 		YOD_G(runtime)		= (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
 	}
 	REGISTER_DOUBLE_CONSTANT("YOD_RUNTIME", YOD_G(runtime), CONST_CS);
-
 
 	YOD_G(yodapp)			= NULL;
 	YOD_G(exited)			= 0;

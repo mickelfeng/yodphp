@@ -19,6 +19,8 @@
 #ifndef PHP_YOD_DBMODEL_H
 #define PHP_YOD_DBMODEL_H
 
+int yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *result TSRMLS_DC);
+
 extern zend_class_entry *yod_dbmodel_ce;
 
 PHP_MINIT_FUNCTION(yod_dbmodel);

@@ -771,7 +771,7 @@ PHP_METHOD(yod_controller, import) {
 */
 PHP_METHOD(yod_controller, model) {
 	yod_controller_t *object;
-	zval *p_name, *z_name, *config = NULL;
+	zval *z_name = NULL, *config = NULL, *p_name, *retval;
 	char *name = NULL;
 	uint name_len = 0;
 	int dbmod = 0;
@@ -779,6 +779,10 @@ PHP_METHOD(yod_controller, model) {
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|zzb", &z_name, &config, &dbmod) == FAILURE) {
 		return;
 	}
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_controller_model()");
+#endif
 
 	object = getThis();
 
@@ -794,7 +798,7 @@ PHP_METHOD(yod_controller, model) {
 		dbmod = Z_BVAL_P(config);
 		ZVAL_NULL(config);
 	}
-	
+
 	if (name_len == 0) {
 		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
 		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
@@ -806,9 +810,12 @@ PHP_METHOD(yod_controller, model) {
 
 	if (dbmod) {
 		yod_dbmodel_getinstance(name, name_len, config, return_value TSRMLS_CC);
-		return;
+	} else {
+		yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
 	}
-	yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
+	if(name){
+		efree(name);
+	}
 }
 /* }}} */
 
