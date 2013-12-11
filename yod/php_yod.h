@@ -41,7 +41,7 @@ extern zend_module_entry yod_module_entry;
 #define YOD_G(v) (yod_globals.v)
 #endif
 
-#define YOD_VERSION					"1.1.0"
+#define YOD_VERSION					"1.2.0"
 #define YOD_FORWARD					5
 #define YOD_CHARSET					"utf-8"
 #define YOD_PATHVAR					""
