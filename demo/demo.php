@@ -83,7 +83,7 @@ class DemoController extends Yod_Controller
 		echo '<pre>';
 		$model = $this->model();
 		print_r($model);
-		//echo '<br>find:'; print_r($model->find());
+		echo '<br>find:'; print_r($model->find());
 		//echo '<br>findAll:'; print_r($model->findAll());
 		//echo '<br>count:'; print_r($model->count());
 		$data = array(
@@ -92,9 +92,28 @@ class DemoController extends Yod_Controller
 			'created' => time(),
 		);
 		//echo '<br>save:'; print_r($model->save($data));
-		echo '<br>save:'; print_r($model->save($data, 'id = :id', array(':id' => 1)));
-		echo '<br>remove:'; print_r($model->remove('id = :id', array(':id' => 1)));
-		echo '<br>lastQuery:'; print_r($model->lastQuery());
+		//echo '<br>save:'; print_r($model->save($data, 'id = :id', array(':id' => 1)));
+		//echo '<br>remove:'; print_r($model->remove('id = :id', array(':id' => 1)));
+		//echo '<br>lastQuery:'; print_r($model->lastQuery());
+	}
+
+	public function dbmAction()
+	{
+		echo '<pre>';
+		$dbm = $this->model(true);
+		print_r($dbm);
+		echo '<br>find:'; print_r($dbm->find());
+		//echo '<br>findAll:'; print_r($dbm->findAll());
+		//echo '<br>count:'; print_r($dbm->count());
+		$data = array(
+			'title' => 'Demo',
+			'content' => base64_encode(json_encode(var_export($this, true))),
+			'created' => time(),
+		);
+		//echo '<br>save:'; print_r($dbm->save($data));
+		//echo '<br>save:'; print_r($dbm->save($data, 'id = :id', array(':id' => 1)));
+		//echo '<br>remove:'; print_r($dbm->remove('id = :id', array(':id' => 1)));
+		//echo '<br>lastQuery:'; print_r($dbm->lastQuery());
 	}
 
 	public function pdoAction()
