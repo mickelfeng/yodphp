@@ -11,7 +11,7 @@
 
 // yodphp constant
 defined('YOD_RUNTIME') or define('YOD_RUNTIME', microtime(true));
-defined('YOD_VERSION') or define('YOD_VERSION', '1.1.0');
+defined('YOD_VERSION') or define('YOD_VERSION', '1.2.0');
 defined('YOD_FORWARD') or define('YOD_FORWARD', 5);
 defined('YOD_CHARSET') or define('YOD_CHARSET', 'utf-8');
 defined('YOD_PATHVAR') or define('YOD_PATHVAR', '');
@@ -1548,7 +1548,7 @@ abstract class Yod_Database
 			}
 			$select = implode(', ', $select);
 		}
-		$query = 'SELECT ' . (empty($select) ? '*' : $select) . ' FROM ' . $this->_prefix . $table . (empty($where) ? '' : ' WHERE ' . $where) . (empty($extend) ? '' : ' ' . $extend;
+		$query = 'SELECT ' . (empty($select) ? '*' : $select) . ' FROM ' . $this->_prefix . $table . (empty($where) ? '' : ' WHERE ' . $where) . (empty($extend) ? '' : ' ') . $extend;
 		return $this->query($query, $params);
 	}
 
