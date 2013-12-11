@@ -423,6 +423,9 @@ abstract class Yod_Controller
 		$this->_action = empty($action) ? $request->action : strtolower($action);
 		$this->_request = $request;
 		$this->_view['tpl_path'] = YOD_RUNPATH . '/views';
+		if ($tpl_data = $this->config('tpl_data')) {
+			$this->_view['tpl_data'] = $tpl_data;
+		}
 
 		$this->init();
 		$this->run();
