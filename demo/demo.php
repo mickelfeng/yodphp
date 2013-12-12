@@ -8,6 +8,7 @@ define('YOD_RUNPATH', dirname(__FILE__) . '/app');
 
 // config
 $config = array(
+	//db
 	'db_dsn' => array(
 		'type' => 'pdo',
 		'dsn'  => 'mysql:host=localhost;port=3306;dbname=test',
@@ -49,6 +50,12 @@ $config = array(
 		'slaves' => array(
 
 		),
+	),
+
+	//tpl
+	'tpl_data' => array(
+		'__PUBLIC__' => 'Public',
+
 	),
 );
 
@@ -101,8 +108,8 @@ class DemoController extends Yod_Controller
 	{
 		echo '<pre>';
 		$dbm = $this->model(true);
-		print_r($dbm);
-		echo '<br>find:'; print_r($dbm->find());
+		$dbm->table('demo');
+		//echo '<br>find:'; print_r($dbm->find());
 		//echo '<br>findAll:'; print_r($dbm->findAll());
 		//echo '<br>count:'; print_r($dbm->count());
 		$data = array(
@@ -114,6 +121,16 @@ class DemoController extends Yod_Controller
 		//echo '<br>save:'; print_r($dbm->save($data, 'id = :id', array(':id' => 1)));
 		//echo '<br>remove:'; print_r($dbm->remove('id = :id', array(':id' => 1)));
 		//echo '<br>lastQuery:'; print_r($dbm->lastQuery());
+
+		$duser = $this->model('DemoUser');
+		$select = array('id', 'title', 'content', 'pubtime' => 'created');
+		$table = 'demo';
+		$duser->select($select)->from($table)->join('user', '', '');
+		echo 'parse:'; $duser->parse();
+
+		//$du01 = new DemoUserModel();
+
+		echo '<br>'; print_r($duser);
 	}
 
 	public function pdoAction()
@@ -220,17 +237,21 @@ class DemoController extends Yod_Controller
 	public function errorAction()
 	{
 		echo '<pre>';
-		print_r(Yod_Application::app());
+		print_r($this);
 	}
 }
 
-class DemoUserModel extends Yod_Model
+class DemoUserModel extends Yod_DbModel
 {
 	protected function init()
 	{
 		echo '<pre>';
-		$m_info = $this->model('DemoInfo');
-		print_r($m_info);
+		//$m_info = $this->model('DemoInfo');
+		//print_r($m_info);
+	}
+
+	public function parse(){
+		echo $this->parseQuery();
 	}
 }
 
