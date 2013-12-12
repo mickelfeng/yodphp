@@ -763,8 +763,6 @@ class Yod_Model
 	 */
 	public function __construct($name = '', $config = '')
 	{
-		$this->init();
-
 		if (empty($name)) {
 			if (empty($this->_name)) {
 				if (substr(get_class($this), 0, 4) == 'Yod_') {
@@ -786,6 +784,8 @@ class Yod_Model
 		if ($this->_db = Yod_Database::getInstance($config)) {
 			$this->_prefix = $this->_db->config('prefix');
 		}
+
+		$this->init();
 	}
 
 	/**
@@ -1179,10 +1179,10 @@ class Yod_DbModel extends Yod_Model
 	 * @access public
 	 * @return Yod_DbModel
 	 */
-	public function join($table, $where, $mode = 'LEFT')
+	public function join($table, $where = '', $mode = 'LEFT')
 	{
-		$alias = 't' . (count($this->_query['JOIN']) + 2);
-		$this->_query['JOIN'][] = "{$mode} JOIN {$this->_prefix}{$table} AS {$alias} ON {$where}";
+		$join = count($this->_query['JOIN']) + 2;
+		$this->_query['JOIN'][] = "{$mode} JOIN {$this->_prefix}{$table} AS t{$join}". (empty($while) ? '' : " ON {$where}");
 		return $this;
 	}
 
