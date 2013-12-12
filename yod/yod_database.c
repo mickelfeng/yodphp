@@ -437,11 +437,15 @@ int yod_database_create(yod_database_t *object, zval *fields, char *table, uint 
 	}
 
 	zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(fields), &pos);
-	while (zend_hash_get_current_data_ex(Z_ARRVAL_P(fields), (void **)&ppval, &pos) == SUCCESS && Z_TYPE_PP(ppval) == IS_STRING) {
+	while (zend_hash_get_current_data_ex(Z_ARRVAL_P(fields), (void **)&ppval, &pos) == SUCCESS) {
 		char *str_key = NULL;
 		uint key_len;
 		int key_type;
 		ulong num_key;
+
+		if (Z_TYPE_PP(ppval) != IS_STRING) {
+			continue;
+		}
 
 		key_type = zend_hash_get_current_key_ex(Z_ARRVAL_P(fields), &str_key, &key_len, &num_key, 0, &pos);
 		if (key_type == HASH_KEY_IS_STRING) {
@@ -712,15 +716,19 @@ int yod_database_select(yod_database_t *object, zval *select, char *table, uint 
 	if (select) {
 		if (Z_TYPE_P(select) == IS_ARRAY) {
 			zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(select), &pos);
-			while (zend_hash_get_current_data_ex(Z_ARRVAL_P(select), (void **)&ppval, &pos) == SUCCESS && Z_TYPE_PP(ppval) == IS_STRING) {
+			while (zend_hash_get_current_data_ex(Z_ARRVAL_P(select), (void **)&ppval, &pos) == SUCCESS) {
 				char *str_key = NULL;
 				uint key_len;
 				int key_type;
 				ulong num_key;
 
+				if (Z_TYPE_PP(ppval) != IS_STRING) {
+					continue;
+				}
+
 				key_type = zend_hash_get_current_key_ex(Z_ARRVAL_P(select), &str_key, &key_len, &num_key, 0, &pos);
 				if (key_type == HASH_KEY_IS_STRING) {
-					fields_len = spprintf(&fields, 0, "%s%s AS %s, ", fields, str_key, Z_STRVAL_PP(ppval));
+					fields_len = spprintf(&fields, 0, "%s%s AS %s, ", fields, Z_STRVAL_PP(ppval), str_key);
 				} else {
 					fields_len = spprintf(&fields, 0, "%s%s, ", fields, Z_STRVAL_PP(ppval));
 				}
@@ -731,7 +739,11 @@ int yod_database_select(yod_database_t *object, zval *select, char *table, uint 
 				*(fields + fields_len) = '\0';
 			}
 		} else if (Z_TYPE_P(select) == IS_STRING) {
-			fields_len = spprintf(&fields, 0, "%s", Z_STRVAL_P(select));
+			if (Z_STRLEN_P(select)) {
+				fields_len = spprintf(&fields, 0, "%s", Z_STRVAL_P(select));
+			} else {
+				fields_len = spprintf(&fields, 0, "*");
+			}
 		}
 	}
 
