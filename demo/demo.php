@@ -124,9 +124,23 @@ class DemoController extends Yod_Controller
 
 		$duser = $this->model('DemoUser');
 		$select = array('id', 'title', 'content', 'pubtime' => 'created');
+		$where = 'id = :id';
+		$param1 = array(':id' => 2);
+		$param2 = array(':mid' => 1);
 		$table = 'demo';
-		$duser->select($select)->from($table)->join('user', '', '');
-		echo 'parse:'; $duser->parse();
+		$duser->select($select)
+			  ->from($table)
+			//  ->join('user', '', '')
+			  ->where($where, $param1)
+			  ->group('type')
+			  ->having('id > :mid', $param2)
+			  ->order('id DESC')
+			  ->limit('5, 3')
+			//  ->union(array('SELECT' => '*'))
+			  ->comment('comment');
+
+		echo 'find:'; $duser->find();
+		echo 'findAll:'; $duser->findAll();
 
 		//$du01 = new DemoUserModel();
 
