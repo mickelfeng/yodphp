@@ -1046,7 +1046,7 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public function find($where = '', $params = array(), $select = '*')
 	{
-		$query = $this->select($select)->where($where, $params)->parseQuery();
+		$query = $this->select($select)->where($where, $params)->limit('1')->parseQuery();
 		if ($result = $this->_db->query($query, $this->_params)) {
 			$data = $this->_db->fetch($result);
 			$this->_db->free($result);
@@ -1194,7 +1194,7 @@ class Yod_DbModel extends Yod_Model
 	public function where($where, $params = array(), $mode = 'AND')
 	{
 		if ($where) {
-			if (is_string($params)) {
+			if (is_string($params) && $params) {
 				$mode = $params;
 			} else {
 				$this->params($params);
@@ -1223,9 +1223,10 @@ class Yod_DbModel extends Yod_Model
 	 * @access public
 	 * @return Yod_DbModel
 	 */
-	public function having($having)
+	public function having($having, $params = array())
 	{
 		$this->_query['HAVING'] = $having;
+		$this->params($params);
 		return $this;
 	}
 
@@ -1316,6 +1317,10 @@ class Yod_DbModel extends Yod_Model
 					$value = implode(' ', $value);
 					$key = '';
 				}
+			}
+			if ($key == 'COMMENT') {
+				$value = '/* ' . $value . ' */';
+				$key = '';
 			}
 			$parse[] = $key . ' ' . $value;
 		}
