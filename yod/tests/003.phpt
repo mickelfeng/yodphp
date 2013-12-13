@@ -1,5 +1,5 @@
 --TEST--
-Check for yod application
+Check for yod request
 --SKIPIF--
 <?php if (!extension_loaded("yod")) print "skip"; ?>
 --FILE--
@@ -42,20 +42,27 @@ class TestsController extends Yod_Controller
     public function requestAction()
     {
         $this->_view['tpl_path'] = './tests/views';
+        $this->forward('forward');
+    }
+
+    public function forwardAction()
+    {
         print_r($this);
+        $this->assign('yodphp', 'Yod PHP Framework');
+        $this->display('widget', array('hello' => 'Hello World!'));
     }
 }
 ?>
 --EXPECTF--
-IndexController Object
+TestsController Object
 (
-    [_name] => index
-    [_action] => index
-    [_request] => Yod_Request Object
+    [_name:protected] => tests
+    [_action:protected] => forward
+    [_request:protected] => Yod_Request Object
         (
             [_routed:protected] => 1
-            [controller] => Index
-            [action] => index
+            [controller] => Tests
+            [action] => request
             [params] => Array
                 (
                 )
@@ -63,7 +70,7 @@ IndexController Object
             [method] => Cli
         )
 
-    [_view] => Array
+    [_view:protected] => Array
         (
             [tpl_data] => Array
                 (
@@ -75,6 +82,10 @@ IndexController Object
         )
 
 )
+Yod PHP Framework
+Header
+Hello World!
+Footer
 Yod_Application Object
 (
     [_config:protected] => Array
@@ -103,13 +114,10 @@ Yod_Application Object
 
     [_request:protected] => Yod_Request Object
         (
-            [_routed:protected] => 1
-            [controller] => Index
-            [action] => index
-            [params] => Array
-                (
-                )
-
+            [_routed:protected] => 
+            [controller] => 
+            [action] => 
+            [params] => 
             [method] => Cli
         )
 
@@ -117,5 +125,5 @@ Yod_Application Object
         (
         )
 
-    [_running:protected] => 1
+    [_running:protected] => 
 )

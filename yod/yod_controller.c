@@ -138,7 +138,7 @@ static int yod_valid_varname(char *varname, int varname_len) {
 */
 static int yod_extract(zval *array TSRMLS_DC) {
 	zval **data, *value;
-	char *key;
+	char *str_key;
 	uint key_len;
 	ulong num_key;
 	HashPosition pos;
@@ -154,23 +154,23 @@ static int yod_extract(zval *array TSRMLS_DC) {
 	zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(array), &pos);
 	while (zend_hash_get_current_data_ex(Z_ARRVAL_P(array), (void **)&data, &pos) == SUCCESS) {
 
-		if (zend_hash_get_current_key_ex(Z_ARRVAL_P(array), &key, &key_len, &num_key, 0, &pos) != HASH_KEY_IS_STRING) {
+		if (zend_hash_get_current_key_ex(Z_ARRVAL_P(array), &str_key, &key_len, &num_key, 0, &pos) != HASH_KEY_IS_STRING) {
 			continue;
 		}
 
-		if (key_len == sizeof("GLOBALS")-1 && !strcmp(key, "GLOBALS")) {
+		if (key_len == sizeof("GLOBALS")-1 && !strcmp(str_key, "GLOBALS")) {
 			continue;
 		}
 
-		if (key_len == sizeof("this")-1  && !strcmp(key, "this") && EG(scope) && EG(scope)->name_length != 0) {
+		if (key_len == sizeof("this")-1  && !strcmp(str_key, "this") && EG(scope) && EG(scope)->name_length != 0) {
 			continue;
 		}
 
-		if (key_len && yod_valid_varname(key, key_len)) {
+		if (key_len && yod_valid_varname(str_key, key_len - 1)) {
 			MAKE_STD_ZVAL(value);
 			*value = **data;
 			zval_copy_ctor(value);
-			ZEND_SET_SYMBOL_WITH_LENGTH(EG(active_symbol_table), key, key_len, value, 1, 0);
+			ZEND_SET_SYMBOL_WITH_LENGTH(EG(active_symbol_table), str_key, key_len, value, 1, 0);
 		}
 
 		zend_hash_move_forward_ex(Z_ARRVAL_P(array), &pos);
@@ -198,10 +198,8 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 		classname_len = spprintf(&classname, 0, "%sAction", Z_STRVAL_P(p_action));
 		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), p_action TSRMLS_CC);
 	} else {
-		method_len = 11;
-		method = "indexaction";
-		classname_len = 11;
-		classname = "indexAction";
+		method_len = spprintf(&method, 0, "indexaction");
+		classname_len = spprintf(&classname, 0, "indexAction");
 		zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_action"), "index" TSRMLS_CC);
 	}
 
@@ -465,23 +463,23 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	tpl_file_len = spprintf(&tpl_file, 0, "%s%s.php", Z_STRVAL_PP(tpl_path), view);
 	add_assoc_stringl(tpl_view, "tpl_file", tpl_file, tpl_file_len, 1);
 
-	// tpl_data
-	if (zend_hash_find(Z_ARRVAL_P(tpl_view), "tpl_data", sizeof("tpl_data"), (void**) &tpl_data) == SUCCESS) {
-		if (tpl_data && Z_TYPE_PP(tpl_data) == IS_ARRAY) {
-			(void)yod_extract(*tpl_data TSRMLS_DC);
-		}
-	}
-
-	if (data && Z_TYPE_P(data) == IS_ARRAY) {
-		(void)yod_extract(data TSRMLS_DC);
-	}
-
 	// response
 	if (VCWD_ACCESS(tpl_file, F_OK) == 0) {
 		if (php_start_ob_buffer(NULL, 0, 1 TSRMLS_CC) != SUCCESS) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "ob_start failed");
 			ZVAL_NULL(response);
 			return 0;
+		}
+
+		// tpl_data
+		if (zend_hash_find(Z_ARRVAL_P(tpl_view), "tpl_data", sizeof("tpl_data"), (void**) &tpl_data) == SUCCESS) {
+			if (tpl_data && Z_TYPE_PP(tpl_data) == IS_ARRAY) {
+				(void)yod_extract(*tpl_data TSRMLS_DC);
+			}
+		}
+
+		if (data && Z_TYPE_P(data) == IS_ARRAY) {
+			(void)yod_extract(data TSRMLS_DC);
 		}
 
 		scope = EG(scope);
@@ -631,7 +629,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	MAKE_STD_ZVAL(argv[1]);
 	MAKE_STD_ZVAL(argv[2]);
 
-	ZVAL_ZVAL(argv[0] , request, 1, 1);
+	ZVAL_ZVAL(argv[0] , request, 1, 0);
 	ZVAL_STRING(argv[1], action, 1);
 	ZVAL_ZVAL(argv[2] , params, 1, 1);
 

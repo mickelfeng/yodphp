@@ -394,8 +394,8 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 			} else {
 				action_len = 5;
 				action_str = "index";
-			}
-			*controller_str = tolower(*controller_str);
+			}return;
+			zend_str_tolower(controller_str, controller_len);
 			spprintf(&classpath, 0, "%s/actions/%s/%sAction.php", yod_runpath(TSRMLS_CC), controller_str, action_str);
 			if (VCWD_ACCESS(classpath, F_OK) == 0) {
 				yod_include(classpath, NULL, 1 TSRMLS_CC);
@@ -422,7 +422,9 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 			}
 		}
 	}
-	zval_ptr_dtor(&target);
+	if (target) {
+		zval_ptr_dtor(&target);
+	}
 
 	return 1;
 }

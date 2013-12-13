@@ -98,21 +98,18 @@ static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, c
 	}
 
 	p_action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
-	if (p_action && Z_TYPE_P(p_action) == IS_STRING) {
+	if (p_action && Z_TYPE_P(p_action) == IS_STRING && Z_STRLEN_P(p_action)) {
 		zend_str_tolower(Z_STRVAL_P(p_action), Z_STRLEN_P(p_action));
-		action = Z_STRVAL_P(p_action);
-		action_len = Z_STRLEN_P(p_action);
-		method_len = spprintf(&method, 0, "%saction", action);
+		action_len = spprintf(&action, 0, "%s", Z_STRVAL_P(p_action));
+		method_len = spprintf(&method, 0, "%saction", Z_STRVAL_P(p_action));
 	} else {
-		action = "index";
-		action_len = 11;
-		method = "indexaction";
-		method_len = 11;
+		action_len = spprintf(&action, 0, "index");
+		method_len = spprintf(&method, 0, "%saction", action);
 	}
 	zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_action"), action TSRMLS_CC);
 
 	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), method, method_len + 1)) {
-		zend_call_method_with_1_params(&object, Z_OBJCE_P(object), NULL, method, NULL, params);
+		zend_call_method(&object, Z_OBJCE_P(object), NULL, method, method_len, NULL, 1, params, NULL TSRMLS_CC);
 	} else {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unavailable action %s::%sAction()", cname, action);
 	}
