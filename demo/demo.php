@@ -139,8 +139,25 @@ class DemoController extends Yod_Controller
 			//  ->union(array('SELECT' => '*'))
 			  ->comment('comment');
 
-		echo 'find:'; $duser->find();
-		echo 'findAll:'; $duser->findAll();
+		echo '<br>find:'; print_r($duser->find());
+
+		echo '<br>findAll:'; print_r($duser->select($select)->from($table)->findAll());
+
+		echo '<br>count:'; print_r($duser->select($select)->from($table)->count());
+
+		$data = array(
+			'title' => 'Demo',
+			'content' => base64_encode(json_encode(var_export($this, true))),
+			'created' => time(),
+		);
+
+		$duser->table($table);
+
+		//echo '<br>save:'; print_r($duser->save($data));
+
+		echo '<br>save:'; print_r($duser->save($data, $where, $param1));
+
+		echo '<br>remove:'; print_r($duser->remove($where, $param1));
 
 		//$du01 = new DemoUserModel();
 
