@@ -908,7 +908,7 @@ PHP_METHOD(yod_database, insert) {
 */
 PHP_METHOD(yod_database, update) {
 	yod_database_t *object;
-	zval *data = NULL, *params;
+	zval *data = NULL, *params = NULL;
 	char *table = NULL, *where = NULL;
 	uint table_len = 0, where_len =0;
 	

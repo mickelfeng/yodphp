@@ -261,10 +261,10 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 				zval_ptr_dtor(&argv[2]);
 				zval_ptr_dtor(&argv[3]);
 
-				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling PDO::__construct()");
 				if (retval) {
 					ZVAL_BOOL(retval, 0);
 				}
+				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling PDO::__construct()");
 				return 0;
 			}
 
