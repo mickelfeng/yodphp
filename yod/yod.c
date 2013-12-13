@@ -582,8 +582,10 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 
 	}
 
+#if PHP_YOD_DEBUG
 	zval_ptr_dtor(&YOD_G(debugs));
 	YOD_G(debugs) = NULL;
+#endif
 
 	return SUCCESS;
 }

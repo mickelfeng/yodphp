@@ -28,25 +28,30 @@ $config = array(
 );
 
 $yodapp = Yod_Application::app();
-$yodapp->run();
-
+$request = new Yod_Request('tests/request');
+$request->dispatch();
 print_r($yodapp);
 
-class IndexController extends Yod_Controller
+class TestsController extends Yod_Controller
 {
 	public function indexAction()
 	{
-		$this->_view['tpl_path'] = './tests/views';
-		print_r($this);
+		
 	}
+
+    public function requestAction()
+    {
+        $this->_view['tpl_path'] = './tests/views';
+        print_r($this);
+    }
 }
 ?>
 --EXPECTF--
 IndexController Object
 (
-    [_name:protected] => index
-    [_action:protected] => index
-    [_request:protected] => Yod_Request Object
+    [_name] => index
+    [_action] => index
+    [_request] => Yod_Request Object
         (
             [_routed:protected] => 1
             [controller] => Index
@@ -58,7 +63,7 @@ IndexController Object
             [method] => Cli
         )
 
-    [_view:protected] => Array
+    [_view] => Array
         (
             [tpl_data] => Array
                 (
