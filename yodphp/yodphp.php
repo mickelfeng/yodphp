@@ -454,10 +454,11 @@ abstract class Yod_Controller
 			call_user_func(array($this, $method), $this->_request->params);
 		} else {
 			$this->_name = empty($this->_name) ? 'index' : strtolower($this->_name);
-			$classpath = YOD_RUNPATH . '/actions/' . $this->_name . '/' . $method . '.php';
+			$classname = ucfirst($this->_action) . 'Action';
+			$classpath = YOD_RUNPATH . '/actions/' . $this->_name . '/' . $classname . '.php';
 			if (is_file($classpath)) {
 				require $classpath;
-				$action = new $method($this->_request);
+				$action = new $classname($this->_request);
 				$action->run($this->_request->params);
 			} elseif (method_exists($this, 'errorAction')) {
 				$this->errorAction($this->_request->params);
