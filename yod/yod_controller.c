@@ -662,6 +662,9 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Widget '%s' not found", classname);
 		}
 	}
+	if (target) {
+		zval_ptr_dtor(&target);
+	}
 
 	zval_ptr_dtor(&argv[0]);
 	zval_ptr_dtor(&argv[1]);
