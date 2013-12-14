@@ -196,10 +196,11 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 		zend_str_tolower(Z_STRVAL_P(p_action), Z_STRLEN_P(p_action));
 		method_len = spprintf(&method, 0, "%saction", Z_STRVAL_P(p_action));
 		classname_len = spprintf(&classname, 0, "%sAction", Z_STRVAL_P(p_action));
+		*classname = toupper(*classname);
 		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), p_action TSRMLS_CC);
 	} else {
 		method_len = spprintf(&method, 0, "indexaction");
-		classname_len = spprintf(&classname, 0, "indexAction");
+		classname_len = spprintf(&classname, 0, "IndexAction");
 		zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_action"), "index" TSRMLS_CC);
 	}
 
@@ -218,15 +219,16 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 			zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_name"), "index" TSRMLS_CC);
 			spprintf(&classpath, 0, "%s/actions/index/%s.php", yod_runpath(TSRMLS_CC), classname);
 		}
-		
+
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, NULL, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+				MAKE_STD_ZVAL(target);
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
 					zend_call_method_with_1_params(&target, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request);
-					zend_call_method_with_1_params(&target, *pce, NULL, "run", NULL, p_params);
 				}
+				zval_ptr_dtor(&target);
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 			}

@@ -477,7 +477,6 @@ PHP_GINIT_FUNCTION(yod)
 #if PHP_YOD_DEBUG
 	yod_globals->debugs		= NULL;
 #endif
-
 }
 /* }}} */
 
@@ -534,17 +533,11 @@ PHP_RINIT_FUNCTION(yod)
 	array_init(YOD_G(debugs));
 #endif
 
-#if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4))
-	YOD_G(buffer)			= NULL;
-	YOD_G(owrite_handler)	= NULL;
-	YOD_G(buf_nesting)		= 0;
-#endif
-
 	// spl_autoload_register
 /*
 	zval *autoload;
 	MAKE_STD_ZVAL(autoload);
-	ZVAL_STRING(autoload, "__autoload", 1);
+	ZVAL_STRING(autoload, "yod_autoload", 1);
 	zend_call_method_with_1_params(NULL, NULL, NULL, "spl_autoload_register", NULL, autoload);
 */
 	yod_autoload_register(TSRMLS_CC);

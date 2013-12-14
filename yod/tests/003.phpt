@@ -127,3 +127,7 @@ Yod_Application Object
 
     [_running:protected] => 
 )
+yodphpYod PHP Framework
+Header
+Hello World!
+Footer

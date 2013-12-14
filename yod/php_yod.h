@@ -121,12 +121,6 @@ ZEND_BEGIN_MODULE_GLOBALS(yod)
 #if PHP_YOD_DEBUG
 	zval		*debugs;
 #endif
-
-#if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION < 4))
-	uint		buf_nesting;
-	void		*buffer;
-	void		*owrite_handler;
-#endif
 ZEND_END_MODULE_GLOBALS(yod)
 
 PHP_MINIT_FUNCTION(yod);

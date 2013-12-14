@@ -56,7 +56,7 @@ ZEND_END_ARG_INFO()
 /** {{{ static void yod_application_init_config(yod_application_t *object, zval *config)
 */
 static void yod_application_init_config(yod_application_t *object, zval *config) {
-	zval *result, **ppval;
+	zval *retval, **ppval;
 	char *filepath;
 	size_t filepath_len;
 
@@ -80,10 +80,10 @@ static void yod_application_init_config(yod_application_t *object, zval *config)
 	}
 
 	if (VCWD_ACCESS(filepath, F_OK) == 0) {
-		yod_include(filepath, &result, 0 TSRMLS_CC);
+		yod_include(filepath, &retval, 0 TSRMLS_CC);
 	} else {
-		MAKE_STD_ZVAL(result);
-		array_init(result);
+		MAKE_STD_ZVAL(retval);
+		array_init(retval);
 
 		filepath_len = php_dirname(filepath, strlen(filepath));
 		dir = VCWD_OPENDIR(filepath);
@@ -99,17 +99,17 @@ static void yod_application_init_config(yod_application_t *object, zval *config)
 						yod_include(filename, &value, 0 TSRMLS_CC);
 						if (Z_TYPE_P(value) == IS_ARRAY) {
 							if (entry_len == 15 && strncmp(entry->d_name, "base", 4) == 0) {
-								php_array_merge(Z_ARRVAL_P(result), Z_ARRVAL_P(value), 0 TSRMLS_DC);
+								php_array_merge(Z_ARRVAL_P(retval), Z_ARRVAL_P(value), 0 TSRMLS_DC);
 							} else {
 								uint key_len = entry_len - 11;
 								char *key = estrndup(entry->d_name, key_len);
 
-								if (zend_hash_find(Z_ARRVAL_P(result), key, key_len + 1, (void **)&ppval) == SUCCESS &&
+								if (zend_hash_find(Z_ARRVAL_P(retval), key, key_len + 1, (void **)&ppval) == SUCCESS &&
 									Z_TYPE_PP(ppval) == IS_ARRAY
 								) {
 									php_array_merge(Z_ARRVAL_P(value), Z_ARRVAL_PP(ppval), 0 TSRMLS_DC);
 								}
-								add_assoc_zval_ex(result, key, key_len + 1, value);
+								add_assoc_zval_ex(retval, key, key_len + 1, value);
 								efree(key);
 							}
 						}
@@ -124,11 +124,11 @@ static void yod_application_init_config(yod_application_t *object, zval *config)
 	if (zend_hash_find(&EG(symbol_table), "config", sizeof("config"), (void **) &ppval) == SUCCESS &&
 		Z_TYPE_PP(ppval) == IS_ARRAY
 	) {
-		php_array_merge(Z_ARRVAL_P(result), Z_ARRVAL_PP(ppval), 0 TSRMLS_DC);
+		php_array_merge(Z_ARRVAL_P(retval), Z_ARRVAL_PP(ppval), 0 TSRMLS_DC);
 	}
 
-	zend_update_property(yod_application_ce, object, ZEND_STRL("_config"), result TSRMLS_CC);
-	zval_ptr_dtor(&result);
+	zend_update_property(yod_application_ce, object, ZEND_STRL("_config"), retval TSRMLS_CC);
+	zval_ptr_dtor(&retval);
 }
 /* }}} */
 
