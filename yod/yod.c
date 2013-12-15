@@ -529,6 +529,7 @@ PHP_RINIT_FUNCTION(yod)
 	YOD_G(forward)			= 0;
 
 #if PHP_YOD_DEBUG
+	REGISTER_LONG_CONSTANT("YOD_RUNMODE", E_ALL, CONST_CS);
 	MAKE_STD_ZVAL(YOD_G(debugs));
 	array_init(YOD_G(debugs));
 #endif

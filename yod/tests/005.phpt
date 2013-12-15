@@ -1,7 +1,7 @@
 --TEST--
 Check for yod action
 --SKIPIF--
-<?php if (!extension_loaded("yod")) print "skip"; ?>
+<?php if (!extension_loaded("yod") || defined('YOD_RUNMODE')) print "skip"; ?>
 --FILE--
 <?php
 error_reporting(E_ALL);

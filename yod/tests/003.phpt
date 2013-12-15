@@ -1,7 +1,7 @@
 --TEST--
 Check for yod request
 --SKIPIF--
-<?php if (!extension_loaded("yod")) print "skip"; ?>
+<?php if (!extension_loaded("yod") || defined('YOD_RUNMODE')) print "skip"; ?>
 --FILE--
 <?php
 error_reporting(E_ALL);
@@ -30,7 +30,6 @@ $config = array(
 $yodapp = Yod_Application::app();
 $request = new Yod_Request('tests/request');
 $request->dispatch();
-print_r($yodapp);
 
 class TestsController extends Yod_Controller
 {
@@ -86,47 +85,6 @@ Yod PHP Framework
 Header
 Hello World!
 Footer
-Yod_Application Object
-(
-    [_config:protected] => Array
-        (
-            [db_dsn] => Array
-                (
-                    [type] => pdo
-                    [dsn] => mysql:host=localhost;port=3306;dbname=test
-                    [host] => localhost
-                    [user] => root
-                    [pass] => 123456
-                    [dbname] => test
-                    [prefix] => yod_
-                    [slaves] => Array
-                        (
-                        )
-
-                )
-
-            [tpl_data] => Array
-                (
-                    [_PUBLIC_] => /Public/
-                )
-
-        )
-
-    [_request:protected] => Yod_Request Object
-        (
-            [_routed:protected] => 
-            [controller] => 
-            [action] => 
-            [params] => 
-            [method] => Cli
-        )
-
-    [_imports:protected] => Array
-        (
-        )
-
-    [_running:protected] => 
-)
 yodphpYod PHP Framework
 Header
 Hello World!

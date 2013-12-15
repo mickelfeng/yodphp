@@ -219,7 +219,7 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 
 	MAKE_STD_ZVAL(object);
 	if (name_len > 0) {
-		spprintf(&classpath, 0, "%s/models/%s.class.php", yod_runpath(TSRMLS_CC), classname);
+		spprintf(&classpath, 0, "%s/models/%s.php", yod_runpath(TSRMLS_CC), classname);
 
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, NULL, 1 TSRMLS_CC);

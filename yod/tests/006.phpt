@@ -1,5 +1,5 @@
 --TEST--
-Check for yod controller
+Check for yod model
 --SKIPIF--
 <?php if (!extension_loaded("yod") || defined('YOD_RUNMODE')) print "skip"; ?>
 --FILE--
@@ -28,9 +28,26 @@ $config = array(
 		'_PUBLIC_' => '/Public/',
 	),
 );
+
+class IndexController extends Yod_Controller
+{
+	public function indexAction()
+	{
+		$tests = $this->model('Tests');
+		$tests->yodphp();
+
+		$hello = $this->model('Hello');
+		$hello->show();
+	}
+}
+
+class HelloModel extends Yod_DbModel
+{
+	public function show()
+	{
+		echo 'Hello World!';
+	}
+}
 ?>
 --EXPECTF--
-yodphpYod PHP Framework
-Header
-Hello World!
-Footer
+Yodphp Hello World!

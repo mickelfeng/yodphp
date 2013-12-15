@@ -136,7 +136,7 @@ static void yod_application_init_config(yod_application_t *object, zval *config)
 */
 static void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC) {
 	yod_request_t *request;
-	zval *imports;
+	zval *imports, runmode;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_application_construct()");
@@ -145,6 +145,12 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 	if (YOD_G(yodapp)) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Only one application can be initialized");
 		return;
+	}
+
+	// runmode
+	if (zend_get_constant(ZEND_STRL("YOD_RUNMODE"), &runmode TSRMLS_CC)) {
+		convert_to_long(&runmode);
+		EG(error_reporting) = Z_LVAL(runmode);
 	}
 
 	if (object) {
