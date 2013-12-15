@@ -43,6 +43,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_application_import_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, alias)
+	ZEND_ARG_INFO(0, classext)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_application_app_arginfo, 0, 0, 0)
@@ -201,9 +202,9 @@ void yod_application_run(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC)
+/** {{{ int yod_application_config(char *name, uint name_len, zval *result TSRMLS_DC)
 */
-int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC) {
+int yod_application_config(char *name, uint name_len, zval *result TSRMLS_DC) {
 	zval *p_config;
 
 #if PHP_YOD_DEBUG
@@ -251,12 +252,12 @@ int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC) 
 }
 /* }}} */
 
-/** {{{ int yod_application_import(char *alias, size_t alias_len, int isclass TSRMLS_DC)
+/** {{{ int yod_application_import(char *alias, uint alias_len, char *classext, uint classext_len TSRMLS_DC)
 */
-int yod_application_import(char *alias, size_t alias_len, int isclass TSRMLS_DC) {
+int yod_application_import(char *alias, uint alias_len, char *classext, uint classext_len TSRMLS_DC) {
 	zval *p_imports, **ppval;
 	char *classfile, *classname, *classpath;
-	size_t classfile_len, classname_len;
+	uint classfile_len, classname_len;
 	zend_class_entry **pce = NULL;
 
 #if PHP_YOD_DEBUG
@@ -295,10 +296,10 @@ int yod_application_import(char *alias, size_t alias_len, int isclass TSRMLS_DC)
 	p_imports = zend_read_property(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_imports"), 1 TSRMLS_CC);
 	if (zend_hash_find(Z_ARRVAL_P(p_imports), alias, alias_len + 1, (void **)&ppval) == FAILURE) {
 		
-		if (isclass) {
-			spprintf(&classpath, 0, "%s/extends/%s.class.php", yod_runpath(TSRMLS_CC), classfile);
+		if (classext_len) {
+			spprintf(&classpath, 0, "%s/extends/%s%s", yod_runpath(TSRMLS_CC), classfile, classext);
 		} else {
-			spprintf(&classpath, 0, "%s/extends/%s.php", yod_runpath(TSRMLS_CC), classfile);
+			spprintf(&classpath, 0, "%s/extends/%s.class.php", yod_runpath(TSRMLS_CC), classfile);
 		}
 
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
@@ -365,18 +366,17 @@ PHP_METHOD(yod_application, config) {
 }
 /* }}} */
 
-/** {{{ proto public Yod_Application::import($alias, $isclass = true)
+/** {{{ proto public Yod_Application::import($alias, $classext = '.class.php')
 */
 PHP_METHOD(yod_application, import) {
-	char *alias = NULL;
-	uint alias_len = 0;
-	int isclass = 1;
+	char *alias = NULL, *classext = NULL;
+	uint alias_len = 0, classext_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &alias, &alias_len, &isclass) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s", &alias, &alias_len, &classext, &classext_len) == FAILURE) {
 		return;
 	}
 
-	if (yod_application_import(alias, alias_len, isclass TSRMLS_CC)) {
+	if (yod_application_import(alias, alias_len, classext, classext_len TSRMLS_CC)) {
 		RETURN_TRUE;
 	}
 	RETURN_FALSE;
