@@ -4,7 +4,7 @@ Check for yod request
 <?php if (!extension_loaded("yod") || defined('YOD_RUNMODE')) print "skip"; ?>
 --FILE--
 <?php
-error_reporting(E_ALL);
+error_reporting(E_ALL ^ E_WARNING);
 date_default_timezone_set('Asia/Shanghai');
 
 define('TESTS_PATH', dirname(__FILE__));
@@ -129,3 +129,4 @@ Yod PHP Framework
 Header
 Hello World!
 Footer
+HTTP/1.0 404 Not Found

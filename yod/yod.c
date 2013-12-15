@@ -102,6 +102,10 @@ void yod_debugs(TSRMLS_DC) {
 	struct timeval tp = {0};
 	zval **ppzval;
 
+	if (YOD_G(exited)) {
+		return;
+	}
+	
 	if (gettimeofday(&tp, NULL)) {
 		runtime	= 0;	
 	} else {

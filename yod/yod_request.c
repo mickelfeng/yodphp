@@ -366,8 +366,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 		zend_str_tolower(controller_str, controller_len);
 		*controller_str = toupper(*controller_str);
 	} else {
-		controller_len = 5;
-		controller_str = "Index";
+		controller_len = spprintf(&controller_str, 0, "Index");
 	}
 	classname_len = spprintf(&classname, 0, "%sController", controller_str);
 
@@ -392,9 +391,8 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 				action_str = Z_STRVAL_P(action);
 				zend_str_tolower(action_str, action_len);
 			} else {
-				action_len = 5;
-				action_str = "index";
-			}return;
+				action_len = spprintf(&action_str, 0, "index");
+			}
 			zend_str_tolower(controller_str, controller_len);
 			spprintf(&classpath, 0, "%s/actions/%s/%sAction.php", yod_runpath(TSRMLS_CC), controller_str, action_str);
 			if (VCWD_ACCESS(classpath, F_OK) == 0) {
