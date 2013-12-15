@@ -68,7 +68,7 @@ ZEND_BEGIN_ARG_INFO_EX(yod_model_save_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, params)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(yod_model_remove_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(yod_model_remove_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, where)
 	ZEND_ARG_INFO(0, params)
 ZEND_END_ARG_INFO()
@@ -482,7 +482,7 @@ PHP_METHOD(yod_model, remove) {
 	char *where = NULL;
 	uint where_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sz", &where, &where_len, &params) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &where, &where_len, &params) == FAILURE) {
 		return;
 	}
 

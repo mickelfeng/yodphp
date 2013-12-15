@@ -9,7 +9,7 @@ if (!extension_loaded("yod") || defined('YOD_RUNMODE') || !class_exists('PDO', f
 		$config = include dirname(__FILE__) . '/configs/db_dsn.config.php';
 		new PDO($config['dsn'], $config['user'], $config['pass']);
 	} catch (Exception $e) {
-
+		print "skip";
 	}
 }
 ?>
@@ -18,6 +18,37 @@ if (!extension_loaded("yod") || defined('YOD_RUNMODE') || !class_exists('PDO', f
 error_reporting(E_ALL);
 date_default_timezone_set('Asia/Shanghai');
 
+define('TESTS_PATH', dirname(__FILE__));
+include TESTS_PATH . '/clean.php';
+
+is_dir(TESTS_PATH . '/configs') or mkdir(TESTS_PATH . '/configs');
+file_put_contents(TESTS_PATH . '/configs/db_dsn.config.php', <<<PHP
+<?php
+return array(
+	'type' => 'pdo',
+	'dsn' => 'mysql:host=localhost;port=3306;dbname=test',
+	'host' => 'localhost',
+	'user' => 'root',
+	'pass' => '123456',
+	'dbname' => 'test',
+	'prefix' => 'yod_',
+	'slaves' => array(
+		
+	),
+);
+
+PHP
+);
+
+file_put_contents(TESTS_PATH . '/configs/tpl_data.config.php', <<<PHP
+<?php
+return array(
+	'_PUBLIC_' => '/Public/',
+);
+
+PHP
+);
+
 define('YOD_RUNPATH', dirname(__FILE__));
 
 class IndexController extends Yod_Controller
@@ -25,6 +56,7 @@ class IndexController extends Yod_Controller
 	public function indexAction()
 	{
 		$db = Yod_Database::db();
+
 		$fields = array(
 			'id' => 'int(11) NOT NULL AUTO_INCREMENT COMMENT \'ID\'',
 			'title' => 'varchar(255) NOT NULL COMMENT \'标题\'',
@@ -42,15 +74,22 @@ class IndexController extends Yod_Controller
 		$data = array(
 			'title' => 'Tests',
 			'content' => 'Yod PHP Framework',
-			'created' => 12345678901,
+			'created' => 1234567890,
 		);
 		echo $tests->save($data);
 		
-
 		$demo = $this->model('Demo');
+
+		$data['updated'] = 1234567891;
+		echo $demo->table('tests')->where('id = :id', array(':id' => 1))->save($data);
 
 		$data = $demo->from('tests')->where('id = :id', array(':id' => 1))->find();
 		print_r($data);
+
+		echo $demo->table('tests')->where('id = :id', array(':id' => 1))->remove();
+
+		$data = $demo->from('tests')->where('id = :id', array(':id' => 1))->find();
+		var_dump($data);
 
 		echo $db->execute('DROP TABLE yod_tests');
 		
@@ -63,13 +102,14 @@ class DemoModel extends Yod_DbModel
 }
 ?>
 --EXPECTF--
-01Array
+111Array
 (
     [id] => 1
     [title] => Tests
     [content] => Yod PHP Framework
-    [updated] => 0
-    [created] => 2147483647
+    [updated] => 1234567891
+    [created] => 1234567890
     [status] => 0
 )
-0
+1bool(false)
+1

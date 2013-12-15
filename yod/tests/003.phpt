@@ -7,6 +7,50 @@ Check for yod request
 error_reporting(E_ALL);
 date_default_timezone_set('Asia/Shanghai');
 
+define('TESTS_PATH', dirname(__FILE__));
+include TESTS_PATH . '/clean.php';
+
+is_dir(TESTS_PATH . '/views') or mkdir(TESTS_PATH . '/views');
+is_dir(TESTS_PATH . '/views/tests') or mkdir(TESTS_PATH . '/views/tests');
+file_put_contents(TESTS_PATH . '/views/tests/widget.php', <<<PHP
+<?php echo \$yodphp; ?>
+
+<?php \$this->widget('public/header'); ?>
+
+<?php echo \$hello; ?>
+
+<?php \$this->widget('public/footer'); ?>
+
+PHP
+);
+
+is_dir(TESTS_PATH . '/widgets') or mkdir(TESTS_PATH . '/widgets');
+is_dir(TESTS_PATH . '/widgets/public') or mkdir(TESTS_PATH . '/widgets/public');
+file_put_contents(TESTS_PATH . '/widgets/PublicWidget.php', <<<PHP
+<?php
+class PublicWidget extends Yod_Widget
+{
+    public function headerAction()
+    {
+        \$this->display('header', array(
+            'yodphp' => '<sup>Beta</sup>'
+        ));
+    }
+
+    public function footerAction()
+    {
+        \$this->display('footer', array(
+            'footer' => 'Copyright'
+        ));
+    }
+}
+
+PHP
+);
+
+file_put_contents(TESTS_PATH . '/widgets/public/header.php', 'Header');
+file_put_contents(TESTS_PATH . '/widgets/public/footer.php', "Footer\r\n");
+
 $config = array(
 	//db
 	'db_dsn' => array(
@@ -82,10 +126,6 @@ TestsController Object
 
 )
 Yod PHP Framework
-Header
-Hello World!
-Footer
-yodphpYod PHP Framework
 Header
 Hello World!
 Footer

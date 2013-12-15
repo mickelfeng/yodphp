@@ -476,7 +476,7 @@ int yod_database_create(yod_database_t *object, zval *fields, char *table, uint 
 	MAKE_STD_ZVAL(query);
 	ZVAL_STRINGL(query, squery, squery_len, 1);
 	if (instanceof_function(Z_OBJCE_P(object), yod_dbpdo_ce TSRMLS_CC)) {
-		yod_dbpdo_execute(object, query, NULL, retval TSRMLS_CC);
+		yod_dbpdo_execute(object, query, NULL, 0, retval TSRMLS_CC);
 	} else {
 #if PHP_YOD_DEBUG
 		yod_debugf("yod_database_execute()");
@@ -492,7 +492,7 @@ int yod_database_create(yod_database_t *object, zval *fields, char *table, uint 
 /** {{{ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint table_len, int replace, zval *retval TSRMLS_DC)
 */
 int yod_database_insert(yod_database_t *object, zval *data, char *table, uint table_len, int replace, zval* retval TSRMLS_DC) {
-	zval *prefix, *query, *params, **ppval;
+	zval *prefix, *query, *params, *affected, **ppval;
 	char *squery, *fields = "", *values = "";
 	uint squery_len, fields_len = 0, values_len = 0;
 	HashPosition pos;
@@ -552,12 +552,14 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 	MAKE_STD_ZVAL(query);
 	ZVAL_STRINGL(query, squery, squery_len, 1);
 	if (instanceof_function(Z_OBJCE_P(object), yod_dbpdo_ce TSRMLS_CC)) {
-		yod_dbpdo_execute(object, query, params, retval TSRMLS_CC);
+		yod_dbpdo_execute(object, query, params, 1, retval TSRMLS_CC);
 	} else {
 #if PHP_YOD_DEBUG
 		yod_debugf("yod_database_execute()");
 #endif
-		zend_call_method_with_2_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query, params);
+		MAKE_STD_ZVAL(affected);
+		ZVAL_BOOL(affected, 1);
+		yod_call_method_with_3_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query, params, affected);
 	}
 	zval_ptr_dtor(&query);
 
@@ -568,7 +570,7 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 /** {{{ int yod_database_update(yod_database_t *object, zval *data, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC)
 */
 int yod_database_update(yod_database_t *object, zval *data, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC) {
-	zval *prefix, *query, **ppval;
+	zval *prefix, *query, *affected, **ppval;
 	char *squery, *update = "";
 	uint squery_len, update_len = 0;
 	HashPosition pos;
@@ -624,12 +626,14 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 	MAKE_STD_ZVAL(query);
 	ZVAL_STRINGL(query, squery, squery_len, 1);
 	if (instanceof_function(Z_OBJCE_P(object), yod_dbpdo_ce TSRMLS_CC)) {
-		yod_dbpdo_execute(object, query, params, retval TSRMLS_CC);
+		yod_dbpdo_execute(object, query, params, 1, retval TSRMLS_CC);
 	} else {
 #if PHP_YOD_DEBUG
 		yod_debugf("yod_database_execute()");
 #endif
-		zend_call_method_with_2_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query, params);
+		MAKE_STD_ZVAL(affected);
+		ZVAL_BOOL(affected, 1);
+		yod_call_method_with_3_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query, params, affected);
 	}
 	zval_ptr_dtor(&query);
 
@@ -640,7 +644,7 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 /** {{{ int yod_database_delete(yod_database_t *object, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC)
 */
 int yod_database_delete(yod_database_t *object, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC) {
-	zval *prefix, *query, **ppval;
+	zval *prefix, *query, *affected, **ppval;
 	char *squery;
 	uint squery_len;
 
@@ -676,12 +680,14 @@ int yod_database_delete(yod_database_t *object, char *table, uint table_len, cha
 	MAKE_STD_ZVAL(query);
 	ZVAL_STRINGL(query, squery, squery_len, 1);
 	if (instanceof_function(Z_OBJCE_P(object), yod_dbpdo_ce TSRMLS_CC)) {
-		yod_dbpdo_execute(object, query, params, retval TSRMLS_CC);
+		yod_dbpdo_execute(object, query, params, 1, retval TSRMLS_CC);
 	} else {
 #if PHP_YOD_DEBUG
 		yod_debugf("yod_database_execute()");
 #endif
-		zend_call_method_with_2_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query, params);
+		MAKE_STD_ZVAL(affected);
+		ZVAL_BOOL(affected, 1);
+		yod_call_method_with_3_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query, params, affected);
 	}	
 	zval_ptr_dtor(&query);
 

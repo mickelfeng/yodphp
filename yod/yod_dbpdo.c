@@ -149,8 +149,7 @@ ZEND_END_ARG_INFO()
 /** {{{ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zval *retval TSRMLS_DC)
 */
 static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zval *retval TSRMLS_DC) {
-	zval *dbconfig, *linkids, *linkid, *query, **ppval;
-	zval *ctor, *argv[4], rzval;
+	zval *dbconfig, *linkids, *linkid, *argv[4], *query, **ppval;
 	zval persist, errmode, warning;
 	zend_class_entry **pce = NULL;
 	char *squery;
@@ -209,18 +208,16 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 			MAKE_STD_ZVAL(linkid);
 			object_init_ex(linkid, *pce);
 
-			// ctor
-			MAKE_STD_ZVAL(ctor);
-			ZVAL_STRING(ctor, ZEND_CONSTRUCTOR_FUNC_NAME, 1);
-
 			// argv
 			MAKE_STD_ZVAL(argv[0]);
 			MAKE_STD_ZVAL(argv[1]);
 			MAKE_STD_ZVAL(argv[2]);
 			MAKE_STD_ZVAL(argv[3]);
 
+			// argv.dsn
 			ZVAL_STRINGL(argv[0] , Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
 
+			// argv.user
 			if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("user"), (void **)&ppval) == SUCCESS &&
 				Z_TYPE_PP(ppval) == IS_STRING && Z_STRLEN_PP(ppval)
 			) {
@@ -229,6 +226,7 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 				ZVAL_STRING(argv[1], "", 1);
 			}
 
+			// argv.pass
 			if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("pass"), (void **)&ppval) == SUCCESS &&
 				Z_TYPE_PP(ppval) == IS_STRING && Z_STRLEN_PP(ppval)
 			) {
@@ -237,6 +235,7 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 				ZVAL_STRING(argv[2], "", 1);
 			}
 
+			// argv.options
 			if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("options"), (void **)&ppval) == SUCCESS &&
 				Z_TYPE_PP(ppval) == IS_ARRAY
 			) {
@@ -245,6 +244,7 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 				array_init(argv[3]);
 			}
 
+			// pconnect
 			if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("pconnect"), (void **)&ppval) == SUCCESS &&
 				Z_TYPE_PP(ppval) == IS_BOOL && Z_BVAL_PP(ppval)
 			) {
@@ -255,19 +255,13 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 				}
 			}
 
-			if (call_user_function(NULL, &linkid, ctor, &rzval, 4, argv TSRMLS_CC) == FAILURE) {
-				zval_ptr_dtor(&argv[0]);
-				zval_ptr_dtor(&argv[1]);
-				zval_ptr_dtor(&argv[2]);
-				zval_ptr_dtor(&argv[3]);
+			yod_call_method_with_4_params(&linkid, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, argv[0], argv[1], argv[2], argv[3]);
 
-				if (retval) {
-					ZVAL_BOOL(retval, 0);
-				}
-				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling PDO::__construct()");
-				return 0;
-			}
-
+			zval_ptr_dtor(&argv[0]);
+			zval_ptr_dtor(&argv[1]);
+			zval_ptr_dtor(&argv[2]);
+			zval_ptr_dtor(&argv[3]);
+			
 			// charset
 			if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("charset"), (void **)&ppval) == SUCCESS &&
 				Z_TYPE_PP(ppval) == IS_STRING || Z_STRLEN_PP(ppval)
@@ -301,12 +295,6 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 			if (retval) {
 				ZVAL_ZVAL(retval, linkid, 1, 0);
 			}
-
-			zval_ptr_dtor(&argv[0]);
-			zval_ptr_dtor(&argv[1]);
-			zval_ptr_dtor(&argv[2]);
-			zval_ptr_dtor(&argv[3]);
-			zval_dtor(&rzval);
 		} else {
 			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class 'PDO' not found");
 			if (retval) {
@@ -318,9 +306,9 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 }
 /* }}} */
 
-/** {{{ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, zval *retval TSRMLS_DC)
+/** {{{ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affected, zval *retval TSRMLS_DC)
 */
-int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, zval *retval TSRMLS_DC) {
+int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affected, zval *retval TSRMLS_DC) {
 	zval *config, *linkid, *result, *bindparams, *pzval, **ppval;
 	HashPosition pos;
 
@@ -346,7 +334,14 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, zval *retv
 			zend_call_method_with_1_params(&linkid, Z_OBJCE_P(linkid), NULL, "exec", &pzval, query);
 			if (pzval) {
 				if (retval) {
-					ZVAL_ZVAL(retval, pzval, 1, 0);
+					if (params && Z_TYPE_P(params) == IS_BOOL) {
+						affected = Z_BVAL_P(params);
+					}
+					if (affected) {
+						ZVAL_ZVAL(retval, pzval, 1, 0);
+					} else {
+						ZVAL_BOOL(retval, 1);
+					}
 				}
 				return 1;
 			}
@@ -370,7 +365,9 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, zval *retv
 					zend_hash_move_forward_ex(Z_ARRVAL_P(params), &pos);
 				}
 				zend_call_method_with_1_params(&result, Z_OBJCE_P(result), NULL, "execute", &pzval, bindparams);
-				zend_call_method_with_0_params(&result, Z_OBJCE_P(result), NULL, "rowcount", &pzval);
+				if (affected) {
+					zend_call_method_with_0_params(&result, Z_OBJCE_P(result), NULL, "rowcount", &pzval);
+				}
 				zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_result"), result TSRMLS_CC);
 				if (pzval) {
 					if (retval) {
@@ -709,16 +706,17 @@ PHP_METHOD(yod_dbpdo, fields) {
 }
 /* }}} */
 
-/** {{{ proto public Yod_DbPdo::execute($query, $params = array())
+/** {{{ proto public Yod_DbPdo::execute($query, $params = array(), $affected = true)
 */
 PHP_METHOD(yod_dbpdo, execute) {
 	zval *query = NULL, *params = NULL;
+	int affected = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|z", &query, &params) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|zb", &query, &params, &affected) == FAILURE) {
 		return;
 	}
 
-	yod_dbpdo_execute(getThis(), query, params, return_value TSRMLS_DC);
+	yod_dbpdo_execute(getThis(), query, params, affected, return_value TSRMLS_DC);
 }
 /* }}} */
 

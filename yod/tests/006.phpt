@@ -7,6 +7,23 @@ Check for yod model
 error_reporting(E_ALL);
 date_default_timezone_set('Asia/Shanghai');
 
+define('TESTS_PATH', dirname(__FILE__));
+include TESTS_PATH . '/clean.php';
+
+is_dir(TESTS_PATH . '/models') or mkdir(TESTS_PATH . '/models');
+file_put_contents(TESTS_PATH . '/models/TestsModel.php', <<<PHP
+<?php
+class TestsModel extends Yod_Model
+{
+	public function yodphp()
+	{
+		echo 'Yodphp ';
+	} 
+}
+
+PHP
+);
+
 define('YOD_RUNPATH', dirname(__FILE__));
 
 $config = array(

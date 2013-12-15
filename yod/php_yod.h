@@ -109,6 +109,12 @@ char *yod_extpath(TSRMLS_DC);
 char *yod_runpath(TSRMLS_DC);
 int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC);
 
+#define yod_call_method_with_3_params(obj, obj_ce, fn_proxy, function_name, retval, arg1, arg2, arg3) \
+	yod_call_method(obj, obj_ce, fn_proxy, function_name, sizeof(function_name)-1, retval, 3, arg1, arg2, arg3, NULL TSRMLS_CC)
+
+#define yod_call_method_with_4_params(obj, obj_ce, fn_proxy, function_name, retval, arg1, arg2, arg3, arg4) \
+	yod_call_method(obj, obj_ce, fn_proxy, function_name, sizeof(function_name)-1, retval, 4, arg1, arg2, arg3, arg4 TSRMLS_CC)
+
 ZEND_BEGIN_MODULE_GLOBALS(yod)
 	double		runtime;
 	char 		*runpath;
