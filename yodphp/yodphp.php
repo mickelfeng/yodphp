@@ -88,6 +88,11 @@ final class Yod_Application
 			return;
 		}
 
+		// runmode
+		if (defined('YOD_RUNMODE')) {
+			error_reporting(YOD_RUNMODE);
+		}
+
 		// config
 		if (is_array($config)) {
 			$this->_config = $config;
@@ -815,7 +820,7 @@ class Yod_Model
 			$classname = $name . 'Model';
 		}
 		if (empty(self::$_model[$name])) {
-			$classpath = YOD_RUNPATH . '/models/' . $classname . '.class.php';
+			$classpath = YOD_RUNPATH . '/models/' . $classname . '.php';
 			if (is_file($classpath)) {
 				include $classpath;
 				self::$_model[$name] = new $classname($name, $config);
@@ -1008,7 +1013,7 @@ class Yod_DbModel extends Yod_Model
 			$classname = $name . 'Model';
 		}
 		if (empty(self::$_model[$name])) {
-			$classpath = YOD_RUNPATH . '/models/' . $classname . '.class.php';
+			$classpath = YOD_RUNPATH . '/models/' . $classname . '.php';
 			if (is_file($classpath)) {
 				include $classpath;
 				self::$_model[$name] = new $classname($name, $config);

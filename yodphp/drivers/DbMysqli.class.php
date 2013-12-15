@@ -122,9 +122,10 @@ class Yod_DbMysqli extends Yod_Database
 					call_user_func_array(array($mysqli_stmt, 'bind_param'), $bind_params);
 				}
 				if ($mysqli_stmt->execute()) {
-					$result = $mysqli_stmt->affected_rows;
+					$rcount = $mysqli_stmt->affected_rows;
 					$mysqli_stmt->close();
-					return $result;
+					return $rcount;
+
 				}
 				$this->_errno = $mysqli_stmt->errno();
 				$this->_error = $mysqli_stmt->error();
