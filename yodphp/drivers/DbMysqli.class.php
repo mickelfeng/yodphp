@@ -97,14 +97,17 @@ class Yod_DbMysqli extends Yod_Database
 	 * @access public
 	 * @return boolean
 	 */
-	public function execute($query, $params = array())
+	public function execute($query, $params = array(), $affected = false)
 	{
 		$this->connect($this->_config, 0);
 
 		$this->_lastquery = $query;
-		if (empty($params)) {
+		if (empty($params) || is_bool($params)) {
 			if ($this->_linkid->query($query)) {
-				return $this->_linkid->affected_rows;
+				if (is_bool($params)) {
+					$affected = $params;
+				}
+				return $affected ? $this->_linkid->affected_rows : true;
 			}
 		} else {
 			$bind_params = array();
@@ -122,9 +125,13 @@ class Yod_DbMysqli extends Yod_Database
 					call_user_func_array(array($mysqli_stmt, 'bind_param'), $bind_params);
 				}
 				if ($mysqli_stmt->execute()) {
-					$rcount = $mysqli_stmt->affected_rows;
+					if ($affected) {
+						$retval = $mysqli_stmt->affected_rows;
+					} else {
+						$retval = true;
+					}
 					$mysqli_stmt->close();
-					return $rcount;
+					return $retval;
 
 				}
 				$this->_errno = $mysqli_stmt->errno();

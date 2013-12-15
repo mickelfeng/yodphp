@@ -1511,7 +1511,7 @@ abstract class Yod_Database
 			}
 		}
 		$query = ($replace ? 'REPLACE' : 'INSERT') . ' INTO ' . $this->_prefix . $table . ' (' . implode(', ', $fields) . ') VALUES (' . implode(',', $values) . ')';
-		return $this->execute($query, $params);
+		return $this->execute($query, $params, true);
 	}
 
 	/**
@@ -1531,7 +1531,7 @@ abstract class Yod_Database
 			}
 		}
 		$query = 'UPDATE ' . $this->_prefix . $table . ' SET ' .implode(', ', $update) . (empty($where) ? '' : ' WHERE ' . $where);
-		return $this->execute($query, $params);
+		return $this->execute($query, $params, true);
 	}
 
 	/**
@@ -1543,7 +1543,7 @@ abstract class Yod_Database
 	{
 		if (empty($table)) return false;
 		$query = 'DELETE FROM ' . $this->_prefix . $table . (empty($where) ? '' : ' WHERE ' . $where);
-		return $this->execute($query, $params);
+		return $this->execute($query, $params, true);
 	}
 
 	/**
@@ -1630,7 +1630,7 @@ abstract class Yod_Database
 	 * @access public
 	 * @return mixed
 	 */
-	abstract public function execute($query, $params = array());
+	abstract public function execute($query, $params = array(), $affected = false);
 
 	/**
 	 * query
@@ -1794,13 +1794,19 @@ class Yod_DbPdo extends Yod_Database
 	 * @access public
 	 * @return boolean
 	 */
-	public function execute($query, $params = array())
+	public function execute($query, $params = array(), $affected = false)
 	{
 		$this->connect($this->_config, 0);
 
 		$this->_lastquery = $query;
-		if (empty($params)) {
-			return $this->_linkid->exec($query);
+		if (empty($params) || is_bool($params)) {
+			$retval = $this->_linkid->exec($query);
+			if ($retval !== false) {
+				if (is_bool($params)) {
+					$affected = $params;
+				}
+				return $affected ? $retval : true;
+			}
 		}
 		if ($this->_result = $this->_linkid->prepare($query)) {
 			$bind_params = array();
@@ -1809,8 +1815,9 @@ class Yod_DbPdo extends Yod_Database
 					$bind_params[$key] = $params[$key];
 				}
 			}
-			$this->_result->execute($bind_params);
-			return $this->_result->rowCount();
+			if ($this->_result->execute($bind_params)) {
+				return $affected ? $this->_result->rowCount() : true;
+			}
 		}
 		return false;
 	}

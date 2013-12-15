@@ -97,12 +97,12 @@ class Yod_DbMysql extends Yod_Database
 	 * @access public
 	 * @return boolean
 	 */
-	public function execute($query, $params = array())
+	public function execute($query, $params = array(), $affected = false)
 	{
 		$this->connect($this->_config, 0);
 
 		$this->_lastquery = $query;
-		if (!empty($params)) {
+		if (!empty($params) && is_array($params)) {
 			foreach ($params as $key => $value) {
 				if (strstr($query, $key)) {
 					$value = mysql_real_escape_string($value);
@@ -111,7 +111,10 @@ class Yod_DbMysql extends Yod_Database
 			}
 		}
 		if (mysql_query($query, $this->_linkid)) {
-			return mysql_affected_rows($this->_linkid);
+			if (is_bool($params)) {
+				$affected = $params;
+			}
+			return $affected ? mysql_affected_rows($this->_linkid) : true;
 		}
 		if (error_reporting()) {
 			if ($error = mysql_error($this->_linkid)) {
