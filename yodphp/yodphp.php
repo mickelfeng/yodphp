@@ -286,10 +286,12 @@ final class Yod_Request
 		$route = str_replace('//', '/', $route);
 		$route = explode('/', trim($route, '/'));
 
-		$controller = basename($_SERVER['SCRIPT_FILENAME'], '.php');
-		$classname = $controller . 'Controller';
-		if (class_exists($classname, false)) {
-			array_unshift($route, $controller);
+		if (isset($_SERVER['SCRIPT_FILENAME'])) {
+			$controller = basename($_SERVER['SCRIPT_FILENAME'], '.php');
+			$classname = $controller . 'Controller';
+			if (class_exists($classname, false)) {
+				array_unshift($route, $controller);
+			}
 		}
 
 		$this->controller = empty($route[0]) ? 'Index' : ucfirst(strtolower($route[0]));
