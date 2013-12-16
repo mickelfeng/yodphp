@@ -56,22 +56,29 @@ ZEND_DECLARE_MODULE_GLOBALS(yod);
 /** {{{ void yod_debugf(const char *format,...)
 */
 void yod_debugf(const char *format,...) {
-	zval *fmtdata, *retdata;
 	struct timeval tp = {0};
 	va_list args;
 	char *buffer;
 
+	struct tm *ta, tmbuf;
+	time_t curtime;
+	char *datetime, asctimebuf[52];
+	uint datetime_len;
+
 	TSRMLS_FETCH();
 
-	MAKE_STD_ZVAL(fmtdata);
-	ZVAL_STRING(fmtdata, "Y-m-d H:i:s", 1);
-	zend_call_method_with_1_params(NULL, NULL, NULL, "date", &retdata, fmtdata);
-	if (retdata && Z_TYPE_P(retdata) == IS_STRING && !gettimeofday(&tp, NULL)) {
+	time(&curtime);
+	ta = php_localtime_r(&curtime, &tmbuf);
+	datetime = php_asctime_r(ta, asctimebuf);
+	datetime_len = strlen(datetime);
+	datetime[datetime_len - 1] = 0;
+
+	if (!gettimeofday(&tp, NULL)) {
 		va_start(args, format);
 		vspprintf(&buffer, 0, format, args);
 		va_end(args);
 
-		spprintf(&buffer, 0, "[%s %06d] (%dk) %s\n", Z_STRVAL_P(retdata), tp.tv_usec, zend_memory_usage(1 TSRMLS_CC) / 1024, buffer);
+		spprintf(&buffer, 0, "[%s %06d] (%dk) %s\n", datetime, tp.tv_usec, zend_memory_usage(1 TSRMLS_CC) / 1024, buffer);
 /*
 		spprintf(&buffer, 0, "%s%s\n", buffer, YOD_DOTLINE);
 
@@ -80,7 +87,6 @@ void yod_debugf(const char *format,...) {
 		add_next_index_string(YOD_G(debugs), buffer, 1);
 		efree(buffer);
 	}
-	zval_ptr_dtor(&fmtdata);
 }
 /* }}} */
 
@@ -150,89 +156,65 @@ void yod_do_exit(TSRMLS_DC) {
 }
 /* }}} */
 
-/* {{{ yod_call_method(zval **object_pp, zend_class_entry *obj_ce, zend_function **fn_proxy, char *function_name, int function_name_len, zval **retval_ptr_ptr, int param_count, zval* arg1, zval* arg2, zval* arg3, zval* arg4 TSRMLS_DC)
- Only returns the returned zval if retval_ptr != NULL */
-zval* yod_call_method(zval **object_pp, zend_class_entry *obj_ce, zend_function **fn_proxy, char *function_name, int function_name_len, zval **retval_ptr_ptr, int param_count, zval* arg1, zval* arg2, zval* arg3, zval* arg4 TSRMLS_DC)
+/** {{{ int yod_call_method(zval *object, char *func, int func_len, zval *retval, int param_count, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC)
+*/
+int yod_call_method(zval *object, char *func, int func_len, zval *retval, int param_count, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC)
 {
-	int result;
-	zend_fcall_info fci;
-	zval z_fname;
-	zval *retval;
-	HashTable *function_table;
+	zval *method, *argv[4], *pzval;
 
-	zval **params[4];
+	MAKE_STD_ZVAL(argv[0]);
+	MAKE_STD_ZVAL(argv[1]);
+	MAKE_STD_ZVAL(argv[2]);
+	MAKE_STD_ZVAL(argv[3]);
 
-	params[0] = &arg1;
-	params[1] = &arg2;
-	params[2] = &arg3;
-	params[3] = &arg4;
-
-	fci.size = sizeof(fci);
-	/*fci.function_table = NULL; will be read form zend_class_entry of object if needed */
-	fci.object_ptr = object_pp ? *object_pp : NULL;
-	fci.function_name = &z_fname;
-	fci.retval_ptr_ptr = retval_ptr_ptr ? retval_ptr_ptr : &retval;
-	fci.param_count = param_count;
-	fci.params = params;
-	fci.no_separation = 1;
-	fci.symbol_table = NULL;
-
-	if (!fn_proxy && !obj_ce) {
-		/* no interest in caching and no information already present that is
-		 * needed later inside zend_call_function. */
-		ZVAL_STRINGL(&z_fname, function_name, function_name_len, 0);
-		fci.function_table = !object_pp ? EG(function_table) : NULL;
-		result = zend_call_function(&fci, NULL TSRMLS_CC);
+	if (arg1) {
+		ZVAL_ZVAL(argv[0], arg1, 1, 0);
 	} else {
-		zend_fcall_info_cache fcic;
+		ZVAL_NULL(argv[0]);
+	}
+	if (arg2) {
+		ZVAL_ZVAL(argv[1], arg2, 1, 0);
+	} else {
+		ZVAL_NULL(argv[1]);
+	}
+	if (arg3) {
+		ZVAL_ZVAL(argv[2], arg3, 1, 0);
+	} else {
+		ZVAL_NULL(argv[2]);
+	}
+	if (arg4) {
+		ZVAL_ZVAL(argv[3], arg4, 1, 0);
+	} else {
+		ZVAL_NULL(argv[3]);
+	}
 
-		fcic.initialized = 1;
-		if (!obj_ce) {
-			obj_ce = object_pp ? Z_OBJCE_PP(object_pp) : NULL;
-		}
-		if (obj_ce) {
-			function_table = &obj_ce->function_table;
-		} else {
-			function_table = EG(function_table);
-		}
-		if (!fn_proxy || !*fn_proxy) {
-			if (zend_hash_find(function_table, function_name, function_name_len+1, (void **) &fcic.function_handler) == FAILURE) {
-				/* error at c-level */
-				zend_error(E_CORE_ERROR, "Couldn't find implementation for method %s%s%s", obj_ce ? obj_ce->name : "", obj_ce ? "::" : "", function_name);
-			}
-			if (fn_proxy) {
-				*fn_proxy = fcic.function_handler;
-			}
-		} else {
-			fcic.function_handler = *fn_proxy;
-		}
-		fcic.calling_scope = obj_ce;
-		if (object_pp) {
-			fcic.called_scope = Z_OBJCE_PP(object_pp);
-		} else if (obj_ce && !(EG(called_scope) && instanceof_function(EG(called_scope), obj_ce TSRMLS_CC))) {
-			fcic.called_scope = obj_ce;
-		} else {
-			fcic.called_scope = EG(called_scope);
-		}
-		fcic.object_ptr = object_pp ? *object_pp : NULL;
-		result = zend_call_function(&fci, &fcic TSRMLS_CC);
-	}
-	if (result == FAILURE) {
-		/* error at c-level */
-		if (!obj_ce) {
-			obj_ce = object_pp ? Z_OBJCE_PP(object_pp) : NULL;
-		}
-		if (!EG(exception)) {
-			zend_error(E_CORE_ERROR, "Couldn't execute method %s%s%s", obj_ce ? obj_ce->name : "", obj_ce ? "::" : "", function_name);
-		}
-	}
-	if (!retval_ptr_ptr) {
+	MAKE_STD_ZVAL(method);
+	ZVAL_STRINGL(method, func,func_len, 1);
+
+	if (call_user_function(NULL, &object, method, pzval, param_count, argv TSRMLS_CC) == FAILURE) {
 		if (retval) {
-			zval_ptr_dtor(&retval);
+			ZVAL_BOOL(retval, 0);
 		}
-		return NULL;
+		zval_ptr_dtor(&argv[0]);
+		zval_ptr_dtor(&argv[1]);
+		zval_ptr_dtor(&argv[2]);
+		zval_ptr_dtor(&argv[3]);
+
+		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::%s()", Z_OBJCE_P(object)->name, method);
+		return 0;
 	}
-	return *retval_ptr_ptr;
+
+	if (retval) {
+		ZVAL_ZVAL(retval, pzval, 1, 0);
+	}
+
+	zval_ptr_dtor(&argv[0]);
+	zval_ptr_dtor(&argv[1]);
+	zval_ptr_dtor(&argv[2]);
+	zval_ptr_dtor(&argv[3]);
+	zval_ptr_dtor(&pzval);
+
+	return 1;
 }
 /* }}} */
 

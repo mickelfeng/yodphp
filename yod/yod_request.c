@@ -228,7 +228,7 @@ static int yod_request_route(yod_request_t *object, char *route, uint route_len 
 	}
 
 	// route
-	route = estrndup(route, route_len);
+	//route = estrndup(route, route_len);
 	route = php_str_to_str(route, route_len, "\\", 1, "/", 1, &route_len);
 	while (strstr(route, "//")) {
 		route = php_str_to_str(route, route_len, "//", 2, "/", 1, &route_len);
@@ -295,8 +295,9 @@ static int yod_request_route(yod_request_t *object, char *route, uint route_len 
 		}
 	}
 	zend_update_property(yod_request_ce, object, ZEND_STRL("params"), params TSRMLS_CC);
-
 	zend_update_property_bool(yod_request_ce, object, ZEND_STRL("_routed"), 1 TSRMLS_CC);
+
+	zval_ptr_dtor(&params);
 	YOD_G(routed) = 1;
 
 	return 1;
@@ -383,6 +384,8 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 				yod_controller_construct(target, object, NULL, 0 TSRMLS_CC);
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
+				zval_ptr_dtor(&target);
+				return 0;
 			}
 		} else {
 			action = zend_read_property(yod_request_ce, object, ZEND_STRL("action"), 1 TSRMLS_CC);
@@ -403,6 +406,8 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 					yod_controller_construct(target, object, NULL, 0 TSRMLS_CC);
 				} else {
 					php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
+					zval_ptr_dtor(&target);
+					return 0;
 				}
 			} else {
 				spprintf(&classpath, 0, "%s/controllers/ErrorController.php", yod_runpath(TSRMLS_CC));
@@ -413,6 +418,8 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 						yod_controller_construct(target, object, ZEND_STRL("error") TSRMLS_CC);
 					} else {
 						php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class 'ErrorController' not found");
+						zval_ptr_dtor(&target);
+						return 0;
 					}
 				} else {
 					yod_request_erroraction(object TSRMLS_CC);

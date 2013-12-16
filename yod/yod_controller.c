@@ -273,6 +273,7 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 		name = estrndup(Z_STRVAL_P(p_name), Z_STRLEN_P(p_name));
 		zend_str_tolower(name, Z_STRLEN_P(p_name));
 		zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_name"), name TSRMLS_CC);
+		efree(name);
 	}
 
 	if (action_len) {
@@ -537,9 +538,10 @@ static int yod_controller_display(yod_controller_t *object, char *view, size_t v
 		if (response && Z_TYPE_P(response) == IS_STRING) {
 			PHPWRITE(Z_STRVAL_P(response), Z_STRLEN_P(response));
 		}
+		zval_ptr_dtor(&response);
 		return 1;
 	}
-
+	zval_ptr_dtor(&response);
 	return 0;
 }
 /* }}} */
@@ -554,7 +556,6 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	uint classname_len, key_len;
 
 	zend_class_entry **pce = NULL;
-
 
 #if PHP_YOD_DEBUG
 	if (instanceof_function(Z_OBJCE_P(object), yod_widget_ce TSRMLS_CC)) {
@@ -628,7 +629,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 		object_init_ex(target, *pce);
 		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-			yod_call_method_with_3_params(&target, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request, action1, params);
+			yod_call_method_with_3_params(target, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request, action1, params);
 		}
 	} else {
 		spprintf(&classpath, 0, "%s/widgets/%sWidget.php", yod_runpath(TSRMLS_CC), widget);
@@ -637,7 +638,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-					yod_call_method_with_3_params(&target, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request, action1, params);
+					yod_call_method_with_3_params(target, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request, action1, params);
 				}
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);

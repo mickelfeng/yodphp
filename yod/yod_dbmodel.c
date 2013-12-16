@@ -1093,7 +1093,7 @@ static int yod_dbmodel_save(yod_dbmodel_t *object, zval *data, char *where, uint
 			MAKE_STD_ZVAL(where1);
 			ZVAL_STRINGL(where1, Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
 			params1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), 1 TSRMLS_CC);
-			yod_call_method_with_4_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "update", &result, data, table, where1, params1);
+			yod_call_method_with_4_params(yoddb, "update", &result, data, table, where1, params1);
 			zval_ptr_dtor(&where1);
 		}
 		if (retval) {
@@ -1159,7 +1159,7 @@ static int yod_dbmodel_remove(yod_dbmodel_t *object, char *where, uint where_len
 			ZVAL_STRINGL(where1, Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
 		}
 		params1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), 1 TSRMLS_CC);
-		yod_call_method_with_3_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "delete", &result, table, where1, params1);
+		yod_call_method_with_3_params(yoddb, "delete", &result, table, where1, params1);
 		zval_ptr_dtor(&where1);
 		if (retval) {
 			ZVAL_ZVAL(retval, result, 1, 0);
