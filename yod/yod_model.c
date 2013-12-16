@@ -165,6 +165,7 @@ yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len,
 	if (yod_database_getinstance(config, yoddb TSRMLS_CC)) {
 		p_prefix = yod_database_config(yoddb, ZEND_STRL("prefix"), NULL);
 		zend_update_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_prefix"), p_prefix TSRMLS_CC);
+		zval_ptr_dtor(&config);
 	}
 	zend_update_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_db"), yoddb TSRMLS_CC);
 
@@ -257,10 +258,14 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 
 	add_assoc_zval_ex(p_model, name, name_len + 1, object);
 	zend_update_static_property(yod_model_ce, ZEND_STRL("_model"), p_model TSRMLS_CC);
+	zval_ptr_dtor(&p_model);
+	zval_ptr_dtor(&config);
 
 	if (retval) {
 		ZVAL_ZVAL(retval, object, 1, 0);
 	}
+	//zval_ptr_dtor(&object);
+
 	return 1;
 }
 /* }}} */

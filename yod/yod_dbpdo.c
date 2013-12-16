@@ -248,14 +248,18 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 			if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("pconnect"), (void **)&ppval) == SUCCESS &&
 				Z_TYPE_PP(ppval) == IS_BOOL && Z_BVAL_PP(ppval)
 			) {
+#ifndef ZEND_FETCH_CLASS_SILENT
+				if (zend_get_constant_ex(ZEND_STRL("PDO::ATTR_PERSISTENT"), &persist, NULL TSRMLS_CC)) {
+#else
 				if (zend_get_constant_ex(ZEND_STRL("PDO::ATTR_PERSISTENT"), &persist, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC)) {
+#endif
 					add_index_bool(argv[3], Z_LVAL(persist), 1);
 				} else {
 					add_index_bool(argv[3], 12, 1);
 				}
 			}
 
-			yod_call_method_with_4_params(&linkid, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, argv[0], argv[1], argv[2], argv[3]);
+			yod_call_method_with_4_params(linkid, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, argv[0], argv[1], argv[2], argv[3]);
 
 			zval_ptr_dtor(&argv[0]);
 			zval_ptr_dtor(&argv[1]);
@@ -277,11 +281,19 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 			zval_ptr_dtor(&query);
 
 			if (EG(error_reporting)) {
+#ifndef ZEND_FETCH_CLASS_SILENT
+				if (!zend_get_constant_ex(ZEND_STRL("PDO::ATTR_ERRMODE"), &errmode, NULL TSRMLS_CC)) {
+#else
 				if (!zend_get_constant_ex(ZEND_STRL("PDO::ATTR_ERRMODE"), &errmode, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC)) {
+#endif
 					INIT_PZVAL(&errmode);
 					ZVAL_LONG(&errmode, 3);
 				}
+#ifndef ZEND_FETCH_CLASS_SILENT
+				if (!zend_get_constant_ex(ZEND_STRL("PDO::ERRMODE_WARNING"), &warning, NULL TSRMLS_CC)) {
+#else
 				if (!zend_get_constant_ex(ZEND_STRL("PDO::ERRMODE_WARNING"), &warning, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC)) {
+#endif
 					INIT_PZVAL(&warning);
 					ZVAL_LONG(&warning, 1);
 				}
@@ -485,7 +497,11 @@ int yod_dbpdo_fetch(yod_dbpdo_t *object, zval *result, zval *retval TSRMLS_DC) {
 		result = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_result"), 1 TSRMLS_CC);
 	}
 
+#ifndef ZEND_FETCH_CLASS_SILENT
+	if (!zend_get_constant_ex(ZEND_STRL("PDO::FETCH_ASSOC"), &assoc, NULL TSRMLS_CC)) {
+#else
 	if (!zend_get_constant_ex(ZEND_STRL("PDO::FETCH_ASSOC"), &assoc, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC)) {
+#endif
 		INIT_PZVAL(&assoc);
 		ZVAL_LONG(&assoc, 2);
 	}
@@ -529,7 +545,11 @@ int yod_dbpdo_fetchall(yod_dbpdo_t *object, zval *result, zval *retval TSRMLS_DC
 		result = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_result"), 1 TSRMLS_CC);
 	}
 
+#ifndef ZEND_FETCH_CLASS_SILENT
+	if (!zend_get_constant_ex(ZEND_STRL("PDO::FETCH_ASSOC"), &assoc, NULL TSRMLS_CC)) {
+#else
 	if (!zend_get_constant_ex(ZEND_STRL("PDO::FETCH_ASSOC"), &assoc, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC)) {
+#endif
 		INIT_PZVAL(&assoc);
 		ZVAL_LONG(&assoc, 2);
 	}

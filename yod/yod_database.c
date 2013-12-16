@@ -274,6 +274,7 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 	if (p_db && Z_TYPE_P(p_db) == IS_ARRAY) {
 		if (zend_hash_find(Z_ARRVAL_P(p_db), md5hash, strlen(md5hash) + 1, (void **)&ppval) == SUCCESS) {
 			ZVAL_ZVAL(retval, *ppval, 1, 0);
+			efree(md5hash);
 			return 1;
 		}
 	} else {
@@ -298,11 +299,14 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 	} else {
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 		ZVAL_BOOL(retval, 0);
+		efree(md5hash);
 		return 0;
 	}
 
 	add_assoc_zval_ex(p_db, md5hash, strlen(md5hash) + 1, object);
 	zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db TSRMLS_CC);
+	zval_ptr_dtor(&p_db);
+	efree(md5hash);
 
 	ZVAL_ZVAL(retval, object, 1, 0);
 
@@ -345,8 +349,12 @@ zval *yod_database_config(yod_database_t *object, char *name, uint name_len, zva
 		}
 	}
 
-	ZVAL_NULL(retval);
-	return retval;
+	if (!value) {
+		ZVAL_NULL(retval);
+		return retval;
+	}
+
+	return NULL;
 }
 /* }}} */
 
@@ -559,7 +567,7 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 #endif
 		MAKE_STD_ZVAL(affected);
 		ZVAL_BOOL(affected, 1);
-		yod_call_method_with_3_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query, params, affected);
+		yod_call_method_with_3_params(object, "execute", &retval, query, params, affected);
 	}
 	zval_ptr_dtor(&query);
 
@@ -633,7 +641,7 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 #endif
 		MAKE_STD_ZVAL(affected);
 		ZVAL_BOOL(affected, 1);
-		yod_call_method_with_3_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query, params, affected);
+		yod_call_method_with_3_params(object, "execute", &retval, query, params, affected);
 	}
 	zval_ptr_dtor(&query);
 
@@ -687,7 +695,7 @@ int yod_database_delete(yod_database_t *object, char *table, uint table_len, cha
 #endif
 		MAKE_STD_ZVAL(affected);
 		ZVAL_BOOL(affected, 1);
-		yod_call_method_with_3_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query, params, affected);
+		yod_call_method_with_3_params(object, "execute", &retval, query, params, affected);
 	}	
 	zval_ptr_dtor(&query);
 

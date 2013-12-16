@@ -166,6 +166,7 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 	// request
 	request = yod_request_construct(NULL, NULL, 0 TSRMLS_CC);
 	zend_update_property(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_request"), request TSRMLS_CC);
+	zval_ptr_dtor(&request);
 
 	// imports
 	MAKE_STD_ZVAL(imports);
@@ -320,7 +321,7 @@ int yod_application_import(char *alias, size_t alias_len, int isclass TSRMLS_DC)
 /** {{{ void yod_application_app(zval *config TSRMLS_DC)
 */
 void yod_application_app(zval *config TSRMLS_DC) {
-	
+
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_application_app()");
 #endif
