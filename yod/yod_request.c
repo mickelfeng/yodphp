@@ -119,7 +119,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 /** {{{ void yod_request_erroraction(yod_request_t *object TSRMLS_DC)
 */
 void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
-	zval *controller, *action, *pzval, *error;
+	zval *controller, *action, *pzval, *error, *retval;
 	char *controller_str, *action_str, *classname, *classpath;
 	uint controller_len, action_len, classname_len;
 	zend_class_entry **pce = NULL;
@@ -141,7 +141,7 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 
 	MAKE_STD_ZVAL(error);
 	if (VCWD_ACCESS(classpath, F_OK) == 0) {
-		yod_include(classpath, NULL, 1 TSRMLS_CC);
+		yod_include(classpath, &retval, 1 TSRMLS_CC);
 		if (zend_lookup_class_ex(ZEND_STRL("ErrorAction"), 0, &pce TSRMLS_CC) == SUCCESS) {
 			object_init_ex(error, *pce);
 			if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
@@ -154,7 +154,7 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 		zend_update_property_string(yod_request_ce, object, ZEND_STRL("controller"), "Error" TSRMLS_CC);
 		spprintf(&classpath, 0, "%s/actions/ErrorAction.php", yod_runpath(TSRMLS_CC));
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
-			yod_include(classpath, NULL, 1 TSRMLS_CC);
+			yod_include(classpath, &retval, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(ZEND_STRL("ErrorAction"), 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(error, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
@@ -343,7 +343,7 @@ yod_request_t *yod_request_construct(yod_request_t *object, char *route, size_t 
 /** {{{ int yod_request_dispatch(yod_request_t *object TSRMLS_DC)
 */
 int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
-	zval *controller, *action, *pzval, *target;
+	zval *controller, *action, *pzval, *target, *retval;
 	char *controller_str, *action_str, *classname, *classpath;
 	uint controller_len, action_len, classname_len;
 	zend_class_entry **pce = NULL;
@@ -378,7 +378,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 	} else {
 		spprintf(&classpath, 0, "%s/controllers/%sController.php", yod_runpath(TSRMLS_CC), controller_str);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
-			yod_include(classpath, NULL, 1 TSRMLS_CC);
+			yod_include(classpath, &retval, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(target, *pce);
 				yod_controller_construct(target, object, NULL, 0 TSRMLS_CC);
@@ -399,7 +399,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 			zend_str_tolower(controller_str, controller_len);
 			spprintf(&classpath, 0, "%s/actions/%s/%sAction.php", yod_runpath(TSRMLS_CC), controller_str, action_str);
 			if (VCWD_ACCESS(classpath, F_OK) == 0) {
-				yod_include(classpath, NULL, 1 TSRMLS_CC);
+				yod_include(classpath, &retval, 1 TSRMLS_CC);
 				classname_len = spprintf(&classname, 0, "%sAction", action_str);
 				if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 					object_init_ex(target, *pce);
@@ -412,7 +412,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 			} else {
 				spprintf(&classpath, 0, "%s/controllers/ErrorController.php", yod_runpath(TSRMLS_CC));
 				if (VCWD_ACCESS(classpath, F_OK) == 0) {
-					yod_include(classpath, NULL, 1 TSRMLS_CC);
+					yod_include(classpath, &retval, 1 TSRMLS_CC);
 					if (zend_lookup_class_ex(ZEND_STRL("ErrorController"), 0, &pce TSRMLS_CC) == SUCCESS) {
 						object_init_ex(target, *pce);
 						yod_controller_construct(target, object, ZEND_STRL("error") TSRMLS_CC);

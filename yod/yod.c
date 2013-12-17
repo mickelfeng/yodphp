@@ -156,12 +156,20 @@ void yod_do_exit(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ int yod_call_method(zval *object, char *func, int func_len, zval *retval, int param_count, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC)
+/** {{{ int yod_call_method(zval *object, char *func, int func_len, zval **result, int pcount, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC)
 */
-int yod_call_method(zval *object, char *func, int func_len, zval *retval, int param_count, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC)
+int yod_call_method(zval *object, char *func, int func_len, zval **result, int pcount, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC)
 {
-	zval *method, *argv[4], *pzval;
+	zval *method, *argv[4], retval;
 
+#if PHP_YOD_DEBUG
+	if (object) {
+		yod_debugf("yod_call_method(%s, %s)", Z_OBJCE_P(object)->name, func ? func : "");
+	} else {
+		yod_debugf("yod_call_method(%s)", func ? func : "");
+	}
+#endif
+	
 	MAKE_STD_ZVAL(argv[0]);
 	MAKE_STD_ZVAL(argv[1]);
 	MAKE_STD_ZVAL(argv[2]);
@@ -191,28 +199,29 @@ int yod_call_method(zval *object, char *func, int func_len, zval *retval, int pa
 	MAKE_STD_ZVAL(method);
 	ZVAL_STRINGL(method, func,func_len, 1);
 
-	if (call_user_function(NULL, &object, method, pzval, param_count, argv TSRMLS_CC) == FAILURE) {
-		if (retval) {
-			ZVAL_BOOL(retval, 0);
+	if (call_user_function(NULL, &object, method, &retval, pcount, argv TSRMLS_CC) == FAILURE) {
+		if (result) {
+			ZVAL_BOOL(*result, 0);
 		}
 		zval_ptr_dtor(&argv[0]);
 		zval_ptr_dtor(&argv[1]);
 		zval_ptr_dtor(&argv[2]);
 		zval_ptr_dtor(&argv[3]);
+		zval_ptr_dtor(&retval);
 
-		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::%s()", Z_OBJCE_P(object)->name, method);
+		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::%s()", Z_OBJCE_P(object)->name, func);
 		return 0;
 	}
-
-	if (retval) {
-		ZVAL_ZVAL(retval, pzval, 1, 0);
+	
+	if (result) {
+		*result = &retval;
+		php_printf("yod_call_method:"); php_var_dump(result, 0 TSRMLS_CC);
 	}
 
 	zval_ptr_dtor(&argv[0]);
 	zval_ptr_dtor(&argv[1]);
 	zval_ptr_dtor(&argv[2]);
 	zval_ptr_dtor(&argv[3]);
-	zval_ptr_dtor(&pzval);
 
 	return 1;
 }
@@ -346,12 +355,13 @@ char *yod_runpath(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC)
+/** {{{ int yod_include(char *filepath, zval **retval, int dtor TSRMLS_DC)
 */
-int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC) {
+int yod_include(char *filepath, zval **retval, int dtor TSRMLS_DC) {
 	zend_file_handle file_handle;
 	zend_op_array 	*op_array;
 	char realpath[MAXPATHLEN];
+	zval *pzval = NULL;
 
 	if (!VCWD_REALPATH(filepath, realpath)) {
 		return 0;
@@ -383,7 +393,7 @@ int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC) {
 	if (op_array) {
 		YOD_STORE_EG_ENVIRON();
 
-		EG(return_value_ptr_ptr) = result;
+		EG(return_value_ptr_ptr) = retval;
 		EG(active_op_array) 	 = op_array;
 
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION > 2)) || (PHP_MAJOR_VERSION > 5)
@@ -408,7 +418,6 @@ int yod_include(char *filepath, zval **result, int dtor TSRMLS_DC) {
 
 	    return 1;
 	}
-
 	return 0;
 }
 /* }}} */
@@ -455,9 +464,9 @@ static int yod_autoload_register(TSRMLS_DC) {
 /** {{{ static int yod_autoload(char *classname, uint classname_len TSRMLS_DC)
 */
 static int yod_autoload(char *classname, uint classname_len TSRMLS_DC) {
-	zval filepath;
-	char *classfile, *classpath;
 	zend_class_entry **pce = NULL;
+	char *classfile, *classpath;
+	zval *retval;
 
 	if (!YOD_G(yodapp)) return;
 
@@ -489,7 +498,7 @@ static int yod_autoload(char *classname, uint classname_len TSRMLS_DC) {
 	efree(classfile);
 
 	if (VCWD_ACCESS(classpath, F_OK) == 0) {
-		yod_include(classpath, NULL, 1 TSRMLS_CC);
+		yod_include(classpath, &retval, 1 TSRMLS_CC);
 	}
 	
 #if PHP_YOD_DEBUG
