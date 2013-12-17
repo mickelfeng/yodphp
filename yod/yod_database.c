@@ -565,7 +565,7 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 #endif
 		MAKE_STD_ZVAL(affected);
 		ZVAL_BOOL(affected, 1);
-		yod_call_method_with_3_params(object, "execute", &retval, query, params, affected);
+		yod_call_method(object, ZEND_STRL("execute"), &retval, 3, query, params, affected, NULL TSRMLS_CC);
 	}
 	zval_ptr_dtor(&query);
 
@@ -639,7 +639,7 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 #endif
 		MAKE_STD_ZVAL(affected);
 		ZVAL_BOOL(affected, 1);
-		yod_call_method_with_3_params(object, "execute", &retval, query, params, affected);
+		yod_call_method(object, ZEND_STRL("execute"), &retval, 3, query, params, affected, NULL TSRMLS_CC);
 	}
 	zval_ptr_dtor(&query);
 
@@ -694,7 +694,7 @@ int yod_database_delete(yod_database_t *object, char *table, uint table_len, cha
 #endif
 		MAKE_STD_ZVAL(affected);
 		ZVAL_BOOL(affected, 1);
-		yod_call_method_with_3_params(object, "execute", &result, query, params, affected);
+		yod_call_method(object, ZEND_STRL("execute"), &result, 3, query, params, affected, NULL TSRMLS_CC);
 	}
 	if (retval) {
 		if (result) {
@@ -933,6 +933,7 @@ PHP_METHOD(yod_database, update) {
 	}
 
 	yod_database_update(getThis(), data, table, table_len, where, where_len, params, return_value TSRMLS_CC);
+	php_printf("return_value:"); php_var_dump(&return_value, 0 TSRMLS_CC);
 }
 /* }}} */
 

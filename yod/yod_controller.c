@@ -633,7 +633,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 		php_printf(classpath);
 		object_init_ex(target, *pce);
 		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-			//yod_call_method_with_3_params(target, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request, action1, params);
+			yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params, NULL TSRMLS_CC);
 		}
 	} else {
 		spprintf(&classpath, 0, "%s/widgets/%sWidget.php", yod_runpath(TSRMLS_CC), widget);
@@ -643,7 +643,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-					yod_call_method_with_3_params(target, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request, action1, params);
+					yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params, NULL TSRMLS_CC);
 				}
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);

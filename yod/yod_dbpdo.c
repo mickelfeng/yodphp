@@ -259,7 +259,7 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 				}
 			}
 
-			yod_call_method_with_4_params(linkid, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, argv[0], argv[1], argv[2], argv[3]);
+			yod_call_method(linkid, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 4, argv[0], argv[1], argv[2], argv[3] TSRMLS_DC);
 
 			zval_ptr_dtor(&argv[0]);
 			zval_ptr_dtor(&argv[1]);
