@@ -67,7 +67,8 @@ class IndexController extends Yod_Controller
 			'PRIMARY' => 'KEY (`id`)',
 		);
 		$extend = 'ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT=\'Demo\' AUTO_INCREMENT=1';
-		echo $db->create($fields, 'tests', $extend);
+		$create = $db->create($fields, 'tests', $extend);
+		echo "create:"; var_dump($create);
 
 		$tests = $this->model('Tests');
 
@@ -76,23 +77,29 @@ class IndexController extends Yod_Controller
 			'content' => 'Yod PHP Framework',
 			'created' => 1234567890,
 		);
-		echo $tests->save($data);
-		
+		$save = $tests->save($data);
+		echo "save:"; var_dump($save);
+
 		$demo = $this->model('Demo');
 
 		$data['updated'] = 1234567891;
-		echo $demo->table('tests')->where('id = :id', array(':id' => 1))->save($data);
-
+		$save = $demo->table('tests')->where('id = :id', array(':id' => 1))->save($data);
+		echo "save:"; var_dump($save);
+/*
 		$data = $demo->from('tests')->where('id = :id', array(':id' => 1))->find();
-		print_r($data);
+		echo "find:"; print_r($data);
 
-		echo $demo->table('tests')->where('id = :id', array(':id' => 1))->remove();
+		$data = $demo->from('tests')->where('id = :id', array(':id' => 1))->findAll();
+		echo "findAll:"; print_r($data);
 
-		$data = $demo->from('tests')->where('id = :id', array(':id' => 1))->find();
-		var_dump($data);
+		echo "remove:" . $demo->table('tests')->where('id = :id', array(':id' => 1))->remove();
 
-		echo $db->execute('DROP TABLE yod_tests');
-		
+		$find = $demo->from('tests')->where('id = :id', array(':id' => 1))->find();
+		echo "\nfind:"; var_dump($find);
+*/
+		$execute = $db->execute('DROP TABLE yod_tests');
+		echo "execute:"; var_dump($execute);
+
 	}
 }
 

@@ -385,6 +385,7 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affect
 					if (retval) {
 						ZVAL_ZVAL(retval, pzval, 1, 0);
 					}
+					zval_ptr_dtor(&pzval);
 					return 1;
 				}
 			} else {

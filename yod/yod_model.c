@@ -90,11 +90,10 @@ ZEND_BEGIN_ARG_INFO_EX(yod_model_model_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *config TSRMLS_DC)
+/** {{{ int yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *config TSRMLS_DC)
 */
-yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *config TSRMLS_DC) {
+int yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *config TSRMLS_DC) {
 	yod_database_t *yoddb;
-	yod_model_t *retval;
 	zval *p_name, *p_table, *p_dsn, *p_prefix;
 	char *table;
 	uint table_len;
@@ -103,31 +102,28 @@ yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len,
 	yod_debugf("yod_model_construct(%s)", name ? name : "");
 #endif
 
-	if (object) {
-		retval = object;
-	} else {
-		MAKE_STD_ZVAL(retval);
-		object_init_ex(retval, yod_model_ce);
+	if (!object) {
+		return 0;
 	}
 
 	if (name_len == 0) {
-		p_name = zend_read_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_name"), 1 TSRMLS_CC);
+		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
 		if (p_name && Z_TYPE_P(p_name) == IS_STRING && Z_STRLEN_P(p_name) > 0) {
 			name_len = Z_STRLEN_P(p_name);
 			name = estrndup(Z_STRVAL_P(p_name), name_len);
 		} else {
-			name_len = strlen(Z_OBJCE_P(retval)->name) - 5;
-			if (name_len > 0 && strncmp(Z_OBJCE_P(retval)->name, "Yod_", 4)) {
-				name = estrndup(Z_OBJCE_P(retval)->name, name_len);
+			name_len = strlen(Z_OBJCE_P(object)->name) - 5;
+			if (name_len > 0 && strncmp(Z_OBJCE_P(object)->name, "Yod_", 4)) {
+				name = estrndup(Z_OBJCE_P(object)->name, name_len);
 			} else {
 				name_len = 0;
 				name = "";
 			}
 		}
 	}
-	zend_update_property_stringl(Z_OBJCE_P(retval), retval, ZEND_STRL("_name"), name, name_len TSRMLS_CC);
+	zend_update_property_stringl(Z_OBJCE_P(object), object, ZEND_STRL("_name"), name, name_len TSRMLS_CC);
 
-	p_table = zend_read_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_table"), 1 TSRMLS_CC);
+	p_table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 1 TSRMLS_CC);
 	if (!p_table || Z_TYPE_P(p_table) != IS_STRING || Z_STRLEN_P(p_table) == 0) {
 		if (name_len > 0) {
 			table = emalloc(name_len + 1);
@@ -148,13 +144,13 @@ yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len,
 			}
 			*table = '\0';
 			table = table - table_len;
-			zend_update_property_stringl(Z_OBJCE_P(retval), retval, ZEND_STRL("_table"), table, table_len TSRMLS_CC);
+			zend_update_property_stringl(Z_OBJCE_P(object), object, ZEND_STRL("_table"), table, table_len TSRMLS_CC);
 			efree(table);
 		}
 	}
 
 	if (!config || Z_TYPE_P(config) == IS_NULL || (Z_TYPE_P(config) == IS_STRING && Z_STRLEN_P(config) == 0)) {
-		p_dsn = zend_read_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_dsn"), 1 TSRMLS_CC);
+		p_dsn = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_dsn"), 1 TSRMLS_CC);
 		if (p_dsn && Z_TYPE_P(p_dsn) == IS_STRING || Z_STRLEN_P(p_dsn) > 0) {
 			MAKE_STD_ZVAL(config);
 			yod_application_config(Z_STRVAL_P(p_dsn), Z_STRLEN_P(p_dsn), config TSRMLS_CC);
@@ -163,21 +159,26 @@ yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len,
 
 	MAKE_STD_ZVAL(yoddb);
 	if (yod_database_getinstance(config, yoddb TSRMLS_CC)) {
-		p_prefix = yod_database_config(yoddb, ZEND_STRL("prefix"), NULL);
-		zend_update_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_prefix"), p_prefix TSRMLS_CC);
-		zval_ptr_dtor(&config);
+		MAKE_STD_ZVAL(p_prefix);
+		yod_database_config(yoddb, ZEND_STRL("prefix"), NULL, p_prefix);
+		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_prefix"), p_prefix TSRMLS_CC);
+		zval_ptr_dtor(&p_prefix);
 	}
-	zend_update_property(Z_OBJCE_P(retval), retval, ZEND_STRL("_db"), yoddb TSRMLS_CC);
+	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), yoddb TSRMLS_CC);
+	zval_ptr_dtor(&yoddb);
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_model_init()");
 #endif
 
-	if (zend_hash_exists(&(Z_OBJCE_P(retval)->function_table), ZEND_STRS("init"))) {
-		zend_call_method_with_0_params(&retval, Z_OBJCE_P(retval), NULL, "init", NULL);
+	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), ZEND_STRS("init"))) {
+		zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "init", NULL);
 	}
 
-	return retval;
+	if (config) {
+		zval_ptr_dtor(&config);
+	}
+	return 1;
 }
 /* }}} */
 
@@ -185,7 +186,7 @@ yod_model_t *yod_model_construct(yod_model_t *object, char *name, uint name_len,
 */
 int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval TSRMLS_DC) {
 	yod_model_t *object;
-	zval *p_model, *p_name, **ppval;
+	zval *p_model, *p_name, *pzval, **ppval;
 	char *classname, *classpath;
 	uint classname_len;
 	zend_class_entry **pce = NULL;
@@ -223,7 +224,7 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 		spprintf(&classpath, 0, "%s/models/%s.php", yod_runpath(TSRMLS_CC), classname);
 
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
-			yod_include(classpath, NULL, 1 TSRMLS_CC);
+			yod_include(classpath, &pzval, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(object, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
@@ -249,22 +250,22 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 					zval_ptr_dtor(&p_name);
 				}
 			} else {
-				object = yod_model_construct(NULL, name, name_len, config TSRMLS_CC);
+				object_init_ex(object, yod_model_ce);
+				yod_model_construct(object, name, name_len, config TSRMLS_CC);
 			}
 		}
 	} else {
-		object = yod_model_construct(NULL, name, name_len, config TSRMLS_CC);
+		object_init_ex(object, yod_model_ce);
+		yod_model_construct(object, name, name_len, config TSRMLS_CC);
 	}
 
 	add_assoc_zval_ex(p_model, name, name_len + 1, object);
 	zend_update_static_property(yod_model_ce, ZEND_STRL("_model"), p_model TSRMLS_CC);
-	zval_ptr_dtor(&p_model);
-	zval_ptr_dtor(&config);
-
 	if (retval) {
 		ZVAL_ZVAL(retval, object, 1, 0);
 	}
-	//zval_ptr_dtor(&object);
+	zval_ptr_dtor(&p_model);
+	zval_ptr_dtor(&config);
 
 	return 1;
 }
@@ -281,7 +282,7 @@ PHP_METHOD(yod_model, __construct) {
 		return;
 	}
 
-	(void)yod_model_construct(getThis(), name, name_len, config TSRMLS_CC);
+	yod_model_construct(getThis(), name, name_len, config TSRMLS_CC);
 }
 /* }}} */
 

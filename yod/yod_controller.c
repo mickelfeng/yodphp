@@ -398,10 +398,10 @@ static int yod_controller_assign(yod_controller_t *object, zval *name, zval *val
 static int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC) {
 	zend_class_entry *scope;
 
-	zval *p_action, *p_name, *tpl_view, *buffer;
+	zval *p_action, *p_name, *tpl_view, *buffer, *retval;
 	zval **tpl_path, **tpl_data;
 
-	char *tpl_file, *key;
+	char *tpl_file, *key, *view1, *view2;
 	uint tpl_file_len, key_len;
 
 	ulong num_key;
@@ -417,36 +417,39 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	}
 #endif
 
-	if (view && view_len) {
-		view = estrndup(view, view_len);
-	} else {
+	if (view_len == 0) {
 		p_action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
 		if (p_action || Z_TYPE_P(p_action) == IS_STRING) {
 			view_len = Z_STRLEN_P(p_action);
-			view = Z_STRVAL_P(p_action);
-		}
-	}
-	if (view && view_len) {
-		view = php_str_to_str(view, view_len, "..", 2, "", 0, &view_len);
-		view = php_str_to_str(view, view_len, "\\", 1, "/", 1, &view_len);
-		while (strstr(view, "//")) {
-			view = php_str_to_str(view, view_len, "//", 2, "/", 1, &view_len);
+			view1 = Z_STRVAL_P(p_action);
 		}
 	} else {
-		view_len = 5;
-		view = "index";
+		view_len = spprintf(&view1, 0, "%s", view);
+	}
+	if (view1 && view_len) {
+		view2 = php_str_to_str(view1, view_len, "..", 2, "", 0, &view_len);
+		efree(view1);
+		view1 = php_str_to_str(view2, view_len, "\\", 1, "/", 1, &view_len);
+		efree(view2);
+		while (strstr(view1, "//")) {
+			view2 = php_str_to_str(view1, view_len, "//", 2, "/", 1, &view_len);
+			efree(view1);
+			view1 = view2;
+		}
+	} else {
+		view_len = spprintf(&view1, 0, "index");
 	}
 
-	if (view[0] != '/') {
+	if (view1[0] != '/') {
 		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
 		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
-			view_len = spprintf(&view, 0, "/%s/%s", Z_STRVAL_P(p_name), view);
+			view_len = spprintf(&view1, 0, "/%s/%s", Z_STRVAL_P(p_name), view1);
 		} else {
-			view_len = spprintf(&view, 0, "/%s", view);
+			view_len = spprintf(&view1, 0, "/%s", view1);
 		}
 	}
 
-	zend_str_tolower(view, view_len);
+	zend_str_tolower(view1, view_len);
 
 	tpl_view = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_view"), 1 TSRMLS_CC);
 	if (!tpl_view || Z_TYPE_P(tpl_view) != IS_ARRAY) {
@@ -463,8 +466,9 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 		}
 	}
 
-	tpl_file_len = spprintf(&tpl_file, 0, "%s%s.php", Z_STRVAL_PP(tpl_path), view);
+	tpl_file_len = spprintf(&tpl_file, 0, "%s%s.php", Z_STRVAL_PP(tpl_path), view1);
 	add_assoc_stringl(tpl_view, "tpl_file", tpl_file, tpl_file_len, 1);
+	efree(view1);
 
 	// response
 	if (VCWD_ACCESS(tpl_file, F_OK) == 0) {
@@ -488,8 +492,8 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 		scope = EG(scope);
 		EG(scope) = Z_OBJCE_P(object);
 
-		yod_include(tpl_file, NULL, 1 TSRMLS_CC);
-		
+		yod_include(tpl_file, &retval, 1 TSRMLS_CC);
+	
 		EG(scope) = scope;
 
 		if (php_ob_get_buffer(response TSRMLS_CC) != SUCCESS) {
@@ -549,8 +553,8 @@ static int yod_controller_display(yod_controller_t *object, char *view, size_t v
 */
 static void yod_controller_widget(yod_controller_t *object, char *route, uint route_len TSRMLS_DC) {
 	yod_request_t *request;
-	zval *params, *target, *action1, *pzval;
-	char *widget, *action, *classpath;
+	zval *params, *target, *action1, *retval, *pzval;
+	char *route1, *widget, *action, *classpath;
 	char *classname, *key, *value, *token;
 	uint classname_len, key_len;
 
@@ -569,34 +573,34 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	request = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), 1 TSRMLS_CC);
 
 	// route
-	route = estrndup(route, route_len);
-	route = php_str_to_str(route, route_len, "\\", 1, "/", 1, &route_len);
-	while (strstr(route, "//")) {
-		route = php_str_to_str(route, route_len, "//", 2, "/", 1, &route_len);
+	route1 = php_str_to_str(route, route_len, "\\", 1, "/", 1, &route_len);
+	while (strstr(route1, "//")) {
+		route1 = php_str_to_str(route1, route_len, "//", 2, "/", 1, &route_len);
 	}
-	if (*(route + route_len - 1) == '/') {
-		*(route + route_len - 1) = '\0';
+	if (*(route1 + route_len - 1) == '/') {
+		*(route1 + route_len - 1) = '\0';
 		route_len--;
 	}
-	while (*route == '/') {
+	while (*route1 == '/') {
 		route_len--;
-		route++;
+		route1++;
 	}
 
 	// widget
-	widget = php_strtok_r(route, "/", &token);
+	widget = php_strtok_r(route1, "/", &token);
 	if (widget) {
 		zend_str_tolower(widget, strlen(widget));
 		*widget = toupper(*widget);
 	} else {
-		widget = "Index";
+		spprintf(&widget, 0, "Index");
 	}
+	efree(route1);
 
 	action = php_strtok_r(NULL, "/", &token);
 	if (action) {
 		zend_str_tolower(action, strlen(action));
 	} else {
-		action = "index";
+		spprintf(&action, 0, "index");
 	}
 
 	// params
@@ -626,14 +630,16 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 
 	classname_len = spprintf(&classname, 0, "%sWidget", widget);
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+		php_printf(classpath);
 		object_init_ex(target, *pce);
 		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-			yod_call_method_with_3_params(target, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request, action1, params);
+			//yod_call_method_with_3_params(target, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, request, action1, params);
 		}
 	} else {
 		spprintf(&classpath, 0, "%s/widgets/%sWidget.php", yod_runpath(TSRMLS_CC), widget);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
-			yod_include(classpath, NULL, 1 TSRMLS_CC);
+			php_printf(classpath);
+			yod_include(classpath, &retval, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
@@ -646,6 +652,8 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Widget '%s' not found", classname);
 		}
 	}
+	zval_ptr_dtor(&action1);
+	zval_ptr_dtor(&params);
 	if (target) {
 		zval_ptr_dtor(&target);
 	}
@@ -955,7 +963,6 @@ zend_function_entry yod_controller_methods[] = {
 */
 PHP_MINIT_FUNCTION(yod_controller) {
 	zend_class_entry ce;
-	zval *view;
 
 	INIT_CLASS_ENTRY(ce, "Yod_Controller", yod_controller_methods);
 	yod_controller_ce = zend_register_internal_class(&ce TSRMLS_CC);
