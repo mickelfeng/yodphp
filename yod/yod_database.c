@@ -159,8 +159,8 @@ char *yod_database_md5(char *str, uint len TSRMLS_DC) {
 	PHP_MD5Final(digest, &context);
 	make_digest(md5str, digest);
 
-	retval = estrndup(&md5str[0], sizeof(md5str));
-
+	spprintf(&retval, 0, "%s", &md5str[0]);
+	//retval = estrndup(&md5str[0], sizeof(md5str));
 	return 	retval;
 }
 /* }}} */
@@ -274,6 +274,7 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 	if (p_db && Z_TYPE_P(p_db) == IS_ARRAY) {
 		if (zend_hash_find(Z_ARRVAL_P(p_db), md5hash, strlen(md5hash) + 1, (void **)&ppval) == SUCCESS) {
 			ZVAL_ZVAL(retval, *ppval, 1, 0);
+			efree(classname);
 			efree(md5hash);
 			return 1;
 		}
@@ -284,10 +285,10 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == FAILURE) {
 		spprintf(&classpath, 0, "%s/drivers/%s.class.php", yod_extpath(TSRMLS_CC), classname + 4);
-
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, &pzval, 1 TSRMLS_CC);
 		}
+		efree(classpath);
 	}
 
 	MAKE_STD_ZVAL(object);
@@ -299,6 +300,7 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 	} else {
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 		ZVAL_BOOL(retval, 0);
+		efree(classname);
 		efree(md5hash);
 		return 0;
 	}
@@ -306,10 +308,10 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 	add_assoc_zval_ex(p_db, md5hash, strlen(md5hash) + 1, object);
 	zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db TSRMLS_CC);
 	zval_ptr_dtor(&p_db);
+	efree(classname);
 	efree(md5hash);
 
 	ZVAL_ZVAL(retval, object, 1, 0);
-
 	return 1;
 }
 /* }}} */
@@ -472,6 +474,7 @@ int yod_database_create(yod_database_t *object, zval *fields, char *table, uint 
 	} else {
 		squery_len = spprintf(&squery, 0, "CREATE TABLE %s (%s)%s%s", table, values, (extend_len ? " " : ""), (extend_len ? extend : ""));
 	}
+	efree(values);
 
 #if PHP_YOD_DEBUG
 	yod_debugl(YOD_DOTLINE);
@@ -490,6 +493,7 @@ int yod_database_create(yod_database_t *object, zval *fields, char *table, uint 
 		zend_call_method_with_1_params(&object, Z_OBJCE_P(object), NULL, "execute", &retval, query);
 	}
 	zval_ptr_dtor(&query);
+	efree(squery);
 
 	return 1;
 }
@@ -548,6 +552,8 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 	} else {
 		squery_len = spprintf(&squery, 0, "%s INTO %s (%s) VALUES (%s)", (replace ? "REPLACE" : "INSERT"), table, fields, values);
 	}
+	efree(fields);
+	efree(values);
 	
 #if PHP_YOD_DEBUG
 	yod_debugl(YOD_DOTLINE);
@@ -567,7 +573,9 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 		ZVAL_BOOL(affected, 1);
 		yod_call_method(object, ZEND_STRL("execute"), &retval, 3, query, params, affected, NULL TSRMLS_CC);
 	}
+	zval_ptr_dtor(&params);
 	zval_ptr_dtor(&query);
+	efree(squery);
 
 	return 1;
 }
@@ -608,6 +616,7 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 			update_len = spprintf(&update, 0, "%s%s = %s, ", update, str_key, name);
 			Z_ADDREF_PP(ppval);
 			add_assoc_zval_ex(params, name, name_len + 1, *ppval);
+			efree(name);
 		}
 		zend_hash_move_forward_ex(Z_ARRVAL_P(data), &pos);
 	}
@@ -622,6 +631,7 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 	} else {
 		squery_len = spprintf(&squery, 0, "UPDATE %s SET %s%s%s", table, update, (where_len ? " WHERE " : ""), (where_len ? where : ""));
 	}
+	efree(update);
 
 #if PHP_YOD_DEBUG
 	yod_debugl(YOD_DOTLINE);
@@ -642,6 +652,7 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 		yod_call_method(object, ZEND_STRL("execute"), &retval, 3, query, params, affected, NULL TSRMLS_CC);
 	}
 	zval_ptr_dtor(&query);
+	efree(squery);
 
 	return 1;
 }
@@ -772,6 +783,7 @@ int yod_database_select(yod_database_t *object, zval *select, char *table, uint 
 	} else {
 		squery_len = spprintf(&squery, 0, "SELECT %s FROM %s%s%s%s%s", (fields_len ? fields : "*"), table, (where_len ? " WHERE " : ""), (where_len ? where : ""), (extend_len ? " " : ""), (extend_len ? extend : ""));
 	}
+	efree(fields);
 
 #if PHP_YOD_DEBUG
 	yod_debugl(YOD_DOTLINE);
@@ -790,6 +802,7 @@ int yod_database_select(yod_database_t *object, zval *select, char *table, uint 
 		zend_call_method_with_2_params(&object, Z_OBJCE_P(object), NULL, "query", &retval, query, params);
 	}
 	zval_ptr_dtor(&query);
+	efree(squery);
 
 	return 1;
 }

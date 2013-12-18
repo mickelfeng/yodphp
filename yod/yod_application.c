@@ -74,7 +74,7 @@ static void yod_application_init_config(yod_application_t *object, zval *config)
 	}
 
 	if(config && Z_TYPE_P(config) == IS_STRING) {
-		filepath = Z_STRVAL_P(config);
+		filepath = estrndup(Z_STRVAL_P(config), Z_STRLEN_P(config));
 	} else {
 		spprintf(&filepath, 0, "%s/configs/config.php", yod_runpath(TSRMLS_CC));
 	}
@@ -119,8 +119,8 @@ static void yod_application_init_config(yod_application_t *object, zval *config)
 			}
 			closedir(dir);
 		}
-		efree(filepath);
 	}
+	efree(filepath);
 	if (zend_hash_find(&EG(symbol_table), "config", sizeof("config"), (void **) &ppval) == SUCCESS &&
 		Z_TYPE_PP(ppval) == IS_ARRAY
 	) {

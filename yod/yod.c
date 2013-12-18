@@ -207,6 +207,7 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 		zval_ptr_dtor(&argv[1]);
 		zval_ptr_dtor(&argv[2]);
 		zval_ptr_dtor(&argv[3]);
+		zval_ptr_dtor(&method);
 		zval_dtor(&retval);
 
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::%s()", Z_OBJCE_P(object)->name, func);
@@ -217,11 +218,11 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 		pzval = &retval;
 		ZVAL_ZVAL(*result, pzval, 1, 0);
 	}
-
 	zval_ptr_dtor(&argv[0]);
 	zval_ptr_dtor(&argv[1]);
 	zval_ptr_dtor(&argv[2]);
 	zval_ptr_dtor(&argv[3]);
+	zval_ptr_dtor(&method);
 	zval_dtor(&retval);
 
 	return 1;
@@ -659,8 +660,9 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 	}
 
 #if PHP_YOD_DEBUG
-	zval_ptr_dtor(&YOD_G(debugs));
-	YOD_G(debugs) = NULL;
+	if (YOD_G(debugs)) {
+		zval_ptr_dtor(&YOD_G(debugs));
+	}
 #endif
 
 	return SUCCESS;

@@ -312,9 +312,13 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 			if (retval) {
 				ZVAL_BOOL(retval, 0);
 			}
+			zval_ptr_dtor(&dbconfig);
 			return 0;
 		}
 	}
+	zval_ptr_dtor(&dbconfig);
+	
+	return 1;
 }
 /* }}} */
 
@@ -364,18 +368,23 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affect
 				array_init(bindparams);
 				zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(params), &pos);
 				while (zend_hash_get_current_data_ex(Z_ARRVAL_P(params), (void **)&ppval, &pos) == SUCCESS) {
+					zval *value = NULL;
 					char *str_key = NULL;
 					uint key_len, name_len;
 					ulong num_key;
 
 					if (zend_hash_get_current_key_ex(Z_ARRVAL_P(params), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
 						if (strstr(Z_STRVAL_P(query), str_key)) {
-							add_assoc_zval_ex(bindparams, str_key, key_len, *ppval);
+							MAKE_STD_ZVAL(value);
+							ZVAL_ZVAL(value, *ppval, 1, 0);
+							add_assoc_zval_ex(bindparams, str_key, key_len, value);
 						}
 					}
 					zend_hash_move_forward_ex(Z_ARRVAL_P(params), &pos);
 				}
 				zend_call_method_with_1_params(&result, Z_OBJCE_P(result), NULL, "execute", &pzval, bindparams);
+				zval_ptr_dtor(&bindparams);
+
 				if (affected) {
 					zend_call_method_with_0_params(&result, Z_OBJCE_P(result), NULL, "rowcount", &pzval);
 				}
@@ -442,18 +451,23 @@ int yod_dbpdo_query(yod_dbpdo_t *object, zval *query, zval *params, zval *retval
 				array_init(bindparams);
 				zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(params), &pos);
 				while (zend_hash_get_current_data_ex(Z_ARRVAL_P(params), (void **)&ppval, &pos) == SUCCESS) {
+					zval *value = NULL;
 					char *str_key = NULL;
 					uint key_len, name_len;
 					ulong num_key;
 
 					if (zend_hash_get_current_key_ex(Z_ARRVAL_P(params), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
 						if (strstr(Z_STRVAL_P(query), str_key)) {
-							add_assoc_zval_ex(bindparams, str_key, key_len, *ppval);
+							MAKE_STD_ZVAL(value);
+							ZVAL_ZVAL(value, *ppval, 1, 0);
+							add_assoc_zval_ex(bindparams, str_key, key_len, value);
 						}
 					}
 					zend_hash_move_forward_ex(Z_ARRVAL_P(params), &pos);
 				}
 				zend_call_method_with_1_params(&result, Z_OBJCE_P(result), NULL, "execute", &pzval, bindparams);
+				zval_ptr_dtor(&bindparams);
+
 				zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_result"), result TSRMLS_CC);
 				if (result) {
 					if (retval) {
@@ -722,6 +736,7 @@ PHP_METHOD(yod_dbpdo, fields) {
 			}
 		}
 	}
+	efree(squery);
 }
 /* }}} */
 

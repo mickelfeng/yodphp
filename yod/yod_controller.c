@@ -475,6 +475,7 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 		if (php_start_ob_buffer(NULL, 0, 1 TSRMLS_CC) != SUCCESS) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "ob_start failed");
 			ZVAL_NULL(response);
+			efree(tpl_file);
 			return 0;
 		}
 
@@ -504,10 +505,12 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 			php_end_ob_buffer(0, 0 TSRMLS_CC);
 		}
 
+		efree(tpl_file);
 		return 1;
 	} else {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "View '%s' not found", tpl_file);
 		ZVAL_NULL(response);
+		efree(tpl_file);
 		return 0;
 	}
 
@@ -554,7 +557,7 @@ static int yod_controller_display(yod_controller_t *object, char *view, size_t v
 static void yod_controller_widget(yod_controller_t *object, char *route, uint route_len TSRMLS_DC) {
 	yod_request_t *request;
 	zval *params, *target, *action1, *retval, *pzval;
-	char *route1, *widget, *action, *classpath;
+	char *widget, *action, *classpath, *route1, *route2;
 	char *classname, *key, *value, *token;
 	uint classname_len, key_len;
 
@@ -575,7 +578,9 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	// route
 	route1 = php_str_to_str(route, route_len, "\\", 1, "/", 1, &route_len);
 	while (strstr(route1, "//")) {
-		route1 = php_str_to_str(route1, route_len, "//", 2, "/", 1, &route_len);
+		route2 = php_str_to_str(route1, route_len, "//", 2, "/", 1, &route_len);
+		efree(route1);
+		route1 = route2;
 	}
 	if (*(route1 + route_len - 1) == '/') {
 		*(route1 + route_len - 1) = '\0';
@@ -591,6 +596,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	if (widget) {
 		zend_str_tolower(widget, strlen(widget));
 		*widget = toupper(*widget);
+		spprintf(&widget, 0, "%s", widget);
 	} else {
 		spprintf(&widget, 0, "Index");
 	}
@@ -598,6 +604,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	action = php_strtok_r(NULL, "/", &token);
 	if (action) {
 		zend_str_tolower(action, strlen(action));
+		spprintf(&action, 0, "%s", action);
 	} else {
 		spprintf(&action, 0, "index");
 	}
@@ -645,7 +652,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 			}
-		} else {
+		} else {php_printf("\nclassname:%s\n", classname);return;
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Widget '%s' not found", classname);
 		}
 	}
@@ -654,7 +661,9 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	}
 	zval_ptr_dtor(&action1);
 	zval_ptr_dtor(&params);
+	efree(classname);
 	efree(route1);
+	efree(widget);
 }
 /* }}} */
 
@@ -782,7 +791,7 @@ PHP_METHOD(yod_controller, model) {
 			dbmod = Z_BVAL_P(z_name);
 		} else if (Z_TYPE_P(z_name) == IS_STRING) {
 			name_len = Z_STRLEN_P(z_name);
-			name = estrndup(Z_STRVAL_P(z_name), name_len);
+			name = Z_STRVAL_P(z_name);
 		}
 	}
 	if (config && Z_TYPE_P(config) == IS_BOOL) {
@@ -803,9 +812,6 @@ PHP_METHOD(yod_controller, model) {
 		yod_dbmodel_getinstance(name, name_len, config, return_value TSRMLS_CC);
 	} else {
 		yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
-	}
-	if(name){
-		efree(name);
 	}
 }
 /* }}} */

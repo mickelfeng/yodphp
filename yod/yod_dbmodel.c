@@ -228,6 +228,7 @@ static int yod_dbmodel_parsequery(yod_dbmodel_t *object, zval *query, zval *retv
 		}
 		
 		add_assoc_stringl(query, "FROM", from, from_len, 1);
+		efree(from);
 	}
 
 	zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(query), &pos);
@@ -313,7 +314,6 @@ int yod_dbmodel_construct(yod_dbmodel_t *object, char *name, uint name_len, zval
 	}
 	add_assoc_zval_ex(model, name, name_len + 1, object);
 	zend_update_static_property(yod_dbmodel_ce, ZEND_STRL("_model"), model TSRMLS_CC);
-	zval_ptr_dtor(&model);
 
 	return 1;
 }
@@ -359,7 +359,6 @@ int yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *retva
 	MAKE_STD_ZVAL(object);
 	if (name_len > 0) {
 		spprintf(&classpath, 0, "%s/models/%s.php", yod_runpath(TSRMLS_CC), classname);
-
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, &pzval, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
@@ -388,10 +387,12 @@ int yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *retva
 				yod_dbmodel_construct(object, name, name_len, config TSRMLS_CC);
 			}
 		}
+		efree(classpath);
 	} else {
 		object_init_ex(object, yod_dbmodel_ce);
 		yod_dbmodel_construct(object, name, name_len, config TSRMLS_CC);
 	}
+	efree(classname);
 
 	add_assoc_zval_ex(p_model, name, name_len + 1, object);
 	zend_update_static_property(yod_dbmodel_ce, ZEND_STRL("_model"), p_model TSRMLS_CC);
@@ -457,6 +458,7 @@ static int yod_dbmodel_select(yod_dbmodel_t *object, zval *select TSRMLS_DC) {
 					*(fields + fields_len) = '\0';
 				}
 				add_assoc_stringl(query, "SELECT", fields, fields_len, 0);
+				efree(fields);
 			} else if (Z_TYPE_P(select) == IS_STRING && Z_STRLEN_P(select)) {
 				add_assoc_stringl(query, "SELECT", Z_STRVAL_P(select), Z_STRLEN_P(select), 1);
 			}
@@ -550,6 +552,7 @@ static int yod_dbmodel_join(yod_dbmodel_t *object, char *table, uint table_len, 
 				squery_len = spprintf(&squery, 0, "%s%sJOIN %s AS t%d%s%s", (mode ? mode : "LEFT"), (mode_len ? " " : ""), table, nelem, (where_len ? " ON " : ""), (where_len ? where : ""));
 			}
 			add_next_index_stringl(*ppval, squery, squery_len, 1);
+			efree(squery);
 
 			add_assoc_zval(query, "JOIN", *ppval);
 			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
@@ -620,11 +623,12 @@ static int yod_dbmodel_where(yod_dbmodel_t *object, char *where, uint where_len,
 		}
 
 		if (ppval && Z_TYPE_PP(ppval) == IS_STRING && Z_STRLEN_PP(ppval)) {
-				where_len = spprintf(&where, 0, "(%s) %s (%s)", Z_STRVAL_PP(ppval), (mode_len ? mode : "AND"), where);
+			where_len = spprintf(&where, 0, "(%s) %s (%s)", Z_STRVAL_PP(ppval), (mode_len ? mode : "AND"), where);
 		}
 
 		add_assoc_stringl(query, "WHERE", where, where_len, 1);
 		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
+		efree(where);
 		return 1;
 	}
 
@@ -885,11 +889,15 @@ static int yod_dbmodel_find(yod_dbmodel_t *object, char *where, uint where_len, 
 			zend_call_method_with_0_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "free", NULL);
 			if (retval && data) {
 				ZVAL_ZVAL(retval, data, 1, 1);
+				zval_ptr_dtor(&result);
+				zval_ptr_dtor(&query);
 				yod_dbmodel_initquery(object, NULL TSRMLS_CC);
 				return 1;
 			}
 		}
+		zval_ptr_dtor(&result);
 	}
+	zval_ptr_dtor(&query);
 
 	yod_dbmodel_initquery(object, NULL TSRMLS_CC);
 	return 0;
@@ -952,11 +960,15 @@ static int yod_dbmodel_findall(yod_dbmodel_t *object, char *where, uint where_le
 			zend_call_method_with_0_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "free", NULL);
 			if (retval && data) {
 				ZVAL_ZVAL(retval, data, 1, 1);
+				zval_ptr_dtor(&result);
+				zval_ptr_dtor(&query);
 				yod_dbmodel_initquery(object, NULL TSRMLS_CC);
 				return 1;
 			}
 		}
+		zval_ptr_dtor(&result);
 	}
+	zval_ptr_dtor(&query);
 
 	yod_dbmodel_initquery(object, NULL TSRMLS_CC);
 	return 0;
