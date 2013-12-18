@@ -100,7 +100,7 @@ class IndexController extends Yod_Controller
 	}
 }
 
-class DemoModel extends Yod_DbModel
+class DemoModel extends Yod_Model
 {
 
 }
