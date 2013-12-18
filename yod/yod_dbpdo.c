@@ -325,7 +325,7 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 /** {{{ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affected, zval *retval TSRMLS_DC)
 */
 int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affected, zval *retval TSRMLS_DC) {
-	zval *config, *linkid, *result, *bindparams, *pzval, **ppval;
+	zval *config, *linkid, *result, *params1, *pzval, **ppval;
 	HashPosition pos;
 
 #if PHP_YOD_DEBUG
@@ -364,8 +364,8 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affect
 		} else {
 			zend_call_method_with_1_params(&linkid, Z_OBJCE_P(linkid), NULL, "prepare", &result, query);
 			if (result && Z_TYPE_P(result) == IS_OBJECT) {
-				MAKE_STD_ZVAL(bindparams);
-				array_init(bindparams);
+				MAKE_STD_ZVAL(params1);
+				array_init(params1);
 				zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(params), &pos);
 				while (zend_hash_get_current_data_ex(Z_ARRVAL_P(params), (void **)&ppval, &pos) == SUCCESS) {
 					zval *value = NULL;
@@ -377,13 +377,14 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affect
 						if (strstr(Z_STRVAL_P(query), str_key)) {
 							MAKE_STD_ZVAL(value);
 							ZVAL_ZVAL(value, *ppval, 1, 0);
-							add_assoc_zval_ex(bindparams, str_key, key_len, value);
+							convert_to_string(value);
+							add_assoc_zval_ex(params1, str_key, key_len, value);
 						}
 					}
 					zend_hash_move_forward_ex(Z_ARRVAL_P(params), &pos);
 				}
-				zend_call_method_with_1_params(&result, Z_OBJCE_P(result), NULL, "execute", &pzval, bindparams);
-				zval_ptr_dtor(&bindparams);
+				zend_call_method_with_1_params(&result, Z_OBJCE_P(result), NULL, "execute", &pzval, params1);
+				zval_ptr_dtor(&params1);
 
 				if (affected) {
 					zend_call_method_with_0_params(&result, Z_OBJCE_P(result), NULL, "rowcount", &pzval);

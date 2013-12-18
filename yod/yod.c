@@ -169,7 +169,7 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 		yod_debugf("yod_call_method(%s)", func ? func : "");
 	}
 #endif
-	
+
 	MAKE_STD_ZVAL(argv[0]);
 	MAKE_STD_ZVAL(argv[1]);
 	MAKE_STD_ZVAL(argv[2]);
@@ -576,7 +576,7 @@ PHP_MINIT_FUNCTION(yod)
 	PHP_MINIT(yod_action)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_widget)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_model)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(yod_dbmodel)(INIT_FUNC_ARGS_PASSTHRU);
+//	PHP_MINIT(yod_dbmodel)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_database)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_dbpdo)(INIT_FUNC_ARGS_PASSTHRU);
 

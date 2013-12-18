@@ -399,7 +399,7 @@ int yod_database_dbconfig(yod_database_t *object, zval *config, long linknum, zv
 			linknum = 0;
 		} else {
 			if (zend_hash_find(Z_ARRVAL_PP(slaves), ZEND_STRS("dsn"), (void **)&ppval) == SUCCESS) {
-				php_array_merge(Z_ARRVAL_P(retval), Z_ARRVAL_PP(slaves), 0 TSRMLS_DC);
+				php_array_merge(Z_ARRVAL_P(retval), Z_ARRVAL_PP(slaves), 0 TSRMLS_CC);
 			} else {
 				hash_num = zend_hash_num_elements(Z_ARRVAL_PP(slaves));
 				zend_hash_internal_pointer_reset_ex(Z_ARRVAL_PP(slaves), &pos);
@@ -408,7 +408,7 @@ int yod_database_dbconfig(yod_database_t *object, zval *config, long linknum, zv
 				) {
 					rand_num = php_rand(TSRMLS_C);
 					if ((double) (rand_num / (PHP_RAND_MAX + 1.0)) < (double) 1 / (double) hash_num) {
-						php_array_merge(Z_ARRVAL_P(retval), Z_ARRVAL_PP(ppval), 0 TSRMLS_DC);
+						php_array_merge(Z_ARRVAL_P(retval), Z_ARRVAL_PP(ppval), 0 TSRMLS_CC);
 						break;
 					}
 					zend_hash_move_forward_ex(Z_ARRVAL_PP(slaves), &pos);
@@ -584,7 +584,7 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 /** {{{ int yod_database_update(yod_database_t *object, zval *data, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC)
 */
 int yod_database_update(yod_database_t *object, zval *data, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC) {
-	zval *prefix, *query, *affected, **ppval;
+	zval *prefix, *query, *affected, *params1, **ppval;
 	char *squery, *update = "";
 	uint squery_len, update_len = 0;
 	HashPosition pos;
@@ -600,22 +600,21 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 		return 0;
 	}
 
-	if (!params || Z_TYPE_P(params) != IS_ARRAY) {
-		MAKE_STD_ZVAL(params);
-		array_init(params);
-	}
-
+	MAKE_STD_ZVAL(params1);
+	array_init(params1);
 	zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(data), &pos);
 	while (zend_hash_get_current_data_ex(Z_ARRVAL_P(data), (void **)&ppval, &pos) == SUCCESS) {
+		zval *value = NULL;
 		char *str_key = NULL, *name = NULL;
 		uint key_len, name_len;
 		ulong num_key;
 
 		if (zend_hash_get_current_key_ex(Z_ARRVAL_P(data), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
+			MAKE_STD_ZVAL(value);
+			ZVAL_ZVAL(value, *ppval, 1, 0);
 			name_len = spprintf(&name, 0, ":%s", yod_database_md5(str_key, key_len));
 			update_len = spprintf(&update, 0, "%s%s = %s, ", update, str_key, name);
-			Z_ADDREF_PP(ppval);
-			add_assoc_zval_ex(params, name, name_len + 1, *ppval);
+			add_assoc_zval_ex(params1, name, name_len + 1, *ppval);
 			efree(name);
 		}
 		zend_hash_move_forward_ex(Z_ARRVAL_P(data), &pos);
@@ -623,6 +622,10 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 	if (update_len > 0) {
 		update_len = update_len - 2;
 		*(update + update_len) = '\0';
+	}
+
+	if (params && Z_TYPE_P(params) == IS_ARRAY) {
+		php_array_merge(Z_ARRVAL_P(params1), Z_ARRVAL_P(params), 0 TSRMLS_CC);
 	}
 
 	prefix = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_prefix"), 1 TSRMLS_CC);
@@ -642,15 +645,16 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 	MAKE_STD_ZVAL(query);
 	ZVAL_STRINGL(query, squery, squery_len, 1);
 	if (instanceof_function(Z_OBJCE_P(object), yod_dbpdo_ce TSRMLS_CC)) {
-		yod_dbpdo_execute(object, query, params, 1, retval TSRMLS_CC);
+		yod_dbpdo_execute(object, query, params1, 1, retval TSRMLS_CC);
 	} else {
 #if PHP_YOD_DEBUG
 		yod_debugf("yod_database_execute()");
 #endif
 		MAKE_STD_ZVAL(affected);
 		ZVAL_BOOL(affected, 1);
-		yod_call_method(object, ZEND_STRL("execute"), &retval, 3, query, params, affected, NULL TSRMLS_CC);
+		yod_call_method(object, ZEND_STRL("execute"), &retval, 3, query, params1, affected, NULL TSRMLS_CC);
 	}
+	zval_ptr_dtor(&params1);
 	zval_ptr_dtor(&query);
 	efree(squery);
 

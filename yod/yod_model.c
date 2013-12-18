@@ -26,6 +26,7 @@
 #include "php_yod.h"
 #include "yod_application.h"
 #include "yod_model.h"
+//#include "yod_dbmodel.h"
 #include "yod_database.h"
 
 zend_class_entry *yod_model_ce;
@@ -600,7 +601,8 @@ PHP_METHOD(yod_model, model) {
 	}
 	
 	if (dbmod) {
-		yod_dbmodel_getinstance(name, name_len, config, return_value TSRMLS_CC);
+		//yod_dbmodel_getinstance(name, name_len, config, return_value TSRMLS_CC);
+		yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
 	} else {
 		yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
 	}

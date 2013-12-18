@@ -147,8 +147,11 @@ static int yod_dbmodel_initquery(yod_dbmodel_t *object, zval *retval TSRMLS_DC) 
 		return 0;
 	}
 
-	MAKE_STD_ZVAL(query);
-	array_init(query);
+	query = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), 1 TSRMLS_CC);
+	if (!query || Z_TYPE_P(query) != IS_ARRAY) {
+		MAKE_STD_ZVAL(query);
+		array_init(query);
+	}
 	add_assoc_stringl(query, "SELECT", "", 0, 1);
 	add_assoc_stringl(query, "FROM", "", 0, 1);
 	MAKE_STD_ZVAL(join);
@@ -163,15 +166,15 @@ static int yod_dbmodel_initquery(yod_dbmodel_t *object, zval *retval TSRMLS_DC) 
 	add_assoc_stringl(query, "COMMENT", "", 0, 1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 
-	MAKE_STD_ZVAL(params);
+	params = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), 1 TSRMLS_CC);
+	if (!params) {
+		MAKE_STD_ZVAL(params);
+	}
 	array_init(params);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), params TSRMLS_CC);
-	zval_ptr_dtor(&params);
 
 	if (retval) {
 		ZVAL_ZVAL(retval, query, 1, 0);
-	} else {
-		zval_ptr_dtor(&query);
 	}
 
 	return 1;
@@ -1063,7 +1066,7 @@ static int yod_dbmodel_save(yod_dbmodel_t *object, zval *data, char *where, uint
 	yod_debugf("yod_dbmodel_save(%s)", where ? where : "");
 #endif
 
-	if (!object) {
+	if (!data || Z_TYPE_P(data) != IS_ARRAY|| !object) {
 		if (retval) {
 			ZVAL_BOOL(retval, 0);
 		}
@@ -1108,11 +1111,45 @@ static int yod_dbmodel_save(yod_dbmodel_t *object, zval *data, char *where, uint
 				}
 			}
 		} else {
+			zval *argv[4], *pzval, method;
+
+			INIT_ZVAL(method);
+			ZVAL_STRING(&method, "update", 0);
+
+			MAKE_STD_ZVAL(argv[0]);
+			MAKE_STD_ZVAL(argv[1]);
+			MAKE_STD_ZVAL(argv[2]);
+			MAKE_STD_ZVAL(argv[3]);
+
+			ZVAL_ZVAL(argv[0], data, 1, 0);
+			ZVAL_STRINGL(argv[1], Z_STRVAL_P(table), Z_STRLEN_P(table), 0);
+			ZVAL_STRINGL(argv[2], Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 0);
+			params1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), 1 TSRMLS_CC);
+			ZVAL_ZVAL(argv[3], params1, 1, 0);
+
+			if (call_user_function(NULL, &yoddb, &method, retval, 4, argv TSRMLS_CC) == FAILURE) {
+				zval_ptr_dtor(&argv[0]);
+				zval_ptr_dtor(&argv[1]);
+				zval_ptr_dtor(&argv[2]);
+				zval_ptr_dtor(&argv[3]);
+				//zval_dtor(&method);
+
+				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::update()", Z_OBJCE_P(yoddb)->name);
+				return 0;
+			}
+
+			zval_ptr_dtor(&argv[0]);
+			zval_ptr_dtor(&argv[1]);
+			zval_ptr_dtor(&argv[2]);
+			zval_ptr_dtor(&argv[3]);
+			//zval_dtor(&method);
+/*
 			MAKE_STD_ZVAL(where1);
 			ZVAL_STRINGL(where1, Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
 			params1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), 1 TSRMLS_CC);
 			yod_call_method(yoddb, ZEND_STRL("update"), &retval, 4, data, table, where1, params1 TSRMLS_CC);
 			zval_ptr_dtor(&where1);
+*/
 		}
 
 		yod_dbmodel_initquery(object, NULL TSRMLS_CC);
