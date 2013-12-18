@@ -933,7 +933,6 @@ PHP_METHOD(yod_database, update) {
 	}
 
 	yod_database_update(getThis(), data, table, table_len, where, where_len, params, return_value TSRMLS_CC);
-	php_printf("return_value:"); php_var_dump(&return_value, 0 TSRMLS_CC);
 }
 /* }}} */
 

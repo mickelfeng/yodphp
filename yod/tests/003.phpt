@@ -12,40 +12,14 @@ include TESTS_PATH . '/clean.php';
 
 is_dir(TESTS_PATH . '/views') or mkdir(TESTS_PATH . '/views');
 is_dir(TESTS_PATH . '/views/tests') or mkdir(TESTS_PATH . '/views/tests');
-file_put_contents(TESTS_PATH . '/views/tests/widget.php', <<<PHP
+file_put_contents(TESTS_PATH . '/views/tests/hello.php', <<<PHP
 <?php echo \$yodphp; ?>
-
-<?php \$this->widget('public/header'); ?>
 
 <?php echo \$hello; ?>
 
-<?php \$this->widget('public/footer'); ?>
 
 PHP
 );
-
-is_dir(TESTS_PATH . '/widgets') or mkdir(TESTS_PATH . '/widgets');
-is_dir(TESTS_PATH . '/widgets/public') or mkdir(TESTS_PATH . '/widgets/public');
-file_put_contents(TESTS_PATH . '/widgets/PublicWidget.php', <<<PHP
-<?php
-class PublicWidget extends Yod_Widget
-{
-    public function headerAction()
-    {
-        \$this->display('header', array('yodphp' => '<sup>Beta</sup>'));
-    }
-
-    public function footerAction()
-    {
-        \$this->display('footer', array('footer' => 'Copyright'));
-    }
-}
-
-PHP
-);
-
-file_put_contents(TESTS_PATH . '/widgets/public/header.php', 'Header');
-file_put_contents(TESTS_PATH . '/widgets/public/footer.php', "Footer\r\n");
 
 $config = array(
 	//db
@@ -81,14 +55,15 @@ class TestsController extends Yod_Controller
     public function requestAction()
     {
         $this->_view['tpl_path'] = './tests/views';
-        $this->forward('forward');
+        $this->forward('hello');
     }
 
-    public function forwardAction()
+    public function helloAction()
     {
         print_r($this);
         $this->assign('yodphp', 'Yod PHP Framework');
-        $this->display('widget', array('hello' => 'Hello World!'));
+        $this->assign(array('hello' => 'Hello World!'));
+        $this->display();
     }
 }
 ?>
@@ -96,7 +71,7 @@ class TestsController extends Yod_Controller
 TestsController Object
 (
     [_name:protected] => tests
-    [_action:protected] => forward
+    [_action:protected] => hello
     [_request:protected] => Yod_Request Object
         (
             [_routed:protected] => 1
@@ -122,7 +97,5 @@ TestsController Object
 
 )
 Yod PHP Framework
-Header
 Hello World!
-Footer
 HTTP/1.0 404 Not Found

@@ -13,19 +13,20 @@ $tests = array(
 	TESTS_PATH . '/extends',
 	TESTS_PATH . '/models/TestsModel.php',
 	TESTS_PATH . '/models',
+	TESTS_PATH . '/views/tests/hello.php',
+	TESTS_PATH . '/views/tests/widget.php',
+	TESTS_PATH . '/views/tests',
+	TESTS_PATH . '/views',
 	TESTS_PATH . '/widgets/public/footer.php',
 	TESTS_PATH . '/widgets/public/header.php',
 	TESTS_PATH . '/widgets/public',
 	TESTS_PATH . '/widgets/PublicWidget.php',
 	TESTS_PATH . '/widgets',
-	TESTS_PATH . '/views/tests/widget.php',
-	TESTS_PATH . '/views/tests',
-	TESTS_PATH . '/views',
 );
 foreach ($tests as $file) {
 	if (is_file($file)) {
-		unlink($file);
+		@unlink($file);
 	} elseif (is_dir($file)) {
-		rmdir($file);
+		@rmdir($file);
 	}
 }

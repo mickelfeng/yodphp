@@ -370,7 +370,6 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affect
 
 					if (zend_hash_get_current_key_ex(Z_ARRVAL_P(params), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
 						if (strstr(Z_STRVAL_P(query), str_key)) {
-							Z_ADDREF_PP(ppval);
 							add_assoc_zval_ex(bindparams, str_key, key_len, *ppval);
 						}
 					}
@@ -449,7 +448,6 @@ int yod_dbpdo_query(yod_dbpdo_t *object, zval *query, zval *params, zval *retval
 
 					if (zend_hash_get_current_key_ex(Z_ARRVAL_P(params), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
 						if (strstr(Z_STRVAL_P(query), str_key)) {
-							Z_ADDREF_PP(ppval);
 							add_assoc_zval_ex(bindparams, str_key, key_len, *ppval);
 						}
 					}
@@ -971,7 +969,7 @@ PHP_METHOD(yod_dbpdo, close) {
 
 /** {{{ proto public Yod_DbPdo::errno()
 */
-PHP_METHOD(yod_dbpdo, Errno) {
+PHP_METHOD(yod_dbpdo, errNo) {
 	yod_dbpdo_t *object;
 	zval *linkid, *errcode;
 
@@ -1040,7 +1038,7 @@ zend_function_entry yod_dbpdo_methods[] = {
 	PHP_ME(yod_dbpdo, quote,		yod_dbpdo_quote_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbpdo, free,			yod_dbpdo_free_arginfo,				ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbpdo, close,		yod_dbpdo_close_arginfo,			ZEND_ACC_PUBLIC)
-	PHP_ME(yod_dbpdo, Errno,		yod_dbpdo_errno_arginfo,			ZEND_ACC_PUBLIC)
+	PHP_ME(yod_dbpdo, errNo,		yod_dbpdo_errno_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbpdo, error,		yod_dbpdo_error_arginfo,			ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
