@@ -222,7 +222,11 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, NULL, 1 TSRMLS_CC);
+#if PHP_API_VERSION < 20100412
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+#else
+			if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
+#endif
 				MAKE_STD_ZVAL(target);
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
@@ -239,7 +243,6 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 				yod_request_erroraction(request TSRMLS_CC);
 			}
 		}
-
 		efree(classpath);
 	}
 
@@ -472,7 +475,11 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 
 	// response
 	if (VCWD_ACCESS(tpl_file, F_OK) == 0) {
-		if (php_start_ob_buffer(NULL, 0, 1 TSRMLS_CC) != SUCCESS) {
+#ifdef PHP_OUTPUT_NEWAPI
+		if (php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC) == FAILURE) {
+#else
+		if (php_start_ob_buffer(NULL, 0, 1 TSRMLS_CC) == FAILURE) {
+#endif
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "ob_start failed");
 			ZVAL_NULL(response);
 			efree(tpl_file);
@@ -497,14 +504,21 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	
 		EG(scope) = scope;
 
-		if (php_ob_get_buffer(response TSRMLS_CC) != SUCCESS) {
+#ifdef PHP_OUTPUT_NEWAPI
+		if (php_output_get_contents(response TSRMLS_CC) == FAILURE) {
+#else
+		if (php_ob_get_buffer(response TSRMLS_CC) == FAILURE) {
+#endif
 			ZVAL_NULL(response);
 		}
 
+#ifdef PHP_OUTPUT_NEWAPI
+		php_output_discard(TSRMLS_C);
+#else
 		if (OG(ob_nesting_level)) {
 			php_end_ob_buffer(0, 0 TSRMLS_CC);
 		}
-
+#endif
 		efree(tpl_file);
 		return 1;
 	} else {
@@ -635,7 +649,11 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	ZVAL_STRING(action1, action, 1);
 
 	classname_len = spprintf(&classname, 0, "%sWidget", widget);
+#if PHP_API_VERSION < 20100412
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+#else
+	if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
+#endif
 		object_init_ex(target, *pce);
 		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
 			yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params, NULL TSRMLS_CC);
@@ -644,7 +662,11 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 		spprintf(&classpath, 0, "%s/widgets/%sWidget.php", yod_runpath(TSRMLS_CC), widget);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, &retval, 1 TSRMLS_CC);
+#if PHP_API_VERSION < 20100412
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+#else
+			if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
+#endif
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
 					yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params, NULL TSRMLS_CC);
@@ -652,7 +674,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 			}
-		} else {php_printf("\nclassname:%s\n", classname);return;
+		} else {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Widget '%s' not found", classname);
 		}
 	}
@@ -663,6 +685,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	zval_ptr_dtor(&params);
 	efree(classname);
 	efree(route1);
+	efree(action);
 	efree(widget);
 }
 /* }}} */

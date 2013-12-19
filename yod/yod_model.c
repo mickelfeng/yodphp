@@ -221,7 +221,11 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 		spprintf(&classpath, 0, "%s/models/%s.php", yod_runpath(TSRMLS_CC), classname);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, &pzval, 1 TSRMLS_CC);
+#if PHP_API_VERSION < 20100412
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+#else
+			if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
+#endif
 				object_init_ex(object, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
 					MAKE_STD_ZVAL(p_name);
@@ -242,7 +246,11 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 				return 0;
 			}
 		} else {
+#if PHP_API_VERSION < 20100412
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+#else
+			if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
+#endif
 				object_init_ex(object, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
 					MAKE_STD_ZVAL(p_name);
@@ -337,13 +345,13 @@ PHP_METHOD(yod_model, find) {
 
 	object = getThis();
 
-	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 0 TSRMLS_CC);
+	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (!yoddb || Z_TYPE_P(yoddb) != IS_OBJECT) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function select() on a non-object");
 		RETURN_FALSE;
 	}
 
-	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 0 TSRMLS_CC);
+	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 1 TSRMLS_CC);
 	if (table) {
 		convert_to_string(table);
 
@@ -378,13 +386,13 @@ PHP_METHOD(yod_model, findAll) {
 
 	object = getThis();
 
-	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 0 TSRMLS_CC);
+	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (!yoddb || Z_TYPE_P(yoddb) != IS_OBJECT) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function select() on a non-object");
 		RETURN_FALSE;
 	}
 
-	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 0 TSRMLS_CC);
+	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 1 TSRMLS_CC);
 	if (table) {
 		convert_to_string(table);
 
@@ -419,13 +427,13 @@ PHP_METHOD(yod_model, count) {
 
 	object = getThis();
 
-	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 0 TSRMLS_CC);
+	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (!yoddb || Z_TYPE_P(yoddb) != IS_OBJECT) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function select() on a non-object");
 		RETURN_FALSE;
 	}
 
-	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 0 TSRMLS_CC);
+	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 1 TSRMLS_CC);
 	if (table) {
 		convert_to_string(table);
 
@@ -470,7 +478,7 @@ PHP_METHOD(yod_model, save) {
 	
 	object = getThis();
 
-	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 0 TSRMLS_CC);
+	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (!yoddb || Z_TYPE_P(yoddb) != IS_OBJECT) {
 		if (where_len == 0) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function insert() on a non-object");
@@ -480,7 +488,7 @@ PHP_METHOD(yod_model, save) {
 		RETURN_FALSE;
 	}
 
-	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 0 TSRMLS_CC);
+	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 1 TSRMLS_CC);
 	if (table) {
 		convert_to_string(table);
 		if (where_len == 0) {
@@ -507,13 +515,13 @@ PHP_METHOD(yod_model, remove) {
 
 	object = getThis();
 
-	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 0 TSRMLS_CC);
+	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (!yoddb || Z_TYPE_P(yoddb) != IS_OBJECT) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function delete() on a non-object");
 		RETURN_FALSE;
 	}
 
-	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 0 TSRMLS_CC);
+	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 1 TSRMLS_CC);
 	if (table) {
 		convert_to_string(table);
 		yod_database_delete(yoddb, Z_STRVAL_P(table), Z_STRLEN_P(table), where, where_len, params, return_value TSRMLS_CC);

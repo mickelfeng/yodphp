@@ -183,6 +183,7 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 	if (linkids && Z_TYPE_P(linkids) == IS_ARRAY) {
 		if (zend_hash_index_find(Z_ARRVAL_P(linkids), linknum, (void **)&ppval) == SUCCESS) {
 			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkid"), *ppval TSRMLS_CC);
+			zval_ptr_dtor(&dbconfig);
 			if (retval) {
 				ZVAL_ZVAL(retval, *ppval, 1, 0);
 			}
@@ -198,13 +199,18 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 			Z_TYPE_PP(ppval) != IS_STRING || Z_STRLEN_PP(ppval) == 0
 		) {
 			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Database DSN configure error");
+			zval_ptr_dtor(&dbconfig);
 			if (retval) {
 				ZVAL_BOOL(retval, 0);
 			}
 			return 0;
 		}
 
+#if PHP_API_VERSION < 20100412
 		if (zend_lookup_class_ex(ZEND_STRL("PDO"), 0, &pce TSRMLS_CC) == SUCCESS) {
+#else
+		if (zend_lookup_class_ex(ZEND_STRL("PDO"), NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
+#endif
 			MAKE_STD_ZVAL(linkid);
 			object_init_ex(linkid, *pce);
 
@@ -309,10 +315,10 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 			}
 		} else {
 			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class 'PDO' not found");
+			zval_ptr_dtor(&dbconfig);
 			if (retval) {
 				ZVAL_BOOL(retval, 0);
 			}
-			zval_ptr_dtor(&dbconfig);
 			return 0;
 		}
 	}

@@ -58,7 +58,7 @@ static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, c
 	yod_debugf("yod_widget_construct()");
 #endif
 
-	dupl = zend_get_object_classname(object, &cname, &cname_len TSRMLS_CC);
+	dupl = zend_get_object_classname(object, (const char **)&cname, &cname_len TSRMLS_CC);
 
 	if (cname_len > 6) {
 		name = estrndup(cname, cname_len);

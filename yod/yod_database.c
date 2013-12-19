@@ -224,7 +224,7 @@ void yod_database_construct(yod_database_t *object, zval *config TSRMLS_DC) {
 */
 int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 	yod_database_t *object;
-	zval *p_db, *pzval, **ppval;
+	zval *p_db, *config1, *pzval, **ppval;
 	char *classname, *classpath, *md5hash;
 	uint classname_len;
 	zend_class_entry **pce = NULL;
@@ -234,22 +234,24 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 	yod_debugf("yod_database_getinstance()");
 #endif
 
+	MAKE_STD_ZVAL(config1);
 	if (!config) {
-		MAKE_STD_ZVAL(config);
-		yod_application_config(ZEND_STRL("db_dsn"), config TSRMLS_CC);
+		yod_application_config(ZEND_STRL("db_dsn"), config1 TSRMLS_CC);
 	} else if (Z_TYPE_P(config) == IS_STRING) {
-		yod_application_config(Z_STRVAL_P(config), Z_STRLEN_P(config), config TSRMLS_CC);
+		yod_application_config(Z_STRVAL_P(config), Z_STRLEN_P(config), config1 TSRMLS_CC);
 	}
 
-	if (Z_TYPE_P(config) != IS_ARRAY) {
+	if (Z_TYPE_P(config1) != IS_ARRAY) {
+		zval_ptr_dtor(&config1);
+		
 		ZVAL_BOOL(retval, 0);
 		return 0;
 	}
 
-	if (zend_hash_find(Z_ARRVAL_P(config), ZEND_STRS("type"), (void **)&ppval) == FAILURE ||
+	if (zend_hash_find(Z_ARRVAL_P(config1), ZEND_STRS("type"), (void **)&ppval) == FAILURE ||
 		Z_TYPE_PP(ppval) != IS_STRING
 	) {
-		add_assoc_string_ex(config, ZEND_STRS("type"), "pdo", 1);
+		add_assoc_string_ex(config1, ZEND_STRS("type"), "pdo", 1);
 		classname_len = spprintf(&classname, 0, "Yod_DbPdo");
 	} else {
 		char *dbtype = estrndup(Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval));
@@ -268,12 +270,13 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 		efree(dbtype);
 	}
 
-	md5hash = yod_database_md5hash(&config);
+	md5hash = yod_database_md5hash(&config1);
 
 	p_db = zend_read_static_property(yod_database_ce, ZEND_STRL("_db"), 0 TSRMLS_CC);
 	if (p_db && Z_TYPE_P(p_db) == IS_ARRAY) {
 		if (zend_hash_find(Z_ARRVAL_P(p_db), md5hash, strlen(md5hash) + 1, (void **)&ppval) == SUCCESS) {
 			ZVAL_ZVAL(retval, *ppval, 1, 0);
+			zval_ptr_dtor(&config1);
 			efree(classname);
 			efree(md5hash);
 			return 1;
@@ -283,7 +286,11 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 		array_init(p_db);
 	}
 
+#if PHP_API_VERSION < 20100412
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == FAILURE) {
+#else
+	if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == FAILURE) {
+#endif
 		spprintf(&classpath, 0, "%s/drivers/%s.class.php", yod_extpath(TSRMLS_CC), classname + 4);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, &pzval, 1 TSRMLS_CC);
@@ -292,21 +299,28 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 	}
 
 	MAKE_STD_ZVAL(object);
+#if PHP_API_VERSION < 20100412
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+#else
+	if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
+#endif
 		object_init_ex(object, *pce);
 		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-			zend_call_method_with_1_params(&object, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, config);
+			zend_call_method_with_1_params(&object, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, config1);
 		}
 	} else {
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
-		ZVAL_BOOL(retval, 0);
+		zval_ptr_dtor(&config1);
 		efree(classname);
 		efree(md5hash);
+
+		ZVAL_BOOL(retval, 0);
 		return 0;
 	}
 
 	add_assoc_zval_ex(p_db, md5hash, strlen(md5hash) + 1, object);
 	zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db TSRMLS_CC);
+	zval_ptr_dtor(&config1);
 	zval_ptr_dtor(&p_db);
 	efree(classname);
 	efree(md5hash);

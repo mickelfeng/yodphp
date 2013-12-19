@@ -509,7 +509,11 @@ static int yod_autoload(char *classname, uint classname_len TSRMLS_DC) {
 
 	efree(classpath);
 
+#if PHP_API_VERSION < 20100412
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+#else
+	if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
+#endif
 		return SUCCESS;
 	}
 
