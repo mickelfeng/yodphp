@@ -276,6 +276,8 @@ final class Yod_Request
 		if (empty($route)) {
 			if (strtoupper($this->method) == 'CLI') {
 				$route = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : '';
+			} elseif(strtoupper($this->method) == 'UNKNOWN') {
+				$route = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : (empty($_SERVER['PATH_INFO']) ? '' : $_SERVER['PATH_INFO']);
 			} elseif (empty($_GET[YOD_PATHVAR])) {
 				$route = empty($_SERVER['PATH_INFO']) ? '' : $_SERVER['PATH_INFO'];
 			} else {
