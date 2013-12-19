@@ -187,7 +187,7 @@ int yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *co
 */
 int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval TSRMLS_DC) {
 	yod_model_t *object;
-	zval *p_model, *p_name, *pzval, **ppval;
+	zval *model1, *p_model, *p_name, *pzval, **ppval;
 	char *classname, *classpath;
 	uint classname_len;
 	zend_class_entry **pce = NULL;
@@ -202,6 +202,7 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 		classname_len = spprintf(&classname, 0, "%sModel", name);
 	}
 
+	
 	p_model = zend_read_static_property(yod_model_ce, ZEND_STRL("_model"), 1 TSRMLS_CC);
 	if (p_model && Z_TYPE_P(p_model) == IS_ARRAY) {
 		if (zend_hash_find(Z_ARRVAL_P(p_model), name, name_len + 1, (void **)&ppval) == SUCCESS) {
@@ -211,9 +212,6 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 			efree(classname);
 			return 1;
 		}
-	} else {
-		MAKE_STD_ZVAL(p_model);
-		array_init(p_model);
 	}
 
 	MAKE_STD_ZVAL(object);
@@ -273,10 +271,19 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 		yod_model_construct(object, name, name_len, config TSRMLS_CC);
 	}
 
-	if (Z_TYPE_P(object) == IS_OBJECT) {
-		add_assoc_zval_ex(p_model, name, name_len + 1, object);
-		zend_update_static_property(yod_model_ce, ZEND_STRL("_model"), p_model TSRMLS_CC);
+	MAKE_STD_ZVAL(model1);
+	if (p_model && Z_TYPE_P(p_model) == IS_ARRAY) {
+		ZVAL_ZVAL(model1, p_model, 1, 0);
+	} else {
+		array_init(model1);
 	}
+	
+	if (Z_TYPE_P(object) == IS_OBJECT) {
+		add_assoc_zval_ex(model1, name, name_len + 1, object);
+		zend_update_static_property(yod_model_ce, ZEND_STRL("_model"), model1 TSRMLS_CC);
+	}
+	zval_ptr_dtor(&model1);
+
 	if (retval) {
 		if (Z_TYPE_P(object) == IS_OBJECT) {
 			ZVAL_ZVAL(retval, object, 1, 0);
@@ -363,6 +370,7 @@ PHP_METHOD(yod_model, find) {
 				RETURN_ZVAL(retval, 1, 1);
 			}
 		}
+		zval_ptr_dtor(&result);
 	}
 	
 	RETURN_FALSE;
@@ -404,6 +412,7 @@ PHP_METHOD(yod_model, findAll) {
 				RETURN_ZVAL(retval, 1, 1);
 			}
 		}
+		zval_ptr_dtor(&result);
 	}
 	
 	RETURN_FALSE;
@@ -452,6 +461,7 @@ PHP_METHOD(yod_model, count) {
 				RETURN_ZVAL(*ppval, 1, 1);
 			}
 		}
+		zval_ptr_dtor(&result);
 	}
 	
 	RETURN_FALSE;
