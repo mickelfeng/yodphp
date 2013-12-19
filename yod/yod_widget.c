@@ -58,14 +58,15 @@ static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, c
 	yod_debugf("yod_widget_construct()");
 #endif
 
-	dupl = zend_get_object_classname(object, &cname, &cname_len TSRMLS_CC);
+	dupl = zend_get_object_classname(object, (const char **)&cname, &cname_len TSRMLS_CC);
 
-	name = estrndup(cname, cname_len);
 	if (cname_len > 6) {
+		name = estrndup(cname, cname_len);
 		*(name + cname_len - 6) = '\0';
 		name_len = cname_len - 6;
 		zend_str_tolower(name, name_len);
 		zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_name"), name TSRMLS_CC);
+		efree(name);
 	}
 	
 	if (action_len) {
@@ -113,6 +114,8 @@ static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, c
 	} else {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unavailable action %s::%sAction()", cname, action);
 	}
+	efree(action);
+	efree(method);
 
 	if (!dupl) {
 		efree(cname);

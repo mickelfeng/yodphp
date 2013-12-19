@@ -106,6 +106,7 @@ class DemoController extends Yod_Controller
 
 	public function dbmAction()
 	{
+		/*
 		echo '<pre>';
 		$dbm = $this->model(true);
 		$dbm->table('demo');
@@ -162,6 +163,7 @@ class DemoController extends Yod_Controller
 		//$du01 = new DemoUserModel();
 
 		echo '<br>'; print_r($duser);
+		*/
 	}
 
 	public function pdoAction()

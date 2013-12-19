@@ -160,7 +160,7 @@ void yod_do_exit(TSRMLS_DC) {
 */
 int yod_call_method(zval *object, char *func, int func_len, zval **result, int pcount, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC)
 {
-	zval *method, *argv[4], retval;
+	zval *method, *argv[4], *pzval, retval;
 
 #if PHP_YOD_DEBUG
 	if (object) {
@@ -169,7 +169,7 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 		yod_debugf("yod_call_method(%s)", func ? func : "");
 	}
 #endif
-	
+
 	MAKE_STD_ZVAL(argv[0]);
 	MAKE_STD_ZVAL(argv[1]);
 	MAKE_STD_ZVAL(argv[2]);
@@ -207,21 +207,23 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 		zval_ptr_dtor(&argv[1]);
 		zval_ptr_dtor(&argv[2]);
 		zval_ptr_dtor(&argv[3]);
-		zval_ptr_dtor(&retval);
+		zval_ptr_dtor(&method);
+		zval_dtor(&retval);
 
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error calling %s::%s()", Z_OBJCE_P(object)->name, func);
 		return 0;
 	}
 	
 	if (result) {
-		*result = &retval;
-		php_printf("yod_call_method:"); php_var_dump(result, 0 TSRMLS_CC);
+		pzval = &retval;
+		ZVAL_ZVAL(*result, pzval, 1, 0);
 	}
-
 	zval_ptr_dtor(&argv[0]);
 	zval_ptr_dtor(&argv[1]);
 	zval_ptr_dtor(&argv[2]);
 	zval_ptr_dtor(&argv[3]);
+	zval_ptr_dtor(&method);
+	zval_dtor(&retval);
 
 	return 1;
 }
@@ -507,7 +509,11 @@ static int yod_autoload(char *classname, uint classname_len TSRMLS_DC) {
 
 	efree(classpath);
 
+#if PHP_API_VERSION < 20100412
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
+#else
+	if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
+#endif
 		return SUCCESS;
 	}
 
@@ -574,7 +580,7 @@ PHP_MINIT_FUNCTION(yod)
 	PHP_MINIT(yod_action)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_widget)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_model)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(yod_dbmodel)(INIT_FUNC_ARGS_PASSTHRU);
+//	PHP_MINIT(yod_dbmodel)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_database)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(yod_dbpdo)(INIT_FUNC_ARGS_PASSTHRU);
 
@@ -658,8 +664,9 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 	}
 
 #if PHP_YOD_DEBUG
-	zval_ptr_dtor(&YOD_G(debugs));
-	YOD_G(debugs) = NULL;
+	if (YOD_G(debugs)) {
+		zval_ptr_dtor(&YOD_G(debugs));
+	}
 #endif
 
 	return SUCCESS;

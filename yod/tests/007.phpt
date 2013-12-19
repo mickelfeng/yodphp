@@ -4,13 +4,6 @@ Check for yod database
 <?php
 if (!extension_loaded("yod") || defined('YOD_RUNMODE') || !class_exists('PDO', false)) {
 	print "skip";
-} else {
-	try {
-		$config = include dirname(__FILE__) . '/configs/db_dsn.config.php';
-		new PDO($config['dsn'], $config['user'], $config['pass']);
-	} catch (Exception $e) {
-		print "skip";
-	}
 }
 ?>
 --FILE--
@@ -80,30 +73,34 @@ class IndexController extends Yod_Controller
 		$save = $tests->save($data);
 		echo "save:"; var_dump($save);
 
-		$demo = $this->model('Demo');
+		//$demo = $this->model('Demo');
+
+		//$save = $demo->table('tests')->save($data);
+		//echo "save:"; var_dump($save);
 
 		$data['updated'] = 1234567891;
-		$save = $demo->table('tests')->where('id = :id', array(':id' => 1))->save($data);
-		echo "save:"; var_dump($save);
-/*
-		$data = $demo->from('tests')->where('id = :id', array(':id' => 1))->find();
-		echo "find:"; print_r($data);
+		//$demo->table('tests')->where('id = :id', array(':id' => 1));
+		//echo "save:"; var_dump($demo->save($data));
 
-		$data = $demo->from('tests')->where('id = :id', array(':id' => 1))->findAll();
-		echo "findAll:"; print_r($data);
+		//$demo->from('tests')->where('id = :id', array(':id' => 1));
+		//echo "find:"; print_r($demo->find());
 
-		echo "remove:" . $demo->table('tests')->where('id = :id', array(':id' => 1))->remove();
+		//$data = $demo->from('tests')->findAll();
+		//echo "findAll:"; print_r($data);
 
-		$find = $demo->from('tests')->where('id = :id', array(':id' => 1))->find();
-		echo "\nfind:"; var_dump($find);
-*/
+		//$demo->table('tests')->where('id = :id', array(':id' => 1));
+		//echo "remove:"; var_dump($demo->remove());
+
+		//$demo->from('tests')->where('id = :id', array(':id' => 1));
+		//echo "\nfind:"; var_dump($demo->find());
+
 		$execute = $db->execute('DROP TABLE yod_tests');
 		echo "execute:"; var_dump($execute);
 
 	}
 }
 
-class DemoModel extends Yod_DbModel
+class DemoModel extends Yod_Model
 {
 
 }

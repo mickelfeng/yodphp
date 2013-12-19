@@ -58,7 +58,7 @@ class IndexController extends Yod_Controller
 	}
 }
 
-class HelloModel extends Yod_DbModel
+class HelloModel extends Yod_Model
 {
 	public function show()
 	{
