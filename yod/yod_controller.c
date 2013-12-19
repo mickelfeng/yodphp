@@ -208,7 +208,11 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 	p_params = zend_read_property(yod_request_ce, request, ZEND_STRL("params"), 1 TSRMLS_CC);
 
 	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), method, method_len + 1)) {
-		zend_call_method(&object, Z_OBJCE_P(object), NULL, method, method_len, NULL, 1, p_params, NULL TSRMLS_CC);
+		if (p_params) {
+			zend_call_method(&object, Z_OBJCE_P(object), NULL, method, method_len, NULL, 1, p_params, NULL TSRMLS_CC);
+		} else {
+			zend_call_method(&object, Z_OBJCE_P(object), NULL, method, method_len, NULL, 0, NULL, NULL TSRMLS_CC);
+		}
 	} else {
 		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
 		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
@@ -238,7 +242,11 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 			}
 		} else {
 			if (zend_hash_exists(&(Z_OBJCE_P(object))->function_table, ZEND_STRS("erroraction"))) {
-				zend_call_method_with_1_params(&object, Z_OBJCE_P(object), NULL, "erroraction", NULL, p_params);
+				if (p_params) {
+					zend_call_method_with_1_params(&object, Z_OBJCE_P(object), NULL, "erroraction", NULL, p_params);
+				} else {
+					zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "erroraction", NULL);
+				}
 			} else {
 				yod_request_erroraction(request TSRMLS_CC);
 			}

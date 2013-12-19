@@ -310,7 +310,7 @@ int yod_dbmodel_construct(yod_dbmodel_t *object, char *name, uint name_len, zval
 
 	yod_dbmodel_initquery(object, NULL TSRMLS_CC);
 
-	model = zend_read_static_property(yod_dbmodel_ce, ZEND_STRL("_model"), 0 TSRMLS_CC);
+	model = zend_read_static_property(yod_dbmodel_ce, ZEND_STRL("_model"), 1 TSRMLS_CC);
 	if (!model || Z_TYPE_P(model) != IS_ARRAY) {
 		MAKE_STD_ZVAL(model);
 		array_init(model);
@@ -341,7 +341,7 @@ int yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *retva
 		classname_len = spprintf(&classname, 0, "%sModel", name);
 	}
 
-	p_model = zend_read_static_property(yod_dbmodel_ce, ZEND_STRL("_model"), 0 TSRMLS_CC);
+	p_model = zend_read_static_property(yod_dbmodel_ce, ZEND_STRL("_model"), 1 TSRMLS_CC);
 	if (p_model && Z_TYPE_P(p_model) == IS_ARRAY) {
 		if (zend_hash_find(Z_ARRVAL_P(p_model), name, name_len + 1, (void **)&ppval) == SUCCESS) {
 			if (retval) {

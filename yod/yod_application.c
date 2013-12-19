@@ -206,7 +206,7 @@ void yod_application_run(TSRMLS_DC) {
 /** {{{ int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC)
 */
 int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC) {
-	zval *p_config;
+	zval *config;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_application_config(%s)", name ? name : "");
@@ -217,25 +217,24 @@ int yod_application_config(char *name, size_t name_len, zval *result TSRMLS_DC) 
 		return 0;
 	}
 
-	p_config = zend_read_property(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_config"), 1 TSRMLS_CC);
-
-	if (Z_TYPE_P(p_config) != IS_ARRAY) {
+	config = zend_read_property(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_config"), 1 TSRMLS_CC);
+	if (Z_TYPE_P(config) != IS_ARRAY) {
 		ZVAL_NULL(result);
 		return 0;
 	}
 
 	if (name_len == 0) {
-		ZVAL_ZVAL(result, p_config, 1, 0);
+		ZVAL_ZVAL(result, config, 1, 0);
 		return 1;
 	} else {
 		zval **ppval;
 		char *skey, *token;
 
-		if (zend_hash_find(Z_ARRVAL_P(p_config), name, name_len + 1, (void **)&ppval) == SUCCESS) {
-			ZVAL_ZVAL(result, *ppval, 1, 1);
+		if (zend_hash_find(Z_ARRVAL_P(config), name, name_len + 1, (void **)&ppval) == SUCCESS) {
+			ZVAL_ZVAL(result, *ppval, 1, 0);
 			return 1;
 		} else {
-			ZVAL_ZVAL(result, p_config, 1, 0);
+			ZVAL_ZVAL(result, config, 1, 0);
 			skey = php_strtok_r(name, ".", &token);
 			while (skey) {
 				if (zend_hash_find(Z_ARRVAL_P(result), skey, strlen(skey) + 1, (void **)&ppval) == SUCCESS) {

@@ -239,11 +239,15 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 		yod_application_config(ZEND_STRL("db_dsn"), config1 TSRMLS_CC);
 	} else if (Z_TYPE_P(config) == IS_STRING) {
 		yod_application_config(Z_STRVAL_P(config), Z_STRLEN_P(config), config1 TSRMLS_CC);
+	} else if (Z_TYPE_P(config) == IS_ARRAY) {
+		ZVAL_ZVAL(config1, config, 1, 0);
+	} else {
+		yod_application_config(ZEND_STRL("db_dsn"), config1 TSRMLS_CC);
 	}
 
-	if (Z_TYPE_P(config1) != IS_ARRAY) {
+	if (!config1 || Z_TYPE_P(config1) != IS_ARRAY){
 		zval_ptr_dtor(&config1);
-		
+
 		ZVAL_BOOL(retval, 0);
 		return 0;
 	}
@@ -272,7 +276,7 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 
 	md5hash = yod_database_md5hash(&config1);
 
-	p_db = zend_read_static_property(yod_database_ce, ZEND_STRL("_db"), 0 TSRMLS_CC);
+	p_db = zend_read_static_property(yod_database_ce, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (p_db && Z_TYPE_P(p_db) == IS_ARRAY) {
 		if (zend_hash_find(Z_ARRVAL_P(p_db), md5hash, strlen(md5hash) + 1, (void **)&ppval) == SUCCESS) {
 			ZVAL_ZVAL(retval, *ppval, 1, 0);
@@ -319,9 +323,8 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 	}
 
 	add_assoc_zval_ex(p_db, md5hash, strlen(md5hash) + 1, object);
-	zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db TSRMLS_CC);
+	//zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db TSRMLS_CC);
 	zval_ptr_dtor(&config1);
-	zval_ptr_dtor(&p_db);
 	efree(classname);
 	efree(md5hash);
 
@@ -760,7 +763,7 @@ int yod_database_select(yod_database_t *object, zval *select, char *table, uint 
 		MAKE_STD_ZVAL(params);
 		array_init(params);
 	}
-	
+
 	if (select) {
 		if (Z_TYPE_P(select) == IS_ARRAY) {
 			zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(select), &pos);
@@ -801,7 +804,6 @@ int yod_database_select(yod_database_t *object, zval *select, char *table, uint 
 	} else {
 		squery_len = spprintf(&squery, 0, "SELECT %s FROM %s%s%s%s%s", (fields_len ? fields : "*"), table, (where_len ? " WHERE " : ""), (where_len ? where : ""), (extend_len ? " " : ""), (extend_len ? extend : ""));
 	}
-	efree(fields);
 
 #if PHP_YOD_DEBUG
 	yod_debugl(YOD_DOTLINE);

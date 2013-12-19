@@ -48,6 +48,7 @@ class IndexController extends Yod_Controller
 {
 	public function indexAction()
 	{
+
 		$db = Yod_Database::db();
 
 		$fields = array(
@@ -73,26 +74,15 @@ class IndexController extends Yod_Controller
 		$save = $tests->save($data);
 		echo "save:"; var_dump($save);
 
-		//$demo = $this->model('Demo');
+		echo "find:"; print_r($tests->find());
 
-		//$save = $demo->table('tests')->save($data);
-		//echo "save:"; var_dump($save);
+		$demo = $this->model('demo');
 
 		$data['updated'] = 1234567891;
-		//$demo->table('tests')->where('id = :id', array(':id' => 1));
-		//echo "save:"; var_dump($demo->save($data));
+		$save = $demo->save($data, 'id = :id', array(':id' => 1));
+		echo "save:"; var_dump($save);
 
-		//$demo->from('tests')->where('id = :id', array(':id' => 1));
-		//echo "find:"; print_r($demo->find());
-
-		//$data = $demo->from('tests')->findAll();
-		//echo "findAll:"; print_r($data);
-
-		//$demo->table('tests')->where('id = :id', array(':id' => 1));
-		//echo "remove:"; var_dump($demo->remove());
-
-		//$demo->from('tests')->where('id = :id', array(':id' => 1));
-		//echo "\nfind:"; var_dump($demo->find());
+		echo "findAll:"; print_r($demo->findAll());
 
 		$execute = $db->execute('DROP TABLE yod_tests');
 		echo "execute:"; var_dump($execute);
@@ -102,18 +92,34 @@ class IndexController extends Yod_Controller
 
 class DemoModel extends Yod_Model
 {
-
+	public $_table = 'tests';
+	
 }
 ?>
 --EXPECTF--
-111Array
+create:bool(true)
+save:int(1)
+find:Array
 (
     [id] => 1
     [title] => Tests
     [content] => Yod PHP Framework
-    [updated] => 1234567891
+    [updated] => 0
     [created] => 1234567890
     [status] => 0
 )
-1bool(false)
-1
+save:int(1)
+findAll:Array
+(
+    [0] => Array
+        (
+            [id] => 1
+            [title] => Tests
+            [content] => Yod PHP Framework
+            [updated] => 1234567891
+            [created] => 1234567890
+            [status] => 0
+        )
+
+)
+execute:bool(true)
