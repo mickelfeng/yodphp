@@ -195,7 +195,7 @@ final class Yod_Application
 		$classname = basename($classfile);
 
 		if (empty($this->_imports[$alias])) {
-			$classpath = YOD_RUNPATH . '/extends/' . $classfile . $classext);
+			$classpath = YOD_RUNPATH . '/extends/' . $classfile . $classext;
 			if (is_file($classpath)) include $classpath;
 			$this->_imports[$alias] = $classpath;
 		}
