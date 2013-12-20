@@ -1,6 +1,6 @@
 #!/bin/bash
 
-YOD_CODE=/mnt/hgfs/D/wamp/webs/yod/code
+YOD_CODE=/mnt/hgfs/E/develop/github/yodphp/master
 
 cp -rfv ${YOD_CODE}/yod/* .
 
