@@ -432,7 +432,6 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 				efree(classname);
 				return 0;
 			}
-			efree(classname);
 		} else {
 			action = zend_read_property(yod_request_ce, object, ZEND_STRL("action"), 1 TSRMLS_CC);
 			if (action && Z_TYPE_P(action) == IS_STRING) {
@@ -461,7 +460,6 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 					efree(classname);
 					return 0;
 				}
-				efree(classname);
 			} else {
 				spprintf(&classpath, 0, "%s/controllers/ErrorController.php", yod_runpath(TSRMLS_CC));
 				if (VCWD_ACCESS(classpath, F_OK) == 0) {
