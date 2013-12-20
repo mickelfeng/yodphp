@@ -204,7 +204,7 @@ void yod_database_construct(yod_database_t *object, zval *config TSRMLS_DC) {
 	MAKE_STD_ZVAL(linkids);
 	array_init(linkids);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkids"), linkids TSRMLS_CC);
-	zval_ptr_dtor(&linkids);
+	//zval_ptr_dtor(&linkids);
 
 	if (config) {
 		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_config"), config TSRMLS_CC);
@@ -219,10 +219,9 @@ void yod_database_construct(yod_database_t *object, zval *config TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC)
+/** {{{ int yod_database_getinstance(zval *config, yod_database_t *retval TSRMLS_DC)
 */
-int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
-	yod_database_t *object;
+int yod_database_getinstance(zval *config, yod_database_t *retval TSRMLS_DC) {
 	zval *p_db, *config1, *pzval, **ppval;
 	char *classname, *classpath, *md5hash;
 	uint classname_len;
@@ -300,15 +299,14 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 		efree(classpath);
 	}
 
-	MAKE_STD_ZVAL(object);
 #if PHP_API_VERSION < 20100412
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 #else
 	if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
 #endif
-		object_init_ex(object, *pce);
+		object_init_ex(retval, *pce);
 		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-			zend_call_method_with_1_params(&object, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, config1);
+			zend_call_method_with_1_params(&retval, *pce, &(*pce)->constructor, ZEND_CONSTRUCTOR_FUNC_NAME, NULL, config1);
 		}
 	} else {
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
@@ -319,12 +317,10 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 		return 0;
 	}
 
-	add_assoc_zval_ex(p_db, md5hash, strlen(md5hash) + 1, object);
+	add_assoc_zval_ex(p_db, md5hash, strlen(md5hash) + 1, retval);
 	zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db TSRMLS_CC);
 	zval_ptr_dtor(&config1);
 	efree(classname);
-
-	ZVAL_ZVAL(retval, object, 1, 0);
 	return 1;
 }
 /* }}} */

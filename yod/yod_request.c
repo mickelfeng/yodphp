@@ -186,7 +186,7 @@ static int yod_request_route(yod_request_t *object, char *route, uint route_len 
 	HashTable *_SERVER, *_GET;
 	zval *method, *params, *pzval, **argv, **ppval;
 	char *controller, *action, *token, *route1, *route2;
-	char *classname, *key, *value;
+	char *classname, *classname1, *key, *value;
 	size_t classname_len, key_len;
 	zend_class_entry **pce = NULL;
 
@@ -271,17 +271,19 @@ static int yod_request_route(yod_request_t *object, char *route, uint route_len 
 	}
 
 	classname_len = strlen(SG(request_info).path_translated);
-	php_basename(SG(request_info).path_translated, classname_len, ".php", 4, &classname, &classname_len TSRMLS_CC);
-	zend_str_tolower(classname, classname_len);
-	classname_len = spprintf(&classname, 0, "%sController", classname);
+	php_basename(SG(request_info).path_translated, classname_len, ".php", 4, &classname1, &classname_len TSRMLS_CC);
+	zend_str_tolower(classname1, classname_len);
+	classname_len = spprintf(&classname, 0, "%sController", classname1);
+	efree(classname1);
 
 #if PHP_API_VERSION < 20100412
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 #else
 	if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
 #endif
-		*(classname + classname_len - 10) = '\0';
-		route_len = spprintf(&route1, 0, "%s/%s", classname, route1);
+		classname1 = estrndup(classname, classname_len - 10);
+		route_len = spprintf(&route1, 0, "%s/%s", classname1, route1);
+		efree(classname1);
 	}
 
 	// params

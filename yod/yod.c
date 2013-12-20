@@ -322,6 +322,7 @@ char *yod_extpath(TSRMLS_DC) {
 		retval_len = strlen(SG(request_info).path_translated);
 		retval = estrndup(SG(request_info).path_translated, retval_len);
 		retval_len = php_dirname(retval, retval_len);
+		retval[retval_len] = 0;
 		zend_register_stringl_constant(ZEND_STRS("YOD_EXTPATH"), retval, retval_len, CONST_CS, 0 TSRMLS_CC);
 	}
 	
@@ -346,6 +347,7 @@ char *yod_runpath(TSRMLS_DC) {
 		retval_len = strlen(SG(request_info).path_translated);
 		retval = estrndup(SG(request_info).path_translated, retval_len);
 		retval_len = php_dirname(retval, retval_len);
+		retval[retval_len] = 0;
 		zend_register_stringl_constant(ZEND_STRS("YOD_RUNPATH"), retval, retval_len, CONST_CS, 0 TSRMLS_CC);
 	}
 
@@ -554,7 +556,6 @@ zend_function_entry yod_functions[] = {
 PHP_GINIT_FUNCTION(yod)
 {
 	yod_globals->runtime	= 0;
-	yod_globals->runpath	= NULL;
 	yod_globals->yodapp		= NULL;
 	yod_globals->exited		= 0;
 	yod_globals->routed		= 0;

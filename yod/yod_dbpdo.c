@@ -157,7 +157,7 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 	
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_dbpdo_construct()");
+	yod_debugf("yod_dbpdo_connect()");
 #endif
 
 	if (!object) {

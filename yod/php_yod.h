@@ -112,7 +112,6 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 
 ZEND_BEGIN_MODULE_GLOBALS(yod)
 	double		runtime;
-	char 		*runpath;
 	zval		*yodapp;
 	int			exited;
 	int			routed;

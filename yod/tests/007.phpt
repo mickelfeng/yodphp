@@ -48,6 +48,7 @@ class IndexController extends Yod_Controller
 {
 	public function indexAction()
 	{
+
 		$db = Yod_Database::db();
 
 		$fields = array(
