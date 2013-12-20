@@ -186,16 +186,16 @@ final class Yod_Application
 	 * import
 	 * @access public
 	 * @param string $alias
-	 * @param boolean $isclass
+	 * @param string $classext
 	 * @return boolean
 	 */
-	public function import($alias, $isclass = true)
+	public function import($alias, $classext = '.class.php')
 	{
 		$classfile = trim(str_replace('\\', '/', str_replace('.', '/', $alias)), '/');
 		$classname = basename($classfile);
 
 		if (empty($this->_imports[$alias])) {
-			$classpath = YOD_RUNPATH . '/extends/' . $classfile . ($isclass ? '.class.php' : '.php');
+			$classpath = YOD_RUNPATH . '/extends/' . $classfile . $classext);
 			if (is_file($classpath)) include $classpath;
 			$this->_imports[$alias] = $classpath;
 		}
@@ -492,12 +492,12 @@ abstract class Yod_Controller
 	 * import
 	 * @access protected
 	 * @param string $alias
-	 * @param boolean $isclass
+	 * @param string $classext
 	 * @return boolean
 	 */
-	protected function import($alias, $isclass = true)
+	protected function import($alias, $classext = '.class.php')
 	{
-		return Yod_Application::app()->import($alias, $isclass);
+		return Yod_Application::app()->import($alias, $classext);
 	}
 
 	/**
@@ -946,12 +946,12 @@ class Yod_Model
 	 * import
 	 * @access protected
 	 * @param string $alias
-	 * @param boolean $isclass
+	 * @param string $classext
 	 * @return boolean
 	 */
-	protected function import($alias, $isclass = true)
+	protected function import($alias, $classext = '.class.php')
 	{
-		return Yod_Application::app()->import($alias, $isclass);
+		return Yod_Application::app()->import($alias, $classext);
 	}
 
 	/**

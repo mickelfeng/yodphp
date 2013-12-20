@@ -55,6 +55,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_import_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, alias)
+	ZEND_ARG_INFO(0, classext)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_model_arginfo, 0, 0, 0)
@@ -780,18 +781,17 @@ PHP_METHOD(yod_controller, config) {
 }
 /* }}} */
 
-/** {{{ proto protected Yod_Controller::import($alias, $isclass = true)
+/** {{{ proto protected Yod_Controller::import($alias, $classext = '.class.php')
 */
 PHP_METHOD(yod_controller, import) {
-	char *alias = NULL;
-	uint alias_len = 0;
-	int isclass = 1;
+	char *alias = NULL, *classext = NULL;
+	uint alias_len = 0, classext_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|b", &alias, &alias_len, &isclass) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s", &alias, &alias_len, &classext, &classext_len) == FAILURE) {
 		return;
 	}
 
-	if (yod_application_import(alias, alias_len, isclass TSRMLS_CC)) {
+	if (yod_application_import(alias, alias_len, classext, classext_len TSRMLS_CC)) {
 		RETURN_TRUE;
 	}
 	RETURN_FALSE;
