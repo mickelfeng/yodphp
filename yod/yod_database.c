@@ -158,10 +158,9 @@ char *yod_database_md5(char *str, uint len TSRMLS_DC) {
 	PHP_MD5Update(&context, str, len);
 	PHP_MD5Final(digest, &context);
 	make_digest(md5str, digest);
+	retval = (char*)md5str;
 
-	spprintf(&retval, 0, "%s", &md5str[0]);
-	//retval = estrndup(&md5str[0], sizeof(md5str));
-	return 	retval;
+	return retval;
 }
 /* }}} */
 
@@ -183,7 +182,7 @@ char *yod_database_md5hash(zval **data TSRMLS_DC) {
 
 	retval = yod_database_md5(buf.c, buf.len);
 
-	return 	retval;
+	return retval;
 }
 /* }}} */
 
@@ -282,7 +281,6 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 			ZVAL_ZVAL(retval, *ppval, 1, 0);
 			zval_ptr_dtor(&config1);
 			efree(classname);
-			efree(md5hash);
 			return 1;
 		}
 	} else {
@@ -316,17 +314,15 @@ int yod_database_getinstance(zval *config, zval *retval TSRMLS_DC) {
 		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 		zval_ptr_dtor(&config1);
 		efree(classname);
-		efree(md5hash);
 
 		ZVAL_BOOL(retval, 0);
 		return 0;
 	}
 
 	add_assoc_zval_ex(p_db, md5hash, strlen(md5hash) + 1, object);
-	//zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db TSRMLS_CC);
+	zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db TSRMLS_CC);
 	zval_ptr_dtor(&config1);
 	efree(classname);
-	efree(md5hash);
 
 	ZVAL_ZVAL(retval, object, 1, 0);
 	return 1;
@@ -542,14 +538,18 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 	while (zend_hash_get_current_data_ex(Z_ARRVAL_P(data), (void **)&ppval, &pos) == SUCCESS) {
 		char *str_key = NULL, *name = NULL;
 		uint key_len, name_len;
+		zval *value = NULL;
 		ulong num_key;
 
 		if (zend_hash_get_current_key_ex(Z_ARRVAL_P(data), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
 			name_len = spprintf(&name, 0, ":%s", yod_database_md5(str_key, key_len));
 			fields_len = spprintf(&fields, 0, "%s%s, ", fields, str_key);
 			values_len = spprintf(&values, 0, "%s%s, ", values, name);
-			Z_ADDREF_PP(ppval);
-			add_assoc_zval_ex(params1, name, name_len + 1, *ppval);
+			MAKE_STD_ZVAL(value);
+			ZVAL_ZVAL(value, *ppval, 1, 0);
+			convert_to_string(value);
+			add_assoc_zval_ex(params1, name, name_len + 1, value);
+			efree(name);
 		}
 		
 		zend_hash_move_forward_ex(Z_ARRVAL_P(data), &pos);
@@ -621,16 +621,17 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 	array_init(params1);
 	zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(data), &pos);
 	while (zend_hash_get_current_data_ex(Z_ARRVAL_P(data), (void **)&ppval, &pos) == SUCCESS) {
-		zval *value = NULL;
-		char *str_key = NULL, *name = NULL;
+		char *str_key = NULL, *name = NULL, *md5hash = NULL;
 		uint key_len, name_len;
+		zval *value = NULL;
 		ulong num_key;
 
 		if (zend_hash_get_current_key_ex(Z_ARRVAL_P(data), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
-			MAKE_STD_ZVAL(value);
-			ZVAL_ZVAL(value, *ppval, 1, 0);
 			name_len = spprintf(&name, 0, ":%s", yod_database_md5(str_key, key_len));
 			update_len = spprintf(&update, 0, "%s%s = %s, ", update, str_key, name);
+			MAKE_STD_ZVAL(value);
+			ZVAL_ZVAL(value, *ppval, 1, 0);
+			convert_to_string(value);
 			add_assoc_zval_ex(params1, name, name_len + 1, value);
 			efree(name);
 		}

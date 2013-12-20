@@ -7,7 +7,6 @@ AC_ARG_ENABLE(yod-debug,
 [PHP_YOD_DEBUG="no"])  
 
 if test "$PHP_YOD" != "no"; then
-
 	if test "$PHP_YOD_DEBUG" = "yes"; then
 		AC_DEFINE(PHP_YOD_DEBUG,1,[define to 1 if you want to change the POST/GET by php script])
 	else

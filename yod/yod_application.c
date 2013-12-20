@@ -256,7 +256,7 @@ int yod_application_config(char *name, uint name_len, zval *result TSRMLS_DC) {
 /** {{{ int yod_application_import(char *alias, uint alias_len, char *classext, uint classext_len TSRMLS_DC)
 */
 int yod_application_import(char *alias, uint alias_len, char *classext, uint classext_len TSRMLS_DC) {
-	zval *p_imports, **ppval;
+	zval *p_imports, *pzval, **ppval;
 	char *classfile, *classname, *classpath;
 	uint classfile_len, classname_len;
 	zend_class_entry **pce = NULL;

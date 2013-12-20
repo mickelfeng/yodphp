@@ -395,7 +395,7 @@ int yod_include(char *filepath, zval **retval, int dtor TSRMLS_DC) {
 	if (op_array) {
 		YOD_STORE_EG_ENVIRON();
 
-		EG(return_value_ptr_ptr) = retval;
+		EG(return_value_ptr_ptr) = retval ? retval : &pzval;
 		EG(active_op_array) 	 = op_array;
 
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION > 2)) || (PHP_MAJOR_VERSION > 5)

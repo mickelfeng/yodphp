@@ -99,7 +99,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 		if (object && Z_TYPE_P(object) == IS_OBJECT) {
 			method = zend_read_property(yod_request_ce, object, ZEND_STRL("method"), 1 TSRMLS_CC);
 			if (method && Z_TYPE_P(method) == IS_STRING) {
-				if (strncasecmp(Z_STRVAL_P(method), "cli", 3) == 0) {
+				if (strncasecmp(Z_STRVAL_P(method), "cli", 3) == 0 || strncasecmp(Z_STRVAL_P(method), "unknown", 7) == 0) {
 					PUTS("HTTP/1.0 404 Not Found");
 				} else {
 					yod_request_err404_html(TSRMLS_CC);
@@ -217,7 +217,7 @@ static int yod_request_route(yod_request_t *object, char *route, uint route_len 
 					route_len = Z_STRLEN_PP(ppval);
 					route1 = estrndup(Z_STRVAL_PP(ppval), route_len);
 				}
-			} else if (strncasecmp(Z_STRVAL_P(method), "unknow", 6) == 0) {
+			} else if (strncasecmp(Z_STRVAL_P(method), "unknown", 7) == 0) {
 				if((zend_hash_find(_SERVER, ZEND_STRS("argv"), (void **) &argv) != FAILURE ||
 					zend_hash_find(&EG(symbol_table), ZEND_STRS("argv"), (void **) &argv) != FAILURE) &&
 					Z_TYPE_PP(argv) == IS_ARRAY &&
@@ -360,7 +360,7 @@ yod_request_t *yod_request_construct(yod_request_t *object, char *route, size_t 
 	if (SG(request_info).request_method) {
 		ZVAL_STRING(method, (char *)SG(request_info).request_method, 1);
 	} else if (strncasecmp(sapi_module.name, "cli", 3)) {
-		ZVAL_STRING(method, "Unknow", 1);
+		ZVAL_STRING(method, "Unknown", 1);
 	} else {
 		ZVAL_STRING(method, "Cli", 1);
 	}

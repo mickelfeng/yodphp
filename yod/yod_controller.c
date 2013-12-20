@@ -653,20 +653,22 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 		}
 	}
 
-	MAKE_STD_ZVAL(target);
 	MAKE_STD_ZVAL(action1);
 	ZVAL_STRING(action1, action, 1);
 
 	classname_len = spprintf(&classname, 0, "%sWidget", widget);
+
 #if PHP_API_VERSION < 20100412
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 #else
 	if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
 #endif
+		MAKE_STD_ZVAL(target);
 		object_init_ex(target, *pce);
 		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
 			yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params, NULL TSRMLS_CC);
 		}
+		zval_ptr_dtor(&target);
 	} else {
 		spprintf(&classpath, 0, "%s/widgets/%sWidget.php", yod_runpath(TSRMLS_CC), widget);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
@@ -676,19 +678,19 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 #else
 			if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == SUCCESS) {
 #endif
+				MAKE_STD_ZVAL(target);
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
 					yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params, NULL TSRMLS_CC);
 				}
+				zval_ptr_dtor(&target);
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 			}
 		} else {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Widget '%s' not found", classname);
 		}
-	}
-	if (target) {
-		zval_ptr_dtor(&target);
+		efree(classpath);
 	}
 	zval_ptr_dtor(&action1);
 	zval_ptr_dtor(&params);

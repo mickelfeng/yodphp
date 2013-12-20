@@ -272,30 +272,30 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 		yod_model_construct(object, name, name_len, config TSRMLS_CC);
 	}
 
-	MAKE_STD_ZVAL(model1);
-	if (p_model && Z_TYPE_P(p_model) == IS_ARRAY) {
-		ZVAL_ZVAL(model1, p_model, 1, 0);
-	} else {
-		array_init(model1);
-	}
-	
 	if (Z_TYPE_P(object) == IS_OBJECT) {
+		MAKE_STD_ZVAL(model1);
+		if (p_model && Z_TYPE_P(p_model) == IS_ARRAY) {
+			ZVAL_ZVAL(model1, p_model, 1, 0);
+		} else {
+			array_init(model1);
+		}
 		add_assoc_zval_ex(model1, name, name_len + 1, object);
 		zend_update_static_property(yod_model_ce, ZEND_STRL("_model"), model1 TSRMLS_CC);
+		if (retval) {
+			if (Z_TYPE_P(object) == IS_OBJECT) {
+				ZVAL_ZVAL(retval, object, 1, 0);
+			}
+		}
+		efree(classname);
+		return 1;
 	}
 	zval_ptr_dtor(&model1);
-
-	if (retval) {
-		if (Z_TYPE_P(object) == IS_OBJECT) {
-			ZVAL_ZVAL(retval, object, 1, 0);
-		} else {
-			ZVAL_BOOL(retval, 0);
-		}
-		
-	}
 	efree(classname);
 
-	return 1;
+	if (retval) {
+		ZVAL_BOOL(retval, 0);
+	}
+	return 0;
 }
 /* }}} */
 
@@ -370,8 +370,8 @@ PHP_METHOD(yod_model, find) {
 			if (retval) {
 				RETURN_ZVAL(retval, 1, 1);
 			}
+			zval_ptr_dtor(&result);
 		}
-		zval_ptr_dtor(&result);
 	}
 	
 	RETURN_FALSE;
@@ -412,8 +412,8 @@ PHP_METHOD(yod_model, findAll) {
 			if (retval) {
 				RETURN_ZVAL(retval, 1, 1);
 			}
+			zval_ptr_dtor(&result);
 		}
-		zval_ptr_dtor(&result);
 	}
 	
 	RETURN_FALSE;
