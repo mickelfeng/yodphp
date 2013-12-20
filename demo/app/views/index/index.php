@@ -94,19 +94,29 @@ class HelloController extends Yod_Controller
 <?php highlight_string(
 "<?php
 return array(
-	//'db_dsn' => 'pdo_mysql://yodphp:UJSxh48FxYJajpUS@localhost:3306/yodphp#yod_/uft8',
+	// db_dsn
 	'db_dsn' => array(
-		'type'   => 'pdo_mysql',
+		'type'   => 'pdo',
+		'dsn'    => 'mysql:host=localhost;port=3306;dbname=test',
 		'host'   => 'localhost',
 		'port'   => '3306',
-		'user'   => 'yodphp',
-		'pass'   => 'UJSxh48FxYJajpUS',
-		'dbname' => 'yodphp',
+		'user'   => 'root',
+		'pass'   => '123456',
+		'dbname' => 'test',
 		'prefix' => 'yod_',
 		'charset' => 'utf8',
+		// slaves
+		'slaves' => array(
+			array(
+				'dsn'    => 'mysql:host=localhost;port=3306;dbname=test',
+				'user'   => 'root',
+				'pass'   => '123456',
+			),
+		),
 	),
-	'db_slave' => array(
-
+	// tpl_data
+	'tpl_data' => array(
+		'_PUBLIC_' => '/public/'
 	),
 );
 
