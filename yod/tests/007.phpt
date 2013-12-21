@@ -68,7 +68,7 @@ class IndexController extends Yod_Controller
 
 		$data = array(
 			'title' => 'Tests',
-			'content' => 'Yod PHP Framework',
+			'content' => 'Yod Framework',
 			'created' => 1234567890,
 		);
 		$save = $tests->save($data);
@@ -103,7 +103,7 @@ find:Array
 (
     [id] => 1
     [title] => Tests
-    [content] => Yod PHP Framework
+    [content] => Yod Framework
     [updated] => 0
     [created] => 1234567890
     [status] => 0
@@ -115,7 +115,7 @@ findAll:Array
         (
             [id] => 1
             [title] => Tests
-            [content] => Yod PHP Framework
+            [content] => Yod Framework
             [updated] => 1234567891
             [created] => 1234567890
             [status] => 0

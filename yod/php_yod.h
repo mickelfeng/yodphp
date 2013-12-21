@@ -46,6 +46,8 @@ extern zend_module_entry yod_module_entry;
 #define YOD_CHARSET					"utf-8"
 #define YOD_PATHVAR					""
 
+#define YOD_APP_CNAME				"Yod_Application"
+
 #if PHP_YOD_DEBUG
 #define YOD_DOTLINE					"----------------------------------------------------------------------"
 #define YOD_DIVLINE					"======================================================================"
@@ -112,6 +114,10 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 
 ZEND_BEGIN_MODULE_GLOBALS(yod)
 	double		runtime;
+	char		*charset;
+	char		*pathvar;
+	char		*extpath;
+	char		*runpath;
 	zval		*yodapp;
 	int			exited;
 	int			routed;

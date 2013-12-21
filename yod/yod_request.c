@@ -155,6 +155,7 @@ void yod_request_erroraction(yod_request_t *object TSRMLS_DC) {
 			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class 'ErrorAction' not found");
 		}
 	} else {
+		efree(classpath);
 		zend_update_property_string(yod_request_ce, object, ZEND_STRL("controller"), "Error" TSRMLS_CC);
 		spprintf(&classpath, 0, "%s/actions/ErrorAction.php", yod_runpath(TSRMLS_CC));
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
@@ -380,7 +381,7 @@ yod_request_t *yod_request_construct(yod_request_t *object, char *route, size_t 
 /** {{{ int yod_request_dispatch(yod_request_t *object TSRMLS_DC)
 */
 int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
-	zval *controller, *action, *pzval, *target, *retval;
+	zval *controller, *action, *pzval, *target;
 	char *controller_str, *action_str, *classname, *classpath;
 	uint controller_len, action_len, classname_len;
 	zend_class_entry **pce = NULL;
@@ -399,15 +400,14 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 
 	controller = zend_read_property(yod_request_ce, object, ZEND_STRL("controller"), 1 TSRMLS_CC);
 	if (controller && Z_TYPE_P(controller) == IS_STRING) {
-		controller_len = Z_STRLEN_P(controller);
-		controller_str = Z_STRVAL_P(controller);
+		controller_len = spprintf(&controller_str, 0, "%s", Z_STRVAL_P(controller));
 		zend_str_tolower(controller_str, controller_len);
 		*controller_str = toupper(*controller_str);
 	} else {
 		controller_len = spprintf(&controller_str, 0, "Index");
 	}
 	classname_len = spprintf(&classname, 0, "%sController", controller_str);
-
+	
 	MAKE_STD_ZVAL(target);
 #if PHP_API_VERSION < 20100412
 	if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
@@ -419,7 +419,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 	} else {
 		spprintf(&classpath, 0, "%s/controllers/%sController.php", yod_runpath(TSRMLS_CC), controller_str);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
-			yod_include(classpath, &retval, 1 TSRMLS_CC);
+			yod_include(classpath, NULL, 1 TSRMLS_CC);
 #if PHP_API_VERSION < 20100412
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
 #else
@@ -430,11 +430,13 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 			} else {
 				php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 				zval_ptr_dtor(&target);
+				efree(controller_str);
 				efree(classpath);
 				efree(classname);
 				return 0;
 			}
 		} else {
+			efree(classpath);
 			action = zend_read_property(yod_request_ce, object, ZEND_STRL("action"), 1 TSRMLS_CC);
 			if (action && Z_TYPE_P(action) == IS_STRING) {
 				action_len = spprintf(&action_str, 0, Z_STRVAL_P(action));
@@ -445,7 +447,8 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 			zend_str_tolower(controller_str, controller_len);
 			spprintf(&classpath, 0, "%s/actions/%s/%sAction.php", yod_runpath(TSRMLS_CC), controller_str, action_str);
 			if (VCWD_ACCESS(classpath, F_OK) == 0) {
-				yod_include(classpath, &retval, 1 TSRMLS_CC);
+				efree(classname);
+				yod_include(classpath, NULL, 1 TSRMLS_CC);
 				classname_len = spprintf(&classname, 0, "%sAction", action_str);
 #if PHP_API_VERSION < 20100412
 				if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {
@@ -457,15 +460,17 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 				} else {
 					php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class '%s' not found", classname);
 					zval_ptr_dtor(&target);
+					efree(controller_str);
 					efree(action_str);
 					efree(classpath);
 					efree(classname);
 					return 0;
 				}
 			} else {
+				efree(classpath);
 				spprintf(&classpath, 0, "%s/controllers/ErrorController.php", yod_runpath(TSRMLS_CC));
 				if (VCWD_ACCESS(classpath, F_OK) == 0) {
-					yod_include(classpath, &retval, 1 TSRMLS_CC);
+					yod_include(classpath, NULL, 1 TSRMLS_CC);
 #if PHP_API_VERSION < 20100412
 					if (zend_lookup_class_ex(ZEND_STRL("ErrorController"), 0, &pce TSRMLS_CC) == SUCCESS) {
 #else
@@ -476,6 +481,7 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 					} else {
 						php_error_docref(NULL TSRMLS_CC, E_ERROR, "Class 'ErrorController' not found");
 						zval_ptr_dtor(&target);
+						efree(controller_str);
 						efree(action_str);
 						efree(classpath);
 						return 0;
@@ -488,10 +494,9 @@ int yod_request_dispatch(yod_request_t *object TSRMLS_DC) {
 		}
 		efree(classpath);
 	}
+	zval_ptr_dtor(&target);
+	efree(controller_str);
 	efree(classname);
-	if (target) {
-		zval_ptr_dtor(&target);
-	}
 
 	return 1;
 }

@@ -17,8 +17,13 @@ class TestsModel extends Yod_Model
 {
 	public function yodphp()
 	{
-		echo 'Yodphp ';
-	} 
+		echo 'Yod ';
+	}
+
+	public function show()
+	{
+		echo 'Framework ';
+	}
 }
 
 PHP
@@ -53,6 +58,9 @@ class IndexController extends Yod_Controller
 		$tests = $this->model('Tests');
 		$tests->yodphp();
 
+		$tests = $this->model('Tests');
+		$tests->show();
+
 		$hello = $this->model('Hello');
 		$hello->show();
 	}
@@ -67,4 +75,4 @@ class HelloModel extends Yod_Model
 }
 ?>
 --EXPECTF--
-Yodphp Hello World!
+Yod Framework Hello World!

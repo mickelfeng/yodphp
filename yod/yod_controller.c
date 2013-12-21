@@ -218,7 +218,7 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
 		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
 			zend_str_tolower(Z_STRVAL_P(p_name), Z_STRLEN_P(p_name));
-			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), p_name TSRMLS_CC);
+			//zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), p_name TSRMLS_CC);
 			spprintf(&classpath, 0, "%s/actions/%s/%s.php", yod_runpath(TSRMLS_CC), Z_STRVAL_P(p_name), classname);
 		} else {
 			zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_name"), "index" TSRMLS_CC);
@@ -254,7 +254,6 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 		}
 		efree(classpath);
 	}
-
 	efree(classname);
 	efree(method);
 }
@@ -311,8 +310,8 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 	add_assoc_string(tpl_view, "tpl_path", tpl_path, 1);
 	add_assoc_string(tpl_view, "tpl_file", "", 1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_view"), tpl_view TSRMLS_CC);
-	zval_ptr_dtor(&tpl_view);
 	efree(tpl_path);
+	zval_ptr_dtor(&tpl_view);
 
 #if PHP_YOD_DEBUG
 	if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
@@ -438,6 +437,7 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	} else {
 		view_len = spprintf(&view1, 0, "%s", view);
 	}
+
 	if (view1 && view_len) {
 		view2 = php_str_to_str(view1, view_len, "..", 2, "", 0, &view_len);
 		efree(view1);
@@ -455,10 +455,12 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	if (view1[0] != '/') {
 		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
 		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
-			view_len = spprintf(&view1, 0, "/%s/%s", Z_STRVAL_P(p_name), view1);
+			view_len = spprintf(&view2, 0, "/%s/%s", Z_STRVAL_P(p_name), view1);
 		} else {
-			view_len = spprintf(&view1, 0, "/%s", view1);
+			view_len = spprintf(&view2, 0, "/%s", view1);
 		}
+		efree(view1);
+		view1 = view2;
 	}
 
 	zend_str_tolower(view1, view_len);
@@ -705,6 +707,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 */
 static void yod_controller_forward(yod_controller_t *object, char *route, uint route_len, int exited TSRMLS_DC) {
 	yod_request_t *request;
+	zval *forward;
 
 #if PHP_YOD_DEBUG
 	if (instanceof_function(Z_OBJCE_P(object), yod_widget_ce TSRMLS_CC)) {
@@ -716,7 +719,11 @@ static void yod_controller_forward(yod_controller_t *object, char *route, uint r
 	}
 #endif
 
-	zend_update_static_property_long(yod_controller_ce, ZEND_STRL("_forward"), YOD_G(forward) + 1 TSRMLS_CC);
+	forward = zend_read_static_property(yod_controller_ce, ZEND_STRL("_forward"), 1 TSRMLS_CC);
+	if (forward && Z_TYPE_P(forward) == IS_LONG) {
+		Z_LVAL_P(forward) = YOD_G(forward) + 1;
+	}
+
 	if (YOD_G(forward)++ > yod_forward(TSRMLS_CC)) {	
 		return;
 	}
