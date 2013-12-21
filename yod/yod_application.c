@@ -262,7 +262,8 @@ void yod_application_run(TSRMLS_DC) {
 /** {{{ int yod_application_config(char *name, uint name_len, zval *result TSRMLS_DC)
 */
 int yod_application_config(char *name, uint name_len, zval *result TSRMLS_DC) {
-	zval *config;
+	zval *config, **ppval;
+	char *name1, *skey, *token;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_application_config(%s)", name ? name : "");
@@ -283,26 +284,27 @@ int yod_application_config(char *name, uint name_len, zval *result TSRMLS_DC) {
 		ZVAL_ZVAL(result, config, 1, 0);
 		return 1;
 	} else {
-		zval **ppval;
-		char *skey, *token;
-
-		if (zend_hash_find(Z_ARRVAL_P(config), name, name_len + 1, (void **)&ppval) == SUCCESS) {
+		name1 = estrndup(name, name_len);
+		if (zend_hash_find(Z_ARRVAL_P(config), name1, name_len + 1, (void **)&ppval) == SUCCESS) {
 			ZVAL_ZVAL(result, *ppval, 1, 0);
+			efree(name1);
 			return 1;
 		} else {
 			ZVAL_ZVAL(result, config, 1, 0);
-			skey = php_strtok_r(name, ".", &token);
+			skey = php_strtok_r(name1, ".", &token);
 			while (skey) {
 				if (zend_hash_find(Z_ARRVAL_P(result), skey, strlen(skey) + 1, (void **)&ppval) == SUCCESS) {
 					ZVAL_ZVAL(result, *ppval, 1, 1);
 				} else {
 					ZVAL_NULL(result);
+					efree(name1);
 					return 0;
 				}
 				skey = php_strtok_r(NULL, ".", &token);
 			}
 		}
 		zval_ptr_dtor(ppval);
+		efree(name1);
 	}
 	return 1;
 }
