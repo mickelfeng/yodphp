@@ -16,7 +16,6 @@ cd php-$1
 --with-config-file-scan-dir=/usr/local/php/etc \
 --with-mysql-dir=/usr \
 --with-pdo-mysql=/usr \
---enable-safe-mode \
 --enable-ftp \
 --enable-zip \
 --with-bz2 \
@@ -67,7 +66,6 @@ make && make install
 --with-config-file-scan-dir=/usr/local/php/etc \
 --with-mysql-dir=/usr \
 --with-pdo-mysql=/usr \
---enable-safe-mode \
 --enable-ftp \
 --enable-zip \
 --with-bz2 \
