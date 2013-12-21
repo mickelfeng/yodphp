@@ -17,50 +17,8 @@ defined('YOD_CHARSET') or define('YOD_CHARSET', 'utf-8');
 defined('YOD_PATHVAR') or define('YOD_PATHVAR', '');
 defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__));
 
-// yodphp autorun
-if (defined('YOD_RUNPATH')) {
-	Yod_Application::app();
-} else {
-	define('YOD_RUNPATH', dirname(__FILE__));
-}
-
-/**
- * yod_autoload
- * 
- * @param string $classname
- */
-function yod_autoload($classname)
-{
-	$classfile = $classname;
-	// class name with namespace in PHP 5.3
-	if (strpos($classname, '\\') !== false) {
-		$classfile = str_replace('\\', '_', $classname);
-	}
-
-	if (substr($classfile, 0, 4) == 'Yod_') { // yodphp extends class
-		if (strncmp($classfile, 'Yod_Db', 6) == 0) {
-			$directory = '/drivers/';
-		} else {
-			$directory = '/extends/';
-		}
-		$classpath = YOD_EXTPATH . $directory . substr($classfile, 4) . '.class.php';
-	} else {
-		if (strncmp(substr($classname, -10), 'Controller', 10) == 0) {
-			$directory = '/controllers/';
-		} elseif (strncmp(substr($classname, -5), 'Model', 5) == 0) {
-			$directory = '/models/';
-		} else {
-			$directory = '/extends/';
-			$classfile = $classfile . '.class';
-		}
-		$classpath = YOD_RUNPATH . $directory . $classfile . '.php';
-	}
-
-	if (is_file($classpath)) include $classpath;
-
-	return class_exists($classname, false) || interface_exists($classname, false);
-}
-spl_autoload_register('yod_autoload');
+// yodphp register
+register_shutdown_function(array('Yod_Application', 'autorun'));
 
 /**
  * Yod_Application
@@ -92,6 +50,9 @@ final class Yod_Application
 		if (defined('YOD_RUNMODE')) {
 			error_reporting(YOD_RUNMODE);
 		}
+
+		// autoload
+		spl_autoload_register(array('Yod_Application', 'autoload'));
 
 		// config
 		if (is_array($config)) {
@@ -215,6 +176,59 @@ final class Yod_Application
 			return self::$_app;
 		}
 		return new self($config);
+	}
+
+	/**
+	 * autorun
+	 * @access public
+	 * @param void
+	 * @return void
+	 */
+	public static function autorun()
+	{
+		if (defined('YOD_RUNPATH')) {
+			Yod_Application::app();
+		} else {
+			define('YOD_RUNPATH', dirname(__FILE__));
+		}
+	}
+
+	/**
+	 * autoload
+	 * 
+	 * @param string $classname
+	 * @return boolean
+	 */
+	public static function autoload($classname)
+	{
+		$classfile = $classname;
+		// class name with namespace in PHP 5.3
+		if (strpos($classname, '\\') !== false) {
+			$classfile = str_replace('\\', '_', $classname);
+		}
+
+		if (substr($classfile, 0, 4) == 'Yod_') { // yodphp extends class
+			if (strncmp($classfile, 'Yod_Db', 6) == 0) {
+				$directory = '/drivers/';
+			} else {
+				$directory = '/extends/';
+			}
+			$classpath = YOD_EXTPATH . $directory . substr($classfile, 4) . '.class.php';
+		} else {
+			if (strncmp(substr($classname, -10), 'Controller', 10) == 0) {
+				$directory = '/controllers/';
+			} elseif (strncmp(substr($classname, -5), 'Model', 5) == 0) {
+				$directory = '/models/';
+			} else {
+				$directory = '/extends/';
+				$classfile = $classfile . '.class';
+			}
+			$classpath = YOD_RUNPATH . $directory . $classfile . '.php';
+		}
+
+		if (is_file($classpath)) include $classpath;
+
+		return class_exists($classname, false) || interface_exists($classname, false);
 	}
 
 	/**
