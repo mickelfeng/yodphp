@@ -178,7 +178,7 @@ int yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *co
 	zval_ptr_dtor(&config1);
 
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), yoddb TSRMLS_CC);
-	//zval_ptr_dtor(&yoddb);
+	zval_ptr_dtor(&yoddb);
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_model_init()");
@@ -374,10 +374,10 @@ PHP_METHOD(yod_model, find) {
 		if (result) {
 			zend_call_method_with_1_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "fetch", &retval, result);
 			zend_call_method_with_0_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "free", NULL);
+			zval_ptr_dtor(&result);
 			if (retval) {
 				RETURN_ZVAL(retval, 1, 1);
 			}
-			zval_ptr_dtor(&result);
 		}
 	}
 	
@@ -416,10 +416,10 @@ PHP_METHOD(yod_model, findAll) {
 		if (result) {
 			zend_call_method_with_1_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "fetchall", &retval, result);
 			zend_call_method_with_0_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "free", NULL);
+			zval_ptr_dtor(&result);
 			if (retval) {
 				RETURN_ZVAL(retval, 1, 1);
 			}
-			zval_ptr_dtor(&result);
 		}
 	}
 	
@@ -453,23 +453,24 @@ PHP_METHOD(yod_model, count) {
 	if (table) {
 		convert_to_string(table);
 
+		MAKE_STD_ZVAL(result);
 		MAKE_STD_ZVAL(select);
 		ZVAL_STRING(select, "COUNT(*)", 1);
-
-		MAKE_STD_ZVAL(result);
 		yod_database_select(yoddb, select, Z_STRVAL_P(table), Z_STRLEN_P(table), where, where_len, params, ZEND_STRL("LIMIT 1"), result TSRMLS_CC);
+		zval_ptr_dtor(&select);
 		if (result) {
 			zend_call_method_with_1_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "fetch", &data, result);
 			zend_call_method_with_0_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "free", NULL);
-
+			zval_ptr_dtor(&result);
 			if (data && Z_TYPE_P(data) == IS_ARRAY) {
-				if (zend_hash_get_current_data(Z_ARRVAL_P(data), (void **) &ppval) == FAILURE) {
-					RETURN_FALSE;
+				if (zend_hash_get_current_data(Z_ARRVAL_P(data), (void **) &ppval) == SUCCESS) {
+					ZVAL_ZVAL(return_value, *ppval, 1, 1);
+					zval_ptr_dtor(&data);
+					return;
 				}
-				RETURN_ZVAL(*ppval, 1, 1);
+				zval_ptr_dtor(&data);
 			}
 		}
-		zval_ptr_dtor(&result);
 	}
 	
 	RETURN_FALSE;
@@ -497,11 +498,7 @@ PHP_METHOD(yod_model, save) {
 
 	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (!yoddb || Z_TYPE_P(yoddb) != IS_OBJECT) {
-		if (where_len == 0) {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function insert() on a non-object");
-		} else {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function update() on a non-object");
-		}
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Call to a member function update() on a non-object");
 		RETURN_FALSE;
 	}
 
@@ -513,7 +510,10 @@ PHP_METHOD(yod_model, save) {
 		} else {
 			yod_database_update(yoddb, data, Z_STRVAL_P(table), Z_STRLEN_P(table), where, where_len, params, return_value TSRMLS_CC);
 		}
+		return;
 	}
+
+	RETURN_FALSE;
 }
 /* }}} */
 
@@ -542,7 +542,10 @@ PHP_METHOD(yod_model, remove) {
 	if (table) {
 		convert_to_string(table);
 		yod_database_delete(yoddb, Z_STRVAL_P(table), Z_STRLEN_P(table), where, where_len, params, return_value TSRMLS_CC);
+		return;
 	}
+
+	RETURN_FALSE;
 }
 /* }}} */
 
@@ -578,7 +581,7 @@ PHP_METHOD(yod_model, config) {
 		return;
 	}
 
-	(void)yod_application_config(name, name_len, return_value TSRMLS_CC);
+	yod_application_config(name, name_len, return_value TSRMLS_CC);
 }
 /* }}} */
 

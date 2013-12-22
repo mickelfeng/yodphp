@@ -24,11 +24,12 @@
 #include "php_ini.h"
 #include "main/SAPI.h"
 #include "Zend/zend_interfaces.h"
+#include "ext/standard/php_smart_str.h"
 
 /*
 #include "Zend/zend_alloc.h"
-#include "Zend/zend_interfaces.h"
 #include "ext/standard/info.h"
+#include "ext/standard/php_var.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_math.h"
 */
@@ -85,20 +86,45 @@ void yod_debugf(const char *format,...) {
 		spprintf(&buffer, 0, "%s%s\n", buffer, YOD_DIVLINE);
 */
 		add_next_index_string(YOD_G(debugs), buffer, 1);
+
 		efree(buffer1);
 		efree(buffer);
 	}
 }
 /* }}} */
 
-/** {{{ void yod_debugl(char *sline)
+/** {{{ void yod_debugl(char *sline TSRMLS_DC)
 */
-void yod_debugl(char *sline) {
+void yod_debugl(char *sline TSRMLS_DC) {
 	char *buffer;
 
-	spprintf(&buffer, 0, "%s\n", sline ? sline : YOD_DOTLINE);
+	if (sline) {
+		switch (sline[0]) {
+			case '-' :
+				spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
+				break;
+			case '=' :
+				spprintf(&buffer, 0, "%s\n", YOD_DIVLINE);
+				break;
+			default :
+				spprintf(&buffer, 0, "%s\n", sline ? sline : YOD_DOTLINE);
+		}
+	} else {
+		spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
+	}
 	add_next_index_string(YOD_G(debugs), buffer, 1);
 	efree(buffer);
+}
+/* }}} */
+
+/** {{{ void yod_debugz(zval *pzval, int dump TSRMLS_DC) {
+*/
+void yod_debugz(zval *pzval, int dump TSRMLS_DC) {
+	if (dump) {
+		php_var_dump(pzval, 0 TSRMLS_CC);
+	} else {
+		zend_print_zval_r(pzval, 0 TSRMLS_CC);
+	}
 }
 /* }}} */
 

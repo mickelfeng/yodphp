@@ -44,6 +44,23 @@ PHP
 
 define('YOD_RUNPATH', dirname(__FILE__));
 
+$config = array(
+	'db_dsn2' => array(
+		'type' => 'pdo',
+		'dsn' => 'mysql:host=localhost;port=3306;dbname=test',
+		'host' => 'localhost',
+		'user' => 'root',
+		'pass' => '123456',
+		'dbname' => 'test',
+		'prefix' => 'yod_',
+		'slaves' => array(
+			'dsn' => 'mysql:host=localhost;port=3306;dbname=test',
+			'user' => 'root',
+			'pass' => '123456',
+		),
+	),
+);
+
 class IndexController extends Yod_Controller
 {
 	public function indexAction()
@@ -82,7 +99,16 @@ class IndexController extends Yod_Controller
 		$save = $demo->save($data, 'id = :id', array(':id' => 1));
 		echo "save:"; var_dump($save);
 
+		$find = $demo->find('id = :id', array(':id' => 1));
+		echo "find:"; print_r($find);
+
 		echo "findAll:"; print_r($demo->findAll());
+
+		echo "count:"; var_dump($demo->count());
+
+		echo "remove:"; var_dump($demo->remove());
+
+		echo "count:"; var_dump($demo->count());
 
 		$execute = $db->execute('DROP TABLE yod_tests');
 		echo "execute:"; var_dump($execute);
@@ -92,6 +118,7 @@ class IndexController extends Yod_Controller
 
 class DemoModel extends Yod_Model
 {
+	public $_dsn = 'db_dsn2';
 	public $_table = 'tests';
 	
 }
@@ -109,6 +136,15 @@ find:Array
     [status] => 0
 )
 save:int(1)
+find:Array
+(
+    [id] => 1
+    [title] => Tests
+    [content] => Yod Framework
+    [updated] => 1234567891
+    [created] => 1234567890
+    [status] => 0
+)
 findAll:Array
 (
     [0] => Array
@@ -122,4 +158,7 @@ findAll:Array
         )
 
 )
+count:string(1) "1"
+remove:int(1)
+count:string(1) "0"
 execute:bool(true)

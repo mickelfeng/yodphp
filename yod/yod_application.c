@@ -105,9 +105,9 @@ static int yod_application_init_autoload(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ static void yod_application_init_config(yod_application_t *object, zval *config)
+/** {{{ static void yod_application_init_configs(yod_application_t *object, zval *config)
 */
-static void yod_application_init_config(yod_application_t *object, zval *config) {
+static void yod_application_init_configs(yod_application_t *object, zval *config) {
 	zval *retval, **ppval;
 	char *filepath;
 	size_t filepath_len;
@@ -117,7 +117,7 @@ static void yod_application_init_config(yod_application_t *object, zval *config)
 	struct dirent *entry = (struct dirent *) &dentry;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_application_init_config()");
+	yod_debugf("yod_application_init_configs()");
 #endif
 
 	if(config && Z_TYPE_P(config) == IS_ARRAY) {
@@ -219,7 +219,7 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 	yod_application_init_autoload(TSRMLS_CC);
 
 	// config
-	yod_application_init_config(YOD_G(yodapp), config);
+	yod_application_init_configs(YOD_G(yodapp), config);
 
 	// request
 	request = yod_request_construct(NULL, NULL, 0 TSRMLS_CC);

@@ -431,8 +431,7 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	if (view_len == 0) {
 		p_action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
 		if (p_action || Z_TYPE_P(p_action) == IS_STRING) {
-			view_len = Z_STRLEN_P(p_action);
-			view1 = Z_STRVAL_P(p_action);
+			view_len = spprintf(&view1, 0, "%s", Z_STRVAL_P(p_action));
 		}
 	} else {
 		view_len = spprintf(&view1, 0, "%s", view);
@@ -469,6 +468,7 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	if (!tpl_view || Z_TYPE_P(tpl_view) != IS_ARRAY) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unavailable property %s::$_view", Z_OBJCE_P(object)->name);
 		ZVAL_NULL(response);
+		efree(view1);
 		return 0;
 	}
 
@@ -476,6 +476,7 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 		if (!tpl_path || Z_TYPE_PP(tpl_path) != IS_STRING) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unavailable property %s::$_view", Z_OBJCE_P(object)->name);
 			ZVAL_NULL(response);
+			efree(view1);
 			return 0;
 		}
 	}
@@ -868,7 +869,7 @@ PHP_METHOD(yod_controller, assign) {
 
 	return_value = getThis();
 
-	(void)yod_controller_assign(return_value, name, value TSRMLS_CC);
+	yod_controller_assign(return_value, name, value TSRMLS_CC);
 }
 /* }}} */
 
@@ -883,7 +884,7 @@ PHP_METHOD(yod_controller, render) {
 		return;
 	}
 
-	(void)yod_controller_render(getThis(), return_value, view, view_len, data TSRMLS_CC);
+	yod_controller_render(getThis(), return_value, view, view_len, data TSRMLS_CC);
 
 }
 /* }}} */
@@ -899,7 +900,7 @@ PHP_METHOD(yod_controller, display) {
 		return;
 	}
 
-	(void)yod_controller_display(getThis(), view, view_len, data TSRMLS_CC);
+	yod_controller_display(getThis(), view, view_len, data TSRMLS_CC);
 
 }
 /* }}} */
@@ -914,7 +915,7 @@ PHP_METHOD(yod_controller, widget) {
 		return;
 	}
 
-	(void)yod_controller_widget(getThis(), route, route_len TSRMLS_CC);
+	yod_controller_widget(getThis(), route, route_len TSRMLS_CC);
 }
 /* }}} */
 
@@ -929,7 +930,7 @@ PHP_METHOD(yod_controller, forward) {
 		return;
 	}
 
-	(void)yod_controller_forward(getThis(), route, route_len, exited TSRMLS_CC);
+	yod_controller_forward(getThis(), route, route_len, exited TSRMLS_CC);
 }
 /* }}} */
 
@@ -971,7 +972,7 @@ PHP_METHOD(yod_controller, error404) {
 
 	request = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_request"), 1 TSRMLS_CC);
 
-	(void)yod_request_error404(request, html TSRMLS_CC);
+	yod_request_error404(request, html TSRMLS_CC);
 }
 /* }}} */
 
