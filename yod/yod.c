@@ -24,19 +24,24 @@
 #include "php_ini.h"
 #include "main/SAPI.h"
 #include "Zend/zend_interfaces.h"
+#include "ext/standard/info.h"
+#include "ext/standard/php_string.h"
 #include "ext/standard/php_smart_str.h"
 
 /*
 #include "Zend/zend_alloc.h"
-#include "ext/standard/info.h"
 #include "ext/standard/php_var.h"
-#include "ext/standard/php_string.h"
 #include "ext/standard/php_math.h"
 */
 
-
+#ifdef PHP_WIN32
+#include "win32/time.h"
+#else
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#else
+#include <time.h>
+#endif
 #endif
 
 #include "php_yod.h"
@@ -47,6 +52,7 @@
 #include "yod_widget.h"
 #include "yod_model.h"
 #include "yod_database.h"
+#include "yod_dbpdo.h"
 
 #define MICRO_IN_SEC 1000000.00
 
@@ -128,9 +134,9 @@ void yod_debugz(zval *pzval, int dump TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ void yod_debugs(TSRMLS_DC)
+/** {{{ void yod_debugs(TSRMLS_D)
 */
-void yod_debugs(TSRMLS_DC) {
+void yod_debugs(TSRMLS_D) {
 	double runtime;
 	struct timeval tp = {0};
 	zval **ppzval;
@@ -167,13 +173,13 @@ void yod_debugs(TSRMLS_DC) {
 
 #endif
 
-/** {{{ void yod_do_exit(TSRMLS_DC)
+/** {{{ void yod_do_exit(TSRMLS_D)
 */
-void yod_do_exit(TSRMLS_DC) {
+void yod_do_exit(TSRMLS_D) {
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_do_exit()");
-	yod_debugs(TSRMLS_CC);
+	yod_debugs(TSRMLS_C);
 #endif
 
 	YOD_G(exited) = 1;
@@ -256,9 +262,9 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 }
 /* }}} */
 
-/** {{{ double yod_runtime(TSRMLS_DC)
+/** {{{ double yod_runtime(TSRMLS_D)
 */
-double yod_runtime(TSRMLS_DC) {
+double yod_runtime(TSRMLS_D) {
 	zval runtime;
 
 	if (zend_get_constant(ZEND_STRL("YOD_RUNTIME"), &runtime TSRMLS_CC)) {
@@ -271,9 +277,9 @@ double yod_runtime(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ long yod_forward(TSRMLS_DC)
+/** {{{ long yod_forward(TSRMLS_D)
 */
-long yod_forward(TSRMLS_DC) {
+long yod_forward(TSRMLS_D) {
 	zval forward;
 	long retval;
 
@@ -292,9 +298,9 @@ long yod_forward(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ char *yod_charset(TSRMLS_DC)
+/** {{{ char *yod_charset(TSRMLS_D)
 */
-char *yod_charset(TSRMLS_DC) {
+char *yod_charset(TSRMLS_D) {
 	zval charset;
 
 	if (!YOD_G(charset)) {
@@ -316,9 +322,9 @@ char *yod_charset(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ char *yod_pathvar(TSRMLS_DC)
+/** {{{ char *yod_pathvar(TSRMLS_D)
 */
-char *yod_pathvar(TSRMLS_DC) {
+char *yod_pathvar(TSRMLS_D) {
 	zval pathvar;
 
 	if (!YOD_G(pathvar)) {
@@ -340,9 +346,9 @@ char *yod_pathvar(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ char *yod_extpath(TSRMLS_DC)
+/** {{{ char *yod_extpath(TSRMLS_D)
 */
-char *yod_extpath(TSRMLS_DC) {
+char *yod_extpath(TSRMLS_D) {
 	zval extpath;
 	uint extpath_len;
 
@@ -367,9 +373,9 @@ char *yod_extpath(TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ char *yod_runpath(TSRMLS_DC)
+/** {{{ char *yod_runpath(TSRMLS_D)
 */
-char *yod_runpath(TSRMLS_DC) {
+char *yod_runpath(TSRMLS_D) {
 	zval runpath;
 	uint runpath_len;
 
@@ -461,11 +467,12 @@ int yod_include(char *filepath, zval **retval, int dtor TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ static int yod_autorun_register(TSRMLS_DC)
+/** {{{ static int yod_autorun_register(TSRMLS_D)
  * */
-static int yod_autorun_register(TSRMLS_DC) {
+static int yod_autorun_register(TSRMLS_D) {
 	zval *param1, *function, *retval = NULL;
 	zval **params[1] = {&param1};
+	zend_fcall_info fci;
 
 	MAKE_STD_ZVAL(param1);
 	array_init(param1);
@@ -475,17 +482,19 @@ static int yod_autorun_register(TSRMLS_DC) {
 	MAKE_STD_ZVAL(function);
 	ZVAL_STRING(function, "register_shutdown_function", 1);
 
-	zend_fcall_info fci = {
-		sizeof(fci),
-		EG(function_table),
-		function,
-		NULL,
-		&retval,
-		1,
-		(zval ***)params,
-		NULL,
-		1
-	};
+	fci.size = sizeof(fci);
+	fci.function_table = EG(function_table);
+	fci.function_name = function;
+	fci.symbol_table = NULL;
+	fci.retval_ptr_ptr = &retval;
+	fci.param_count = 1;
+	fci.params = (zval ***)params;
+#if PHP_API_VERSION > 20041225
+	fci.object_ptr = NULL;
+#else
+	fci.object_pp = NULL;
+#endif
+	fci.no_separation = 1;
 
 	zend_call_function(&fci, NULL TSRMLS_CC);
 
@@ -596,7 +605,7 @@ PHP_RINIT_FUNCTION(yod)
 	zend_call_method_with_1_params(NULL, NULL, NULL, "register_shutdown_function", NULL, params);
 	zval_ptr_dtor(&params);
 */
-	yod_autorun_register(TSRMLS_CC);
+	yod_autorun_register(TSRMLS_C);
 
 	return SUCCESS;
 }
@@ -611,7 +620,7 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 		YOD_G(yodapp) = NULL;
 
 #if PHP_YOD_DEBUG
-		yod_debugs(TSRMLS_CC);
+		yod_debugs(TSRMLS_C);
 #endif
 
 	}

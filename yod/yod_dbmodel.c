@@ -361,7 +361,7 @@ int yod_dbmodel_getinstance(char *name, uint name_len, zval *config, zval *retva
 
 	MAKE_STD_ZVAL(object);
 	if (name_len > 0) {
-		spprintf(&classpath, 0, "%s/models/%s.php", yod_runpath(TSRMLS_CC), classname);
+		spprintf(&classpath, 0, "%s/models/%s.php", yod_runpath(TSRMLS_C), classname);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, &pzval, 1 TSRMLS_CC);
 			if (zend_lookup_class_ex(classname, classname_len, 0, &pce TSRMLS_CC) == SUCCESS) {

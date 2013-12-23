@@ -171,7 +171,7 @@ int yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *co
 	MAKE_STD_ZVAL(yoddb);
 	if (yod_database_getinstance(config1, yoddb TSRMLS_CC)) {
 		MAKE_STD_ZVAL(prefix);
-		yod_database_config(yoddb, ZEND_STRL("prefix"), NULL, prefix);
+		yod_database_config(yoddb, ZEND_STRL("prefix"), NULL, prefix TSRMLS_CC);
 		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_prefix"), prefix TSRMLS_CC);
 		zval_ptr_dtor(&prefix);
 	}
@@ -224,7 +224,7 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 
 	MAKE_STD_ZVAL(object);
 	if (name_len > 0) {
-		spprintf(&classpath, 0, "%s/models/%s.php", yod_runpath(TSRMLS_CC), classname);
+		spprintf(&classpath, 0, "%s/models/%s.php", yod_runpath(TSRMLS_C), classname);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, &pzval, 1 TSRMLS_CC);
 #if PHP_API_VERSION < 20100412

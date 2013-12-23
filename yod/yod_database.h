@@ -22,6 +22,7 @@
 void yod_database_construct(yod_database_t *object, zval *config TSRMLS_DC);
 int yod_database_getinstance(zval *config, zval *result TSRMLS_DC);
 int yod_database_config(yod_database_t *object, char *name, uint name_len, zval *value, zval *retval TSRMLS_DC);
+int yod_database_dbconfig(yod_database_t *object, zval *config, long linknum, zval *retval TSRMLS_DC);
 int yod_database_insert(yod_database_t *object, zval *data, char *table, uint table_len, int replace, zval *retval TSRMLS_DC);
 int yod_database_update(yod_database_t *object, zval *data, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC);
 int yod_database_delete(yod_database_t *object, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC);

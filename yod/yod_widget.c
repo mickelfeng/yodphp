@@ -84,7 +84,7 @@ static void yod_widget_construct(yod_widget_t *object, yod_request_t *request, c
 
 	MAKE_STD_ZVAL(tpl_data);
 	array_init(tpl_data);
-	spprintf(&tpl_path, 0, "%s/widgets", yod_runpath(TSRMLS_CC));
+	spprintf(&tpl_path, 0, "%s/widgets", yod_runpath(TSRMLS_C));
 	MAKE_STD_ZVAL(tpl_view);
 	array_init(tpl_view);
 	add_assoc_zval(tpl_view, "tpl_data", tpl_data);

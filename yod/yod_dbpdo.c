@@ -262,7 +262,7 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 				}
 			}
 
-			yod_call_method(linkid, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 4, argv[0], argv[1], argv[2], argv[3] TSRMLS_DC);
+			yod_call_method(linkid, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 4, argv[0], argv[1], argv[2], argv[3] TSRMLS_CC);
 
 			zval_ptr_dtor(&argv[0]);
 			zval_ptr_dtor(&argv[1]);
@@ -380,7 +380,7 @@ int yod_dbpdo_execute(yod_dbpdo_t *object, zval *query, zval *params, int affect
 				while (zend_hash_get_current_data_ex(Z_ARRVAL_P(params), (void **)&ppval, &pos) == SUCCESS) {
 					zval *value = NULL;
 					char *str_key = NULL;
-					uint key_len, name_len;
+					uint key_len;
 					ulong num_key;
 
 					if (zend_hash_get_current_key_ex(Z_ARRVAL_P(params), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
@@ -460,7 +460,7 @@ int yod_dbpdo_query(yod_dbpdo_t *object, zval *query, zval *params, zval *retval
 				while (zend_hash_get_current_data_ex(Z_ARRVAL_P(params), (void **)&ppval, &pos) == SUCCESS) {
 					zval *value = NULL;
 					char *str_key = NULL;
-					uint key_len, name_len;
+					uint key_len;
 					ulong num_key;
 
 					if (zend_hash_get_current_key_ex(Z_ARRVAL_P(params), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
@@ -623,7 +623,7 @@ PHP_METHOD(yod_dbpdo, __construct) {
 
 	object = getThis();
 
-	yod_database_construct(object, config TSRMLS_DC);
+	yod_database_construct(object, config TSRMLS_CC);
 
 	zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_driver"), Z_OBJCE_P(object)->name TSRMLS_CC);
 }
@@ -746,7 +746,7 @@ PHP_METHOD(yod_dbpdo, execute) {
 		return;
 	}
 
-	yod_dbpdo_execute(getThis(), query, params, affected, return_value TSRMLS_DC);
+	yod_dbpdo_execute(getThis(), query, params, affected, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -759,7 +759,7 @@ PHP_METHOD(yod_dbpdo, query) {
 		return;
 	}
 
-	yod_dbpdo_query(getThis(), query, params, return_value TSRMLS_DC);
+	yod_dbpdo_query(getThis(), query, params, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -772,7 +772,7 @@ PHP_METHOD(yod_dbpdo, fetch) {
 		return;
 	}
 
-	yod_dbpdo_fetch(getThis(), result, return_value TSRMLS_DC);
+	yod_dbpdo_fetch(getThis(), result, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -785,7 +785,7 @@ PHP_METHOD(yod_dbpdo, fetchAll) {
 		return;
 	}
 
-	yod_dbpdo_fetchall(getThis(), result, return_value TSRMLS_DC);
+	yod_dbpdo_fetchall(getThis(), result, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -941,7 +941,7 @@ PHP_METHOD(yod_dbpdo, free) {
 		return;
 	}
 
-	yod_dbpdo_free(getThis(), result TSRMLS_DC);
+	yod_dbpdo_free(getThis(), result TSRMLS_CC);
 }
 /* }}} */
 
@@ -949,8 +949,7 @@ PHP_METHOD(yod_dbpdo, free) {
 */
 PHP_METHOD(yod_dbpdo, close) {
 	yod_dbpdo_t *object;
-	zval *linkids, *linkid, **ppval;
-	HashPosition pos;
+	zval *linkids, *linkid;
 
 #if PHP_YOD_DEBUG
 	//yod_debugf("yod_dbpdo_close()");

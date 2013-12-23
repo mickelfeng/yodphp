@@ -22,6 +22,7 @@
 
 #include "php.h"
 #include "Zend/zend_interfaces.h"
+#include "ext/standard/php_array.h"
 #include "ext/standard/md5.h"
 #include "ext/standard/php_var.h"
 #include "ext/standard/php_rand.h"
@@ -284,7 +285,7 @@ int yod_database_getinstance(zval *config, yod_database_t *retval TSRMLS_DC) {
 		efree(dbtype);
 	}
 
-	md5hash = yod_database_md5hash(&config1);
+	md5hash = yod_database_md5hash(&config1 TSRMLS_CC);
 
 	p_db = zend_read_static_property(yod_database_ce, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (p_db && Z_TYPE_P(p_db) == IS_ARRAY) {
@@ -302,7 +303,7 @@ int yod_database_getinstance(zval *config, yod_database_t *retval TSRMLS_DC) {
 #else
 	if (zend_lookup_class_ex(classname, classname_len, NULL, 0, &pce TSRMLS_CC) == FAILURE) {
 #endif
-		spprintf(&classpath, 0, "%s/drivers/%s.class.php", yod_extpath(TSRMLS_CC), classname + 4);
+		spprintf(&classpath, 0, "%s/drivers/%s.class.php", yod_extpath(TSRMLS_C), classname + 4);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, &pzval, 1 TSRMLS_CC);
 		}
@@ -567,7 +568,7 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 		ulong num_key;
 
 		if (zend_hash_get_current_key_ex(Z_ARRVAL_P(data), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
-			md5hash = yod_database_md5(str_key, key_len);
+			md5hash = yod_database_md5(str_key, key_len TSRMLS_CC);
 			name_len = spprintf(&name, 0, ":%s", md5hash);
 			fields_len = spprintf(&fields1, 0, "%s%s, ", (fields_len ? fields : ""), str_key);
 			values_len = spprintf(&values1, 0, "%s%s, ", (values_len ? values : ""), name);
@@ -670,7 +671,7 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 		ulong num_key;
 
 		if (zend_hash_get_current_key_ex(Z_ARRVAL_P(data), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
-			md5hash = yod_database_md5(str_key, key_len);
+			md5hash = yod_database_md5(str_key, key_len TSRMLS_CC);
 			name_len = spprintf(&name, 0, ":%s", md5hash);
 			update_len = spprintf(&update1, 0, "%s%s = %s, ", (update_len ? update : ""), str_key, name);
 
@@ -740,7 +741,7 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 /** {{{ int yod_database_delete(yod_database_t *object, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC)
 */
 int yod_database_delete(yod_database_t *object, char *table, uint table_len, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC) {
-	zval *prefix, *query, *affected, **ppval;
+	zval *prefix, *query, *affected;
 	char *squery;
 	uint squery_len;
 
@@ -1005,7 +1006,6 @@ PHP_METHOD(yod_database, insert) {
 /** {{{ proto public Yod_Database::update($data, $table, $where = null, $params = array())
 */
 PHP_METHOD(yod_database, update) {
-	yod_database_t *object;
 	zval *data = NULL, *params = NULL;
 	char *table = NULL, *where = NULL;
 	uint table_len = 0, where_len =0;

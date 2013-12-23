@@ -148,10 +148,11 @@ static int yod_extract(zval *array TSRMLS_DC) {
 		return 0;
 	}
 
+#if PHP_API_VERSION > 20041225
 	if (!EG(active_symbol_table)) {
 		zend_rebuild_symbol_table(TSRMLS_C);
 	}
-
+#endif
 	zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(array), &pos);
 	while (zend_hash_get_current_data_ex(Z_ARRVAL_P(array), (void **)&data, &pos) == SUCCESS) {
 
@@ -176,6 +177,8 @@ static int yod_extract(zval *array TSRMLS_DC) {
 
 		zend_hash_move_forward_ex(Z_ARRVAL_P(array), &pos);
 	}
+
+	return 1;
 }
 /* }}} */
 
@@ -218,11 +221,11 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
 		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
 			zend_str_tolower(Z_STRVAL_P(p_name), Z_STRLEN_P(p_name));
-			//zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), p_name TSRMLS_CC);
-			spprintf(&classpath, 0, "%s/actions/%s/%s.php", yod_runpath(TSRMLS_CC), Z_STRVAL_P(p_name), classname);
+			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), p_name TSRMLS_CC);
+			spprintf(&classpath, 0, "%s/actions/%s/%s.php", yod_runpath(TSRMLS_C), Z_STRVAL_P(p_name), classname);
 		} else {
 			zend_update_property_string(Z_OBJCE_P(object), object, ZEND_STRL("_name"), "index" TSRMLS_CC);
-			spprintf(&classpath, 0, "%s/actions/index/%s.php", yod_runpath(TSRMLS_CC), classname);
+			spprintf(&classpath, 0, "%s/actions/index/%s.php", yod_runpath(TSRMLS_C), classname);
 		}
 
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
@@ -303,7 +306,7 @@ void yod_controller_construct(yod_controller_t *object, yod_request_t *request, 
 	if (!tpl_data || Z_TYPE_P(tpl_data) != IS_ARRAY) {
 		array_init(tpl_data);
 	}
-	spprintf(&tpl_path, 0, "%s/views", yod_runpath(TSRMLS_CC));
+	spprintf(&tpl_path, 0, "%s/views", yod_runpath(TSRMLS_C));
 	MAKE_STD_ZVAL(tpl_view);
 	array_init(tpl_view);
 	add_assoc_zval(tpl_view, "tpl_data", tpl_data);
@@ -409,14 +412,11 @@ static int yod_controller_assign(yod_controller_t *object, zval *name, zval *val
 static int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC) {
 	zend_class_entry *scope;
 
-	zval *p_action, *p_name, *tpl_view, *buffer, *retval;
+	zval *p_action, *p_name, *tpl_view, *retval;
 	zval **tpl_path, **tpl_data;
 
-	char *tpl_file, *key, *view1, *view2;
-	uint tpl_file_len, key_len;
-
-	ulong num_key;
-	HashPosition pos;
+	char *tpl_file, *view1, *view2;
+	uint tpl_file_len;
 
 #if PHP_YOD_DEBUG
 	if (instanceof_function(Z_OBJCE_P(object), yod_widget_ce TSRMLS_CC)) {
@@ -501,12 +501,12 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 		// tpl_data
 		if (zend_hash_find(Z_ARRVAL_P(tpl_view), "tpl_data", sizeof("tpl_data"), (void**) &tpl_data) == SUCCESS) {
 			if (tpl_data && Z_TYPE_PP(tpl_data) == IS_ARRAY) {
-				(void)yod_extract(*tpl_data TSRMLS_DC);
+				yod_extract(*tpl_data TSRMLS_CC);
 			}
 		}
 
 		if (data && Z_TYPE_P(data) == IS_ARRAY) {
-			(void)yod_extract(data TSRMLS_DC);
+			yod_extract(data TSRMLS_CC);
 		}
 
 		scope = EG(scope);
@@ -560,7 +560,7 @@ static int yod_controller_display(yod_controller_t *object, char *view, size_t v
 
 	if (!SG(headers_sent)) {
 		sapi_header_line ctr = {0};
-		ctr.line_len = spprintf(&(ctr.line), 0, "Content-type: text/html; charset=%s", yod_charset(TSRMLS_CC));
+		ctr.line_len = spprintf(&(ctr.line), 0, "Content-type: text/html; charset=%s", yod_charset(TSRMLS_C));
 		sapi_header_op(SAPI_HEADER_REPLACE, &ctr TSRMLS_CC);
 		efree(ctr.line);
 	}
@@ -673,7 +673,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 		}
 		zval_ptr_dtor(&target);
 	} else {
-		spprintf(&classpath, 0, "%s/widgets/%sWidget.php", yod_runpath(TSRMLS_CC), widget);
+		spprintf(&classpath, 0, "%s/widgets/%sWidget.php", yod_runpath(TSRMLS_C), widget);
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {
 			yod_include(classpath, &retval, 1 TSRMLS_CC);
 #if PHP_API_VERSION < 20100412
@@ -725,7 +725,7 @@ static void yod_controller_forward(yod_controller_t *object, char *route, uint r
 		Z_LVAL_P(forward) = YOD_G(forward) + 1;
 	}
 
-	if (YOD_G(forward)++ > yod_forward(TSRMLS_CC)) {	
+	if (YOD_G(forward)++ > yod_forward(TSRMLS_C)) {	
 		return;
 	}
 
@@ -812,7 +812,7 @@ PHP_METHOD(yod_controller, import) {
 */
 PHP_METHOD(yod_controller, model) {
 	yod_controller_t *object;
-	zval *z_name = NULL, *config = NULL, *p_name, *retval;
+	zval *z_name = NULL, *config = NULL, *p_name;
 	char *name = NULL;
 	uint name_len = 0;
 	int dbmod = 0;

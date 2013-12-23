@@ -41,6 +41,13 @@ extern zend_module_entry yod_module_entry;
 #define YOD_G(v) (yod_globals.v)
 #endif
 
+#ifdef PHP_WIN32
+#undef strcasecmp
+#undef strncasecmp
+#define strcasecmp(s1, s2) _stricmp(s1, s2)
+#define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
+#endif
+
 #define YOD_VERSION					"1.2.0"
 #define YOD_FORWARD					5
 #define YOD_CHARSET					"utf-8"
@@ -101,15 +108,15 @@ extern zend_module_entry yod_module_entry;
 void yod_debugf(const char *format,...);
 void yod_debugl(char *sline TSRMLS_DC);
 void yod_debugz(zval *pzval, int dump TSRMLS_DC);
-void yod_debugs(TSRMLS_DC);
+void yod_debugs(TSRMLS_D);
 #endif
 
-void yod_do_exit(TSRMLS_DC);
-long yod_forward(TSRMLS_DC);
-char *yod_charset(TSRMLS_DC);
-char *yod_pathvar(TSRMLS_DC);
-char *yod_extpath(TSRMLS_DC);
-char *yod_runpath(TSRMLS_DC);
+void yod_do_exit(TSRMLS_D);
+long yod_forward(TSRMLS_D);
+char *yod_charset(TSRMLS_D);
+char *yod_pathvar(TSRMLS_D);
+char *yod_extpath(TSRMLS_D);
+char *yod_runpath(TSRMLS_D);
 int yod_include(char *filepath, zval **retval, int dtor TSRMLS_DC);
 int yod_call_method(zval *object, char *func, int func_len, zval **result, int pcount, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC);
 

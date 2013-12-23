@@ -182,6 +182,10 @@ SOURCE=.\yod_model.c
 
 SOURCE=.\yod_database.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\yod_dbpdo.c
+# End Source File
 # End Group
 # End Target
 # End Project
