@@ -663,10 +663,7 @@ PHP_MINFO_FUNCTION(yod)
 	php_info_print_table_start();
 	php_info_print_table_header(2, "yod support", "enabled");
 	php_info_print_table_row(2, "Version", YOD_VERSION);
-	//php_info_print_table_row(2, "Supports", YOD_SUPPORT_URL);
 	php_info_print_table_end();
-
-	DISPLAY_INI_ENTRIES();
 }
 /* }}} */
 
