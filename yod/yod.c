@@ -25,6 +25,7 @@
 #include "main/SAPI.h"
 #include "Zend/zend_interfaces.h"
 #include "ext/standard/info.h"
+#include "ext/standard/php_var.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_smart_str.h"
 
@@ -127,7 +128,7 @@ void yod_debugl(char *sline TSRMLS_DC) {
 */
 void yod_debugz(zval *pzval, int dump TSRMLS_DC) {
 	if (dump) {
-		php_var_dump(pzval, 0 TSRMLS_CC);
+		php_var_dump(&pzval, 0 TSRMLS_CC);
 	} else {
 		zend_print_zval_r(pzval, 0 TSRMLS_CC);
 	}

@@ -83,16 +83,16 @@ static void yod_request_err404_html(TSRMLS_D) {
 void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 	zval *method;
 
-#if PHP_YOD_DEBUG
-	yod_debugf("yod_request_error404()");
-#endif
-
 	sapi_header_line ctr = {0};
 	ctr.response_code = 404;
 	ctr.line = "HTTP/1.0 404 Not Found";
 	ctr.line_len = strlen(ctr.line);
 	sapi_header_op(SAPI_HEADER_REPLACE, &ctr TSRMLS_CC);
 	sapi_send_headers(TSRMLS_C);
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_request_error404()");
+#endif
 
 	if (html && Z_TYPE_P(html) == IS_STRING) {
 		PHPWRITE(Z_STRVAL_P(html), Z_STRLEN_P(html));

@@ -48,7 +48,11 @@ extern zend_module_entry yod_module_entry;
 #define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
 #endif
 
+#if PHP_YOD_DEBUG
+#define YOD_VERSION					"1.2.0-dev"
+#else
 #define YOD_VERSION					"1.2.0"
+#endif
 #define YOD_FORWARD					5
 #define YOD_CHARSET					"utf-8"
 #define YOD_PATHVAR					""
