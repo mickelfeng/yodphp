@@ -392,7 +392,7 @@ int yod_database_config(yod_database_t *object, char *name, uint name_len, zval 
 /** {{{ int yod_database_dbconfig(yod_database_t *object, zval *config, long linknum, zval *retval TSRMLS_DC)
 */
 int yod_database_dbconfig(yod_database_t *object, zval *config, long linknum, zval* retval TSRMLS_DC) {
-	zval *p_config, *p_locked;
+	zval *config1, *p_locked;
 	zval **slaves, **ppval;
 	long hash_num, rand_num;
 	HashPosition pos;
@@ -406,10 +406,10 @@ int yod_database_dbconfig(yod_database_t *object, zval *config, long linknum, zv
 		return 0;
 	}
 
-	p_config = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_config"), 1 TSRMLS_CC);
 	if (!config) {
-		if (p_config && Z_TYPE_P(p_config) == IS_ARRAY) {
-			ZVAL_ZVAL(retval, p_config, 1, 0);
+		config1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_config"), 1 TSRMLS_CC);
+		if (config1 && Z_TYPE_P(config1) == IS_ARRAY) {
+			ZVAL_ZVAL(retval, config1, 1, 0);
 		} else {
 			ZVAL_NULL(retval);
 			return 0;
