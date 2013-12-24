@@ -160,10 +160,6 @@ char *yod_database_md5(char *str, uint len TSRMLS_DC) {
 	make_digest(md5str, digest);
 	retval = estrndup(md5str, 32);
 
-#if PHP_YOD_DEBUG
-	yod_debugf("yod_database_md5():%s", retval);
-#endif
-
 	return retval;
 }
 /* }}} */
