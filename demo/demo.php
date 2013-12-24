@@ -5,6 +5,7 @@ date_default_timezone_set('Asia/Shanghai');
 
 define('YOD_PATHVAR', 'r');
 define('YOD_RUNPATH', dirname(__FILE__) . '/app');
+define('YOD_EXTPATH', dirname(__FILE__) . '/../yodphp');
 
 // config
 $config = array(
@@ -59,7 +60,7 @@ $config = array(
 	),
 );
 
-class_exists('Yod_Application', false) or require dirname(__FILE__) . '/yodphp.php';
+class_exists('Yod_Application', false) or require dirname(__FILE__) . '/../yodphp/yodphp.php';
 
 class DemoController extends Yod_Controller
 {
@@ -238,8 +239,8 @@ class DemoController extends Yod_Controller
 			'created' => time(),
 		);
 
-		//echo $db->insert($data, 'demo');
-		//$db1->insert($data, 'demo');
+		echo $db->insert($data, 'demo');
+		$db1->insert($data, 'demo');
 
 		$data = array(
 			'title' => 'Demo',
@@ -247,11 +248,11 @@ class DemoController extends Yod_Controller
 			'updated' => time(),
 		);
 
-		//$db1->update($data, 'demo', 'id = :id', array(':id' => 1));
+		$db1->update($data, 'demo', 'id = :id', array(':id' => 1));
 
-		//$db1->delete('demo', 'id = :id', array(':id' => 1));
+		$db1->delete('demo', 'id = :id', array(':id' => 1));
 
-		//$db1->select('*', 'demo', 'id = :id', array(':id' => 2));
+		$db1->select('*', 'demo', 'id = :id', array(':id' => 2));
 
 		echo '<br>fetchAll:'; print_r($db1->fetchAll());
 		echo '<br>db1:'; print_r($db1);
