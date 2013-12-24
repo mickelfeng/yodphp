@@ -274,7 +274,7 @@ class DemoController extends Yod_Controller
 	}
 }
 
-class DemoUserModel extends Yod_DbModel
+class DemoUserModel extends Yod_Model
 {
 	protected function init()
 	{
