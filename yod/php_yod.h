@@ -44,8 +44,10 @@ extern zend_module_entry yod_module_entry;
 #ifdef PHP_WIN32
 #undef strcasecmp
 #undef strncasecmp
+#undef strdup
 #define strcasecmp(s1, s2) _stricmp(s1, s2)
 #define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
+#define strdup _strdup
 #endif
 
 #if PHP_YOD_DEBUG
