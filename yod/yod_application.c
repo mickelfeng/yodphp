@@ -356,6 +356,7 @@ void yod_application_run(TSRMLS_D) {
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "An application instance already running");
 		return;
 	}
+
 	YOD_G(running) = 1;
 
 	zend_update_property_bool(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_running"), 1 TSRMLS_CC);

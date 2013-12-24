@@ -25,6 +25,8 @@
 #include "main/SAPI.h"
 #include "Zend/zend_interfaces.h"
 #include "ext/standard/info.h"
+#include "ext/standard/file.h"
+#include "ext/standard/flock_compat.h"
 #include "ext/standard/php_var.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_smart_str.h"
@@ -43,6 +45,10 @@
 #else
 #include <time.h>
 #endif
+#endif
+
+#ifdef HAVE_SYS_FILE_H
+# include <sys/file.h>
 #endif
 
 #include "php_yod.h"
@@ -67,12 +73,20 @@ void yod_debugf(const char *format,...) {
 	struct timeval tp = {0};
 	va_list args;
 	char *buffer, *buffer1;
+	uint buffer_len;
+	long mem_usage;
 
 	struct tm *ta, tmbuf;
 	time_t curtime;
 	char *datetime, asctimebuf[52];
 	uint datetime_len;
 
+	zval logfile;
+	zval *zcontext = NULL;
+	php_stream_context *context = NULL;
+	php_stream *stream;
+	char mode[2] = "a";
+	
 	TSRMLS_FETCH();
 
 	time(&curtime);
@@ -86,13 +100,23 @@ void yod_debugf(const char *format,...) {
 		vspprintf(&buffer1, 0, format, args);
 		va_end(args);
 
-		spprintf(&buffer, 0, "[%s %06d] (%dk) %s\n", datetime, tp.tv_usec, zend_memory_usage(1 TSRMLS_CC) / 1024, buffer1);
-/*
-		spprintf(&buffer, 0, "%s%s\n", buffer, YOD_DOTLINE);
-
-		spprintf(&buffer, 0, "%s%s\n", buffer, YOD_DIVLINE);
-*/
+		mem_usage = zend_memory_usage(1 TSRMLS_CC) / 1024;
+		buffer_len = spprintf(&buffer, 0, "[%s %06d] (%dk) %s\n", datetime, tp.tv_usec, mem_usage, buffer1);
+		
 		add_next_index_string(YOD_G(debugs), buffer, 1);
+
+		// logfile
+		if (zend_get_constant(ZEND_STRL("YOD_LOGFILE"), &logfile TSRMLS_CC)) {
+			context = php_stream_context_from_zval(zcontext, 0);
+			stream = php_stream_open_wrapper_ex(Z_STRVAL(logfile), mode, 0, NULL, context);
+			if (stream) {
+				if (php_stream_supports_lock(stream)) {
+					php_stream_lock(stream, LOCK_EX);
+				}
+				php_stream_write(stream, buffer, buffer_len);
+				php_stream_close(stream);
+			}
+		}
 
 		efree(buffer1);
 		efree(buffer);
@@ -145,9 +169,13 @@ void yod_debugs(TSRMLS_D) {
 	if (YOD_G(exited)) {
 		return;
 	}
-	
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_debugs()");
+#endif
+
 	if (gettimeofday(&tp, NULL)) {
-		runtime	= 0;	
+		runtime	= 0;
 	} else {
 		runtime	= (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
 	}
