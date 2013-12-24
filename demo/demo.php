@@ -172,33 +172,33 @@ class DemoController extends Yod_Controller
 		echo '<pre>';
 		//print_r(Yod_Application::app());
 		$db = Yod_Database::db();
-		//$db->connect();
+		$db->connect();
 		echo '<br>db:'; print_r($db);
-/*
-		echo '<br>transaction:'; echo $db->transaction();
+
+		//echo '<br>transaction:'; echo $db->transaction();
 
 		$query = 'UPDATE yod_demo SET updated = '.time().' WHERE id = 2';
-		echo '<br>execute:'; echo $db->execute($query);
+		//echo '<br>execute:'; echo $db->execute($query);
 
 		$query = 'UPDATE yod_demo SET updated = 1 WHERE id = :id';
 		$params = array(':id' => 2);
-		echo '<br>execute:'; echo $db->execute($query, $params);
+		//echo '<br>execute:'; echo $db->execute($query, $params);
 
-		echo '<br>commit:'; echo $db->commit();
+		//echo '<br>commit:'; echo $db->commit();
 
-		echo '<br>transaction:'; echo $db->transaction();
+		//echo '<br>transaction:'; echo $db->transaction();
 
 		$query = 'UPDATE yod_demo SET updated = :updated WHERE id = :id';
 		$params = array(':updated' => time(), ':id' => 2);
-		echo '<br>execute:'; echo $db->execute($query, $params);
+		//echo '<br>execute:'; echo $db->execute($query, $params);
 
-		echo '<br>rollback:'; echo $db->rollback();
+		//echo '<br>rollback:'; echo $db->rollback();
 
 		$query = 'SELECT * FROM yod_demo WHERE id = :id';
 		$params = array(':id' => 2);
-		$db->query($query, $params);
-		echo '<br>fetch:'; print_r($db->fetch());
-
+		//$db->query($query, $params);
+		//echo '<br>fetch:'; print_r($db->fetch());
+/*
 		$query = 'SELECT * FROM yod_demo';
 		$result = $db->query($query);
 		$data = $db->fetchAll($result);
