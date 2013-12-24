@@ -600,6 +600,7 @@ PHP_METHOD(yod_application, __construct) {
 /** {{{ proto public Yod_Application::run()
 */
 PHP_METHOD(yod_application, run) {
+
 	yod_application_run(TSRMLS_C);
 }
 /* }}} */

@@ -154,6 +154,15 @@ void yod_debugs(TSRMLS_D) {
 
 	runtime = (runtime - YOD_G(runtime)) * 1000;
 
+#ifdef PHP_OUTPUT_NEWAPI
+	if (php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC) == FAILURE) {
+#else
+	if (php_start_ob_buffer(NULL, 0, 1 TSRMLS_CC) == FAILURE) {
+#endif
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "ob_start failed");
+		return;
+	}
+
 	if (SG(request_info).request_method) {
 		php_printf("\n<pre><hr><font color=\"red\">Yod is running in debug mode</font>\n%s\n", YOD_DOTLINE);
 	} else {
@@ -169,6 +178,14 @@ void yod_debugs(TSRMLS_D) {
 	}
 
 	php_printf("%s\n[%fms]\n", YOD_DOTLINE, runtime);
+
+#ifdef PHP_OUTPUT_NEWAPI
+	php_output_end(TSRMLS_C);
+#else
+	if (OG(ob_nesting_level)) {
+		php_end_ob_buffer(1, 0 TSRMLS_CC);
+	}
+#endif
 }
 /* }}} */
 
