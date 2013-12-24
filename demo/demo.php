@@ -176,17 +176,22 @@ class DemoController extends Yod_Controller
 		echo '<br>db:'; print_r($db);
 /*
 		echo '<br>transaction:'; echo $db->transaction();
+
 		$query = 'UPDATE yod_demo SET updated = '.time().' WHERE id = 2';
 		echo '<br>execute:'; echo $db->execute($query);
+
 		$query = 'UPDATE yod_demo SET updated = 1 WHERE id = :id';
 		$params = array(':id' => 2);
 		echo '<br>execute:'; echo $db->execute($query, $params);
+
 		echo '<br>commit:'; echo $db->commit();
 
 		echo '<br>transaction:'; echo $db->transaction();
+
 		$query = 'UPDATE yod_demo SET updated = :updated WHERE id = :id';
 		$params = array(':updated' => time(), ':id' => 2);
 		echo '<br>execute:'; echo $db->execute($query, $params);
+
 		echo '<br>rollback:'; echo $db->rollback();
 
 		$query = 'SELECT * FROM yod_demo WHERE id = :id';
@@ -202,10 +207,10 @@ class DemoController extends Yod_Controller
 		$fields = $db->fields('demo');
 		//echo '<br>fields:'; print_r($fields);
 */
-		echo '<br>errno:'; echo $db->errno();
-		echo '<br>error:'; echo $db->error();
-		echo '<br>quote:'; $db->quote("'quote'");
-		echo '<br>close:'; echo $db->close();
+		//echo '<br>errno:'; echo $db->errno();
+		//echo '<br>error:'; echo $db->error();
+		//echo '<br>quote:'; $db->quote("'quote'");
+		//echo '<br>close:'; echo $db->close();
 	}
 
 	public function dbAction()
