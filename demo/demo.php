@@ -54,7 +54,7 @@ $config = array(
 
 	//tpl
 	'tpl_data' => array(
-		'__PUBLIC__' => 'Public',
+		'_PUBLIC_' => 'Public',
 
 	),
 );
