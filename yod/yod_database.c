@@ -406,7 +406,7 @@ int yod_database_dbconfig(yod_database_t *object, zval *config, long linknum, zv
 		return 0;
 	}
 
-	if (!config) {
+	if (!config || Z_TYPE_P(config) != IS_ARRAY) {
 		config1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_config"), 1 TSRMLS_CC);
 		if (config1 && Z_TYPE_P(config1) == IS_ARRAY) {
 			ZVAL_ZVAL(retval, config1, 1, 0);

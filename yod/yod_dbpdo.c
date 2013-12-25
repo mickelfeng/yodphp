@@ -952,7 +952,7 @@ PHP_METHOD(yod_dbpdo, close) {
 	zval *linkids, *linkid;
 
 #if PHP_YOD_DEBUG
-	//yod_debugf("yod_dbpdo_close()");
+	yod_debugf("yod_dbpdo_close()");
 #endif
 
 	object = getThis();
@@ -973,7 +973,7 @@ PHP_METHOD(yod_dbpdo, close) {
 */
 PHP_METHOD(yod_dbpdo, errNo) {
 	yod_dbpdo_t *object;
-	zval *linkid, *errcode;
+	zval *result, *linkid, *errcode;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_dbpdo_errno()");
@@ -981,16 +981,23 @@ PHP_METHOD(yod_dbpdo, errNo) {
 
 	object = getThis();
 
+	result = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_result"), 1 TSRMLS_CC);
+	if (result || Z_TYPE_P(result) == IS_OBJECT) {
+		zend_call_method_with_0_params(&result, Z_OBJCE_P(result), NULL, "errorcode", &errcode);
+		if (errcode) {
+			RETURN_ZVAL(errcode, 1, 0);
+		}
+		RETURN_LONG(0);
+	}
+
 	linkid = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkid"), 1 TSRMLS_CC);
 	if (!linkid || Z_TYPE_P(linkid) != IS_OBJECT) {
 		RETURN_FALSE;
 	}
-
 	zend_call_method_with_0_params(&linkid, Z_OBJCE_P(linkid), NULL, "errorcode", &errcode);
-	if (errcode && Z_TYPE_P(errcode) == IS_LONG) {
-		RETURN_LONG(Z_LVAL_P(errcode));
+	if (errcode) {
+		RETURN_ZVAL(errcode, 1, 0);
 	}
-
 	RETURN_LONG(0);
 }
 /* }}} */
@@ -999,7 +1006,7 @@ PHP_METHOD(yod_dbpdo, errNo) {
 */
 PHP_METHOD(yod_dbpdo, error) {
 	yod_dbpdo_t *object;
-	zval *linkid, *errinfo, **ppval;
+	zval *result, *linkid, *errinfo, **ppval;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_dbpdo_error()");
@@ -1007,19 +1014,28 @@ PHP_METHOD(yod_dbpdo, error) {
 
 	object = getThis();
 	
+	result = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_result"), 1 TSRMLS_CC);
+	if (result || Z_TYPE_P(result) == IS_OBJECT) {
+		zend_call_method_with_0_params(&result, Z_OBJCE_P(result), NULL, "errorinfo", &errinfo);
+		if (errinfo && Z_TYPE_P(errinfo) == IS_ARRAY) {
+			if (zend_hash_index_find(Z_ARRVAL_P(errinfo), 2, (void**)&ppval) == SUCCESS && Z_TYPE_PP(ppval) == IS_STRING) {
+				RETURN_STRINGL(Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
+			}
+		}
+		RETURN_NULL();
+	}
+
 	linkid = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkid"), 1 TSRMLS_CC);
 	if (!linkid || Z_TYPE_P(linkid) != IS_OBJECT) {
 		RETURN_FALSE;
 	}
-
 	zend_call_method_with_0_params(&linkid, Z_OBJCE_P(linkid), NULL, "errorinfo", &errinfo);
 	if (errinfo && Z_TYPE_P(errinfo) == IS_ARRAY) {
 		if (zend_hash_index_find(Z_ARRVAL_P(errinfo), 2, (void**)&ppval) == SUCCESS && Z_TYPE_PP(ppval) == IS_STRING) {
 			RETURN_STRINGL(Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
 		}
 	}
-
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 /* }}} */
 

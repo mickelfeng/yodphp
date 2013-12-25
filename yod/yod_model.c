@@ -357,6 +357,10 @@ PHP_METHOD(yod_model, find) {
 		return;
 	}
 
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_model_find(%s)", where ? where : "");
+#endif
+
 	object = getThis();
 
 	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
@@ -399,6 +403,10 @@ PHP_METHOD(yod_model, findAll) {
 		return;
 	}
 
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_model_findall(%s)", where ? where : "");
+#endif
+
 	object = getThis();
 
 	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
@@ -440,6 +448,10 @@ PHP_METHOD(yod_model, count) {
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &where, &where_len, &params) == FAILURE) {
 		return;
 	}
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_model_count(%s)", where ? where : "");
+#endif
 
 	object = getThis();
 
@@ -490,6 +502,10 @@ PHP_METHOD(yod_model, save) {
 		return;
 	}
 
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_model_save(%s)", where ? where : "");
+#endif
+
 	if (!data || Z_TYPE_P(data) != IS_ARRAY) {
 		RETURN_FALSE;
 	}
@@ -530,6 +546,10 @@ PHP_METHOD(yod_model, remove) {
 		return;
 	}
 
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_model_remove(%s)", where ? where : "");
+#endif
+
 	object = getThis();
 
 	yoddb = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), 1 TSRMLS_CC);
@@ -555,6 +575,10 @@ PHP_METHOD(yod_model, lastQuery) {
 	yod_database_t *yoddb;
 	yod_model_t *object;
 	zval *retval;
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_model_lastquery()");
+#endif
 
 	object = getThis();
 
@@ -610,7 +634,7 @@ PHP_METHOD(yod_model, model) {
 	uint name_len = 0;
 	int dbmod = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|zb", &name, &name_len, &config, &dbmod) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|szb", &name, &name_len, &config, &dbmod) == FAILURE) {
 		return;
 	}
 
