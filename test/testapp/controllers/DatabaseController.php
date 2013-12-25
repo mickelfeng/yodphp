@@ -56,7 +56,6 @@ class DatabaseController extends Yod_Controller
 			'PRIMARY' => 'KEY (`id`)',
 		);
 		$extend = 'ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT=\'Demo\' AUTO_INCREMENT=1';
-
 		$db->create($fields, 'test', $extend);
 
 		$this->display('create', array('db' => $db));
@@ -80,7 +79,6 @@ class DatabaseController extends Yod_Controller
 			'PRIMARY' => 'KEY (`id`)',
 		);
 		$extend = 'ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT=\'Demo\' AUTO_INCREMENT=1';
-
 		$db->create($fields, 'test', $extend);
 
 		$data = array(
@@ -88,7 +86,6 @@ class DatabaseController extends Yod_Controller
 			'content' => 'Yod PHP Framework',
 			'created' => time(),
 		);
-
 		$this->assign('result', $db->insert($data, 'test'));
 
 		$this->display('insert', array('db' => $db));
@@ -112,7 +109,6 @@ class DatabaseController extends Yod_Controller
 			'PRIMARY' => 'KEY (`id`)',
 		);
 		$extend = 'ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT=\'Demo\' AUTO_INCREMENT=1';
-
 		$db->create($fields, 'test', $extend);
 
 		$data = array(
@@ -120,7 +116,6 @@ class DatabaseController extends Yod_Controller
 			'content' => 'Yod PHP Framework',
 			'created' => time(),
 		);
-
 		$db->insert($data, 'test');
 
 		$data = array(
@@ -128,7 +123,6 @@ class DatabaseController extends Yod_Controller
 			'content' => base64_encode('Yod PHP Framework'),
 			'updated' => time(),
 		);
-
 		$result = $db->update($data, 'test', 'id = :id', array(':id' => 1));
 
 		$this->assign('result', $result);
@@ -154,7 +148,6 @@ class DatabaseController extends Yod_Controller
 			'PRIMARY' => 'KEY (`id`)',
 		);
 		$extend = 'ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT=\'Demo\' AUTO_INCREMENT=1';
-
 		$db->create($fields, 'test', $extend);
 
 		$data = array(
@@ -162,7 +155,6 @@ class DatabaseController extends Yod_Controller
 			'content' => 'Yod PHP Framework',
 			'created' => time(),
 		);
-
 		$db->insert($data, 'test');
 
 		$result = $db->delete('test', 'id = :id', array(':id' => 1));
@@ -190,7 +182,6 @@ class DatabaseController extends Yod_Controller
 			'PRIMARY' => 'KEY (`id`)',
 		);
 		$extend = 'ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT=\'Demo\' AUTO_INCREMENT=1';
-
 		$db->create($fields, 'test', $extend);
 
 		$data = array(
@@ -198,7 +189,6 @@ class DatabaseController extends Yod_Controller
 			'content' => 'Yod PHP Framework',
 			'created' => time(),
 		);
-
 		$db->insert($data, 'test');
 
 		$result = $db->select('*', 'test', 'id = :id', array(':id' => 1));
@@ -226,7 +216,6 @@ class DatabaseController extends Yod_Controller
 			'PRIMARY' => 'KEY (`id`)',
 		);
 		$extend = 'ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT=\'Demo\' AUTO_INCREMENT=1';
-
 		$db->create($fields, 'test', $extend);
 
 		$data = array(
@@ -234,7 +223,6 @@ class DatabaseController extends Yod_Controller
 			'content' => 'Yod PHP Framework',
 			'created' => time(),
 		);
-
 		$db->insert($data, 'test');
 
 		$db->select('*', 'test');

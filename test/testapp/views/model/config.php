@@ -5,7 +5,7 @@
 <body>
 <?php $this->widget('public/header'); ?>
 <ul>
-	<li>Yod_Controller::config()</li>
+	<li>Yod_Model::config()</li>
 </ul>
 <pre>
 <b>$this->config():</b><br>

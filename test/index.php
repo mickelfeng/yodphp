@@ -11,29 +11,3 @@ defined('YOD_LOGFILE') or define('YOD_LOGFILE', dirname(__FILE__) . '/debugs/' .
 defined('APP_WEBROOT') or define('APP_WEBROOT', '/yodphp/test/index.php');
 
 class_exists('Yod_Application', false) or require dirname(__FILE__) . '/../yodphp/yodphp.php';
-
-
-class DemoUserModel extends Yod_Model
-{
-	protected function init()
-	{
-		echo '<pre>';
-		//$m_info = $this->model('DemoInfo');
-		//print_r($m_info);
-	}
-
-	public function parse(){
-		echo $this->parseQuery();
-	}
-}
-
-class DemoInfoModel extends Yod_Model
-{
-	protected function init()
-	{
-		echo '<pre>';
-		$m_text = $this->model('DemoText');
-		echo $m_text->lastQuery();
-		print_r($m_text);
-	}
-}
