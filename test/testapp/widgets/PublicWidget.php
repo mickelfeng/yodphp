@@ -10,4 +10,10 @@ class PublicWidget extends Yod_Widget
 	{
 		$this->display();
 	}
+
+	public function widgetAction()
+	{
+		print_r($this);
+	}
+
 }

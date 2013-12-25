@@ -11,6 +11,11 @@ class ApplicationController extends Yod_Controller
 		$this->display();
 	}
 
+	public function runAction()
+	{
+		Yod_Application::app()->run();
+	}
+
 	public function configAction()
 	{
 		$this->assign('title', 'Yod_Application::config()');
@@ -33,5 +38,25 @@ class ApplicationController extends Yod_Controller
 		$qrcode = new ImageQrcode();
 
 		$this->display('import', array('qrcode' => $qrcode));
+	}
+
+	public function appAction()
+	{
+		$this->assign('title', 'Yod_Application::app()');
+
+		$app = Yod_Application::app()->app();
+
+		$this->display('app', array('app' => $app));
+	}
+
+	public function autoloadAction()
+	{
+		$this->assign('title', 'Yod_Application::autoload()');
+
+		Yod_Application::autoload('Toolkit');
+
+		Yod_Application::autoload('ImageQrcode');
+
+		$this->display('autoload');
 	}
 }

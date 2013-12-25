@@ -8,13 +8,13 @@
 	<li>Yod_Application::config()</li>
 </ul>
 <pre>
-$app->config():
+<b>$this->config():</b><br>
 <?php print_r($config); ?>
 
-$app->config('db_dsn'):
+<b>$this->config('db_dsn'):</b><br>
 <?php print_r($db_dsn); ?>
 
-$this->config('tpl_data.PUBLIC'): <?php print_r($this->config('tpl_data.PUBLIC')); ?>
+<b>$this->config('tpl_data.PUBLIC'):</b> <?php print_r($this->config('tpl_data.PUBLIC')); ?>
 </pre>
 <br />
 <?php $this->widget('public/footer'); ?>

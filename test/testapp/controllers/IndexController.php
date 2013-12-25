@@ -6,9 +6,11 @@ class IndexController extends Yod_Controller
 {
 	public function indexAction()
 	{
+		//echo '<pre>';
+		//print_r($this);
+		
 		//$model = Yod_Model::getInstance(null);
 
-		//print_r($model);
 		//$demoUser = $this->model('DemoUser');
 
 		$this->display();

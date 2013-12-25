@@ -5,15 +5,11 @@
 <body>
 <?php $this->widget('public/header'); ?>
 <ul>
-	<li>Yod_Application::import()</li>
+	<li>Yod_Controller::model()</li>
 </ul>
 <pre>
-Yod_Application::app()->import('Toolkit'):
-<?php Toolkit::hello(); ?>
-
-$this->import('Utils.qrcode', '.php'):
-<?php print_r($qrcode); ?>
-
+<b>$this->model():</b><br />
+<?php print_r($model); ?>
 </pre>
 <br />
 <?php $this->widget('public/footer'); ?>
