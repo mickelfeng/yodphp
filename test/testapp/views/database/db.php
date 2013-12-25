@@ -5,13 +5,11 @@
 <body>
 <?php $this->widget('public/header'); ?>
 <ul>
-	<li>Hello</li>
+	<li>Yod_Database::db()</li>
 </ul>
 <pre>
-	<?php echo $yodphp ?>, <?php echo $hello; ?>
-
-<br />-------------------------------------------------------------
-<?php print_r($this); ?>
+<b><?php echo $title; ?>:</b><br>
+<?php print_r($db); ?>
 </pre>
 <br />
 <?php $this->widget('public/footer'); ?>

@@ -153,66 +153,6 @@ class IndexController extends Yod_Controller
 		//echo '<br>close:'; echo $db->close();
 	}
 
-	public function dbAction()
-	{
-		echo '<pre>';
-
-		$db = Yod_Database::db();
-		echo '<br>db:'; print_r($db);
-
-		$db1 = Yod_Database::db('db_dsn1');
-		echo '<br>db1:'; print_r($db1);
-		$db1->config('slaves', array('host' => '192.168.8.1'), array('host' => '192.168.8.2'), array('host' => '192.168.8.3'));
-		$db1->config('slaves', null);
-
-		$fields = array(
-			'id' => 'int(11) NOT NULL AUTO_INCREMENT COMMENT \'ID\'',
-			'title' => 'varchar(255) NOT NULL COMMENT \'标题\'',
-			'content' => 'text DEFAULT NULL COMMENT \'内容\'',
-			'updated' => 'int(11) NOT NULL DEFAULT \'0\' COMMENT \'更新时间\'',
-			'created' => 'int(11) NOT NULL DEFAULT \'0\' COMMENT \'创建时间\'',
-			'status' => 'tinyint(2) NOT NULL DEFAULT \'0\' COMMENT \'状态\'',
-			'PRIMARY' => 'KEY (`id`)',
-		);
-		$extend = 'ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT=\'Demo\' AUTO_INCREMENT=1';
-
-		//$db1->create($fields, 'demo', $extend);
-
-		$data = array(
-			'title' => 'Demo',
-			'content' => base64_encode(json_encode(var_export($this, true))),
-			'created' => time(),
-		);
-
-		echo $db->insert($data, 'demo');
-		$db1->insert($data, 'demo');
-
-		$data = array(
-			'title' => 'Demo',
-			'content' => base64_encode(time()),
-			'updated' => time(),
-		);
-
-		$db1->update($data, 'demo', 'id = :id', array(':id' => 1));
-
-		$db1->delete('demo', 'id = :id', array(':id' => 1));
-
-		$db1->select('*', 'demo', 'id = :id', array(':id' => 2));
-
-		echo '<br>fetchAll:'; print_r($db1->fetchAll());
-		echo '<br>db1:'; print_r($db1);
-
-		$db2 = Yod_Database::db('db_dsn2');
-		echo '<br>db2:'; print_r($db2);
-
-		$db3 = Yod_Database::db('db_dsn2');
-		echo '<br>db3:'; print_r($db3);
-
-		$db4 = Yod_Database::db('db_dsn2');
-		echo '<br>db4:'; print_r($db4);
-
-	}
-
 	public function errorAction()
 	{
 		echo '<pre>';
