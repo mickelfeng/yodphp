@@ -149,7 +149,7 @@ ZEND_END_ARG_INFO()
 /** {{{ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zval *retval TSRMLS_DC)
 */
 static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zval *retval TSRMLS_DC) {
-	zval *dbconfig, *linkids, *linkid, *argv[4], *query, **ppval;
+	zval *dbconfig, *linkids, *linkid, *linkid1, *argv[4], *query, **ppval;
 	zval persist, errmode, warning;
 	zend_class_entry **pce = NULL;
 	char *squery;
@@ -304,17 +304,20 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 				zend_call_method_with_2_params(&linkid, Z_OBJCE_P(linkid), NULL, "setattribute", NULL, &errmode, &warning);
 			}
 
+			MAKE_STD_ZVAL(linkid1);
+			ZVAL_ZVAL(linkid1, linkid, 1, 0);
 			if (linkids && Z_TYPE_P(linkids) == IS_ARRAY) {
-				add_index_zval(linkids, linknum, linkid);
+				add_index_zval(linkids, linknum, linkid1);
 				zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkids"), linkids TSRMLS_CC);
 			} else {
 				MAKE_STD_ZVAL(linkids);
 				array_init(linkids);
-				add_index_zval(linkids, linknum, linkid);
+				add_index_zval(linkids, linknum, linkid1);
 				zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkids"), linkids TSRMLS_CC);
 				zval_ptr_dtor(&linkids);
 			}
 			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkid"), linkid TSRMLS_CC);
+			zval_ptr_dtor(&linkid1);
 
 			if (retval) {
 				ZVAL_ZVAL(retval, linkid, 1, 0);
