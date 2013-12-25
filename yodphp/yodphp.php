@@ -88,7 +88,13 @@ final class Yod_Application
 			}
 		}
 		if (isset($GLOBALS['config']) && is_array($GLOBALS['config'])) {
-			$this->_config = array_merge($this->_config, $GLOBALS['config']);
+			foreach ($GLOBALS['config'] as $key => $value) {
+				if (isset($this->_config[$key]) && is_array($this->_config[$key]) && is_array($value)) {
+					$this->_config[$key] = array_merge($this->_config[$key], $value);
+				} else {
+					$this->_config[$key] = $GLOBALS['config'][$key];
+				}
+			}
 		}
 
 		// request
