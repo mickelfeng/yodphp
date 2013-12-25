@@ -80,12 +80,6 @@ void yod_debugf(const char *format,...) {
 	time_t curtime;
 	char *datetime, asctimebuf[52];
 	uint datetime_len;
-
-	zval logfile;
-	zval *zcontext = NULL;
-	php_stream_context *context = NULL;
-	php_stream *stream;
-	char mode[2] = "a";
 	
 	TSRMLS_FETCH();
 
@@ -102,21 +96,10 @@ void yod_debugf(const char *format,...) {
 
 		mem_usage = zend_memory_usage(1 TSRMLS_CC) / 1024;
 		buffer_len = spprintf(&buffer, 0, "[%s %06d] (%dk) %s\n", datetime, tp.tv_usec, mem_usage, buffer1);
-		
+
 		add_next_index_string(YOD_G(debugs), buffer, 1);
 
-		// logfile
-		if (zend_get_constant(ZEND_STRL("YOD_LOGFILE"), &logfile TSRMLS_CC)) {
-			context = php_stream_context_from_zval(zcontext, 0);
-			stream = php_stream_open_wrapper_ex(Z_STRVAL(logfile), mode, 0, NULL, context);
-			if (stream) {
-				if (php_stream_supports_lock(stream)) {
-					php_stream_lock(stream, LOCK_EX);
-				}
-				php_stream_write(stream, buffer, buffer_len);
-				php_stream_close(stream);
-			}
-		}
+		yod_debugw(buffer, buffer_len TSRMLS_CC);
 
 		efree(buffer1);
 		efree(buffer);
@@ -124,26 +107,61 @@ void yod_debugf(const char *format,...) {
 }
 /* }}} */
 
+/** {{{ int yod_debugw(char *data, uint data_len TSRMLS_DC)
+*/
+int yod_debugw(char *data, uint data_len TSRMLS_DC) {
+	zval logfile;
+	zval *zcontext = NULL;
+	php_stream_context *context = NULL;
+	php_stream *stream;
+
+	if (data_len == 0) {
+		return 0;
+	}
+
+	if (zend_get_constant(ZEND_STRL("YOD_LOGFILE"), &logfile TSRMLS_CC) &&
+		Z_TYPE(logfile) == IS_STRING && Z_STRLEN(logfile)
+	) {
+		context = php_stream_context_from_zval(zcontext, 0);
+		stream = php_stream_open_wrapper_ex(Z_STRVAL(logfile), "ab", 0, NULL, context);
+		if (stream) {
+			if (php_stream_supports_lock(stream)) {
+				php_stream_lock(stream, LOCK_EX);
+			}
+			php_stream_write(stream, data, data_len);
+			php_stream_close(stream);
+		}
+	}
+
+	return 1;
+}
+/* }}} */
+
 /** {{{ void yod_debugl(char *sline TSRMLS_DC)
 */
 void yod_debugl(char *sline TSRMLS_DC) {
 	char *buffer;
+	uint buffer_len;
 
 	if (sline) {
 		switch (sline[0]) {
 			case '-' :
-				spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
+				buffer_len = spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
 				break;
 			case '=' :
-				spprintf(&buffer, 0, "%s\n", YOD_DIVLINE);
+				buffer_len = spprintf(&buffer, 0, "%s\n", YOD_DIVLINE);
 				break;
 			default :
-				spprintf(&buffer, 0, "%s\n", sline ? sline : YOD_DOTLINE);
+				buffer_len = spprintf(&buffer, 0, "%s\n", sline ? sline : YOD_DOTLINE);
 		}
 	} else {
-		spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
+		buffer_len = spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
 	}
+
 	add_next_index_string(YOD_G(debugs), buffer, 1);
+
+	yod_debugw(buffer, buffer_len TSRMLS_CC);
+
 	efree(buffer);
 }
 /* }}} */
@@ -151,20 +169,55 @@ void yod_debugl(char *sline TSRMLS_DC) {
 /** {{{ void yod_debugz(zval *pzval, int dump TSRMLS_DC) {
 */
 void yod_debugz(zval *pzval, int dump TSRMLS_DC) {
+	zval *ob_buffer;
+	int ob_start;
+
+#ifdef PHP_OUTPUT_NEWAPI
+	ob_start = php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC);
+#else
+	ob_start = php_start_ob_buffer(NULL, 0, 1 TSRMLS_CC);
+#endif
+
+	php_printf("%s\n", YOD_DOTLINE);
 	if (dump) {
 		php_var_dump(&pzval, 0 TSRMLS_CC);
 	} else {
 		zend_print_zval_r(pzval, 0 TSRMLS_CC);
 	}
+	php_printf("\n%s\n", YOD_DOTLINE);
+
+	MAKE_STD_ZVAL(ob_buffer);
+#ifdef PHP_OUTPUT_NEWAPI
+	if (php_output_get_contents(ob_buffer TSRMLS_CC) == SUCCESS) {
+#else
+	if (php_ob_get_buffer(ob_buffer TSRMLS_CC) == SUCCESS) {
+#endif
+		if (ob_buffer && Z_TYPE_P(ob_buffer) == IS_STRING) {
+			add_next_index_stringl(YOD_G(debugs), Z_STRVAL_P(ob_buffer), Z_STRLEN_P(ob_buffer), 1);
+
+			yod_debugw(Z_STRVAL_P(ob_buffer), Z_STRLEN_P(ob_buffer) TSRMLS_CC);
+		}
+	}
+	zval_ptr_dtor(&ob_buffer);
+
+#ifdef PHP_OUTPUT_NEWAPI
+	php_output_discard(TSRMLS_C);
+#else
+	if (OG(ob_nesting_level)) {
+		php_end_ob_buffer(0, 0 TSRMLS_CC);
+	}
+#endif
 }
 /* }}} */
 
 /** {{{ void yod_debugs(TSRMLS_D)
 */
 void yod_debugs(TSRMLS_D) {
+	zval **ppzval;
 	double runtime;
 	struct timeval tp = {0};
-	zval **ppzval;
+	char *buffer;
+	uint buffer_len;
 
 	if (YOD_G(exited)) {
 		return;
@@ -205,7 +258,11 @@ void yod_debugs(TSRMLS_D) {
 		zend_hash_move_forward(Z_ARRVAL_P(YOD_G(debugs)));
 	}
 
-	php_printf("%s\n[%fms]\n", YOD_DOTLINE, runtime);
+	buffer_len = spprintf(&buffer, 0, "%s\n[%fms]\n", YOD_DOTLINE, runtime);
+
+	PHPWRITE(buffer, buffer_len);
+
+	yod_debugw(buffer, buffer_len TSRMLS_CC);
 
 #ifdef PHP_OUTPUT_NEWAPI
 	php_output_end(TSRMLS_C);
@@ -573,7 +630,6 @@ PHP_GINIT_FUNCTION(yod)
 	yod_globals->runpath	= NULL;
 	yod_globals->yodapp		= NULL;
 	yod_globals->exited		= 0;
-	yod_globals->routed		= 0;
 	yod_globals->running	= 0;
 	yod_globals->forward	= 0;
 
@@ -632,7 +688,6 @@ PHP_RINIT_FUNCTION(yod)
 	YOD_G(runpath)			= NULL;
 	YOD_G(yodapp)			= NULL;
 	YOD_G(exited)			= 0;
-	YOD_G(routed)			= 0;
 	YOD_G(running)			= 0;
 	YOD_G(forward)			= 0;
 

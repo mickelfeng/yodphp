@@ -739,10 +739,7 @@ static void yod_controller_forward(yod_controller_t *object, char *route, uint r
 	}
 
 	if (exited) {
-		YOD_G(exited) = 1;
-		zend_set_memory_limit(PG(memory_limit));
-		zend_objects_store_mark_destructed(&EG(objects_store) TSRMLS_CC);
-		zend_bailout();
+		yod_do_exit(TSRMLS_C);
 	}
 
 }

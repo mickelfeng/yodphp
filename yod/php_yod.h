@@ -134,7 +134,6 @@ ZEND_BEGIN_MODULE_GLOBALS(yod)
 	char		*runpath;
 	zval		*yodapp;
 	int			exited;
-	int			routed;
 	int			running;
 	long		forward;
 
