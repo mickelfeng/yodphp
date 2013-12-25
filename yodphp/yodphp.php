@@ -74,12 +74,12 @@ final class Yod_Application
 							if (is_array($value)) {
 								if ($key == 'base') {
 									$this->_config = array_merge($this->_config, $value);
-								}elseif (isset($this->_config[$key])){
+								} elseif (isset($this->_config[$key])){
 									if (is_array($this->_config[$key])) {
 										$value = array_merge($this->_config[$key], $value);
 									}
-									$this->_config[$key] = $value;
 								}
+								$this->_config[$key] = $value;
 							}
 						}
 					}
@@ -252,6 +252,7 @@ final class Yod_Application
 final class Yod_Request
 {
 	protected $_routed = false;
+	protected $_dispatched = false;
 
 	public $controller;
 	public $action;
@@ -282,11 +283,13 @@ final class Yod_Request
 	/**
 	 * route
 	 * @access public
-	 * @param void
-	 * @return void
+	 * @param string $route
+	 * @return Yod_Request
 	 */
 	public function route($route = null)
 	{
+		$this->_routed = true;
+
 		if (empty($route)) {
 			if (strtoupper($this->method) == 'CLI') {
 				$route = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : '';
@@ -319,7 +322,7 @@ final class Yod_Request
 			$this->params[$route[$i]] = $_GET[$route[$i]];
 		}
 
-		$this->_routed = true;
+		return $this;
 	}
 
 	/**
@@ -330,6 +333,11 @@ final class Yod_Request
 	 */
 	public function dispatch()
 	{
+		if ($this->_dispatched) {
+			return;
+		}
+		$this->_dispatched = true;
+
 		$this->_routed or $this->route();
 
 		$controller = empty($this->controller) ? 'Index' : $this->controller;
