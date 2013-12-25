@@ -55,7 +55,7 @@ class ControllerController extends Yod_Controller
 	{
 		$this->assign('title', 'Yod_Controller::render()');
 
-		header('Content-type: text/html; charset=' . YOD_CHARSET);
+		header('Content-type: text/html; charset=utf-8');
 
 		echo $this->render('render');
 	}
