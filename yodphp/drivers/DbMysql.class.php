@@ -293,7 +293,8 @@ class Yod_DbMysql extends Yod_Database
 	 */
 	public function quote($string)
 	{
-		return mysql_real_escape_string($string, $this->_linkid);
+		$quote = mysql_real_escape_string($string, $this->_linkid);
+		return "'{$quote}'";
 	}
 
 	/**

@@ -274,7 +274,11 @@ class Yod_DbMysqli extends Yod_Database
 	{
 		$this->_locked = true;
 		$this->connect($this->_config, 0);
-		return $this->_linkid->begin_transaction();
+		if (method_exists('mysqli', 'begin_transaction')) {
+			return $this->_linkid->begin_transaction();
+		} else {
+			return $this->_linkid->query('START TRANSACTION');
+		}
 	}
 
 	/**
@@ -286,7 +290,11 @@ class Yod_DbMysqli extends Yod_Database
 	{
 		$this->_locked = false;
 		$this->connect($this->_config, 0);
-		return $this->_linkid->commit();
+		if (method_exists('mysqli', 'commit')) {
+			return $this->_linkid->commit();
+		} else {
+			return $this->_linkid->query('COMMIT');
+		}
 	}
 
 	/**
@@ -298,7 +306,11 @@ class Yod_DbMysqli extends Yod_Database
 	{
 		$this->_locked = false;
 		$this->connect($this->_config, 0);
-		return $this->_linkid->rollback();
+		if (method_exists('mysqli', 'rollback')) {
+			return $this->_linkid->rollback();
+		} else {
+			return $this->_linkid->query('ROLLBACK');
+		}
 	}
 
 	/**
@@ -318,7 +330,8 @@ class Yod_DbMysqli extends Yod_Database
 	 */
 	public function quote($string)
 	{
-		return $this->_linkid->real_escape_string($string);
+		$quote = $this->_linkid->real_escape_string($string);
+		return "'{$quote}'";
 	}
 
 	/**
