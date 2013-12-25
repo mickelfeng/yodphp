@@ -829,7 +829,7 @@ PHP_METHOD(yod_controller, model) {
 			dbmod = Z_BVAL_P(z_name);
 		} else if (Z_TYPE_P(z_name) == IS_STRING) {
 			name_len = Z_STRLEN_P(z_name);
-			name = Z_STRVAL_P(z_name);
+			name = estrndup(Z_STRVAL_P(z_name), name_len);
 		}
 	}
 	if (config && Z_TYPE_P(config) == IS_BOOL) {
@@ -852,6 +852,11 @@ PHP_METHOD(yod_controller, model) {
 	} else {
 		yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
 	}
+
+	if (name) {
+		efree(name);
+	}
+	
 }
 /* }}} */
 

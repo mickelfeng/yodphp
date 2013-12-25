@@ -474,8 +474,10 @@ PHP_METHOD(yod_model, count) {
 			zend_call_method_with_1_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "fetch", &data, result);
 			zend_call_method_with_0_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "free", NULL);
 			zval_ptr_dtor(&result);
-			if (data && Z_TYPE_P(data) == IS_ARRAY) {
-				if (zend_hash_get_current_data(Z_ARRVAL_P(data), (void **) &ppval) == SUCCESS) {
+			if (data) {
+				if (Z_TYPE_P(data) == IS_ARRAY &&
+					zend_hash_get_current_data(Z_ARRVAL_P(data), (void **) &ppval) == SUCCESS
+				) {
 					ZVAL_ZVAL(return_value, *ppval, 1, 1);
 					zval_ptr_dtor(&data);
 					return;

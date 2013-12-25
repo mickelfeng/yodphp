@@ -75,6 +75,7 @@ TestsController Object
     [_request:protected] => Yod_Request Object
         (
             [_routed:protected] => 1
+            [_dispatched:protected] => 1
             [controller] => Tests
             [action] => request
             [params] => Array

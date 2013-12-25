@@ -371,7 +371,7 @@ int yod_database_config(yod_database_t *object, char *name, uint name_len, zval 
 			MAKE_STD_ZVAL(pzval);
 			ZVAL_ZVAL(pzval, value, 1, 0);
 			add_assoc_zval_ex(config, name, name_len + 1, pzval);
-			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_db"), config TSRMLS_CC);
+			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_config"), config TSRMLS_CC);
 		} else if (config && Z_TYPE_P(config) == IS_ARRAY) {
 			if (zend_hash_find(Z_ARRVAL_P(config), name, name_len + 1, (void **)&ppval) == SUCCESS) {
 				if (retval) {

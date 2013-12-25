@@ -67,6 +67,37 @@ ZEND_DECLARE_MODULE_GLOBALS(yod);
 
 #if PHP_YOD_DEBUG
 
+/** {{{ int yod_debugw(char *data, uint data_len TSRMLS_DC)
+*/
+int yod_debugw(char *data, uint data_len TSRMLS_DC) {
+	zval logfile;
+	zval *zcontext = NULL;
+	php_stream_context *context = NULL;
+	php_stream *stream;
+
+	if (data_len == 0) {
+		return 0;
+	}
+
+	if (zend_get_constant(ZEND_STRL("YOD_LOGFILE"), &logfile TSRMLS_CC)) {
+		if (Z_TYPE(logfile) == IS_STRING && Z_STRLEN(logfile)) {
+			context = php_stream_context_from_zval(zcontext, 0);
+			stream = php_stream_open_wrapper_ex(Z_STRVAL(logfile), "ab", 0, NULL, context);
+			if (stream) {
+				if (php_stream_supports_lock(stream)) {
+					php_stream_lock(stream, LOCK_EX);
+				}
+				php_stream_write(stream, data, data_len);
+				php_stream_close(stream);
+			}
+		}
+		zval_dtor(&logfile);
+	}
+
+	return 1;
+}
+/* }}} */
+
 /** {{{ void yod_debugf(const char *format,...)
 */
 void yod_debugf(const char *format,...) {
@@ -98,42 +129,11 @@ void yod_debugf(const char *format,...) {
 		buffer_len = spprintf(&buffer, 0, "[%s %06d] (%dk) %s\n", datetime, tp.tv_usec, mem_usage, buffer1);
 
 		add_next_index_string(YOD_G(debugs), buffer, 1);
-
 		yod_debugw(buffer, buffer_len TSRMLS_CC);
 
 		efree(buffer1);
 		efree(buffer);
 	}
-}
-/* }}} */
-
-/** {{{ int yod_debugw(char *data, uint data_len TSRMLS_DC)
-*/
-int yod_debugw(char *data, uint data_len TSRMLS_DC) {
-	zval logfile;
-	zval *zcontext = NULL;
-	php_stream_context *context = NULL;
-	php_stream *stream;
-
-	if (data_len == 0) {
-		return 0;
-	}
-
-	if (zend_get_constant(ZEND_STRL("YOD_LOGFILE"), &logfile TSRMLS_CC) &&
-		Z_TYPE(logfile) == IS_STRING && Z_STRLEN(logfile)
-	) {
-		context = php_stream_context_from_zval(zcontext, 0);
-		stream = php_stream_open_wrapper_ex(Z_STRVAL(logfile), "ab", 0, NULL, context);
-		if (stream) {
-			if (php_stream_supports_lock(stream)) {
-				php_stream_lock(stream, LOCK_EX);
-			}
-			php_stream_write(stream, data, data_len);
-			php_stream_close(stream);
-		}
-	}
-
-	return 1;
 }
 /* }}} */
 
@@ -159,7 +159,6 @@ void yod_debugl(char *sline TSRMLS_DC) {
 	}
 
 	add_next_index_string(YOD_G(debugs), buffer, 1);
-
 	yod_debugw(buffer, buffer_len TSRMLS_CC);
 
 	efree(buffer);
@@ -232,7 +231,6 @@ void yod_debugs(TSRMLS_D) {
 	} else {
 		runtime	= (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
 	}
-
 	runtime = (runtime - YOD_G(runtime)) * 1000;
 
 #ifdef PHP_OUTPUT_NEWAPI
@@ -259,10 +257,9 @@ void yod_debugs(TSRMLS_D) {
 	}
 
 	buffer_len = spprintf(&buffer, 0, "%s\n[%fms]\n", YOD_DOTLINE, runtime);
-
 	PHPWRITE(buffer, buffer_len);
-
 	yod_debugw(buffer, buffer_len TSRMLS_CC);
+	efree(buffer);
 
 #ifdef PHP_OUTPUT_NEWAPI
 	php_output_end(TSRMLS_C);

@@ -47,6 +47,7 @@ IndexController Object
     [_request:protected] => Yod_Request Object
         (
             [_routed:protected] => 1
+            [_dispatched:protected] => 1
             [controller] => Index
             [action] => index
             [params] => Array
