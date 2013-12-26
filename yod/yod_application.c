@@ -543,6 +543,12 @@ static void yod_application_autorun(TSRMLS_D) {
 		}
 		zval_dtor(&runpath);
 	}
+
+#if PHP_YOD_DEBUG
+	if (YOD_G(yodapp)) {
+		yod_debugs(TSRMLS_C);
+	}
+#endif
 }
 /* }}} */
 

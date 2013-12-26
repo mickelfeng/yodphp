@@ -530,6 +530,7 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 			php_end_ob_buffer(0, 0 TSRMLS_CC);
 		}
 #endif
+		
 		efree(tpl_file);
 		return 1;
 	} else {
