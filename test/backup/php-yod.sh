@@ -13,11 +13,11 @@ rm -rfv tests/core.*
 if [ x$1 != x ]
 then
 
-./configure --with-php-config=/usr/local/php/${1}/bin/php-config
+./configure ${2} --with-php-config=/usr/local/php/${1}/bin/php-config
 
 else
 
-./configure
+./configure --enable-yod-debug
 
 fi
 
@@ -26,7 +26,7 @@ make clean && make && make install
 if [ x$1 != x ]
 then
 
-/usr/local/php/${1}/bin/php -f /var/www/html/demo.php
+/usr/local/php/${1}/bin/php -f /var/www/html/index.php
 
 /usr/local/php/${1}/bin/php -m
 
@@ -36,7 +36,7 @@ else
 
 service httpd restart
 
-php -f /var/www/html/demo.php
+php -f /var/www/html/index.php
 
 fi
 

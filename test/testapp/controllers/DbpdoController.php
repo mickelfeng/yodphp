@@ -72,7 +72,7 @@ class DbPdoController extends Yod_Controller
 		);
 		$db->insert($data, 'test');
 
-		$query = 'UPDATE yod_demo SET updated = :updated WHERE id = :id';
+		$query = 'UPDATE yod_test SET updated = :updated WHERE id = :id';
 		$params = array(
 			':updated' => time(),
 			':id' => 1,
