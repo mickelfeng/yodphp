@@ -5,7 +5,7 @@
 <body>
 <?php $this->widget('public/header'); ?>
 <ul>
-	<li>Yod_DbPdo::free()</li>
+	<li>Yod_DbPdo::close()</li>
 </ul>
 <pre>
 <b>$db:</b><br>

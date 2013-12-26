@@ -363,7 +363,7 @@ class DbPdoController extends Yod_Controller
 		$params = array(
 			':id' => 1,
 		);
-		$db->query($query, $params);
+		$this->assign('result', $db->query($query, $params));
 
 		$db->free();
 

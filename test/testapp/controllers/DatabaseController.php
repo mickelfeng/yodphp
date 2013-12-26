@@ -17,7 +17,11 @@ class DatabaseController extends Yod_Controller
 
 		$db = Yod_Database::db();
 
-		$this->display('db', array('db' => $db));
+		$db1 = Yod_Database::db('db_mysql');
+
+		$db = Yod_Database::db();
+
+		$this->display('db', array('db' => $db, 'db1' => $db1));
 	}
 
 	public function getinstanceAction()

@@ -8,6 +8,9 @@
 	<li>Yod_DbPdo::free()</li>
 </ul>
 <pre>
+<b>$result:</b><br>
+<?php print_r($result); ?>
+<br>
 <b>$db:</b><br>
 <?php print_r($db); ?>
 </pre>
