@@ -600,11 +600,16 @@ abstract class Yod_Controller
 			return null;
 		}
 		$this->_view['tpl_file'] = $this->_view['tpl_path'] . strtolower($view) . '.php';
+		unset($view);
+
 		// tpl_data
+		$this->_tpl_data = $data;
 		$tpl_path = $this->_view['tpl_path'];
-		unset($this->_view['tpl_data']['this'], $data['this']);
+		unset($this->_view['tpl_data']['this'], $this->_tpl_data['this']);
 		extract($this->_view['tpl_data']);
-		if (is_array($data)) extract($data);
+		if (is_array($this->_tpl_data)) extract($this->_tpl_data);
+		unset($this->_tpl_data);
+
 		// response
 		ob_start();
 		include $this->_view['tpl_file'];
