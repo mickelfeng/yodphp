@@ -715,7 +715,7 @@ PHP_METHOD(yod_dbpdo, fields) {
 		add_assoc_null_ex(field, ZEND_STRS("name"));
 		// type
 		if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Type"), (void**)&ppval) == SUCCESS) {
-			Z_ADDREF_PP(ppval);
+			zval_add_ref(ppval);
 			add_assoc_zval_ex(field, ZEND_STRS("type"), *ppval);
 		}
 		// notnull
@@ -728,7 +728,7 @@ PHP_METHOD(yod_dbpdo, fields) {
 		}
 		// default
 		if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Default"), (void**)&ppval) == SUCCESS) {
-			Z_ADDREF_PP(ppval);
+			zval_add_ref(ppval);
 			add_assoc_zval_ex(field, ZEND_STRS("default"), *ppval);
 		}
 		// primary
@@ -748,7 +748,7 @@ PHP_METHOD(yod_dbpdo, fields) {
 			}
 		}
 		if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Field"), (void**)&ppval) == SUCCESS) {
-			Z_ADDREF_PP(ppval);
+			zval_add_ref(ppval);
 			add_assoc_zval_ex(field, ZEND_STRS("name"), *ppval);
 			add_assoc_zval_ex(return_value, Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval) + 1, field);
 		}
