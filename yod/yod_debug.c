@@ -16,6 +16,8 @@
 
 /* $Id$ */
 
+#if PHP_YOD_DEBUG
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -278,6 +280,8 @@ void yod_debugs(TSRMLS_D) {
 	}
 }
 /* }}} */
+
+#endif
 
 /*
 * Local variables:
