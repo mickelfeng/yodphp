@@ -328,16 +328,15 @@ int yod_database_getinstance(zval *config, yod_database_t *retval TSRMLS_DC) {
 	zval_ptr_dtor(&config1);
 	efree(classname);
 	
-	if (!p_db || Z_TYPE_P(p_db) != IS_ARRAY) {
-		MAKE_STD_ZVAL(p_db1);
-		array_init(p_db1);
-		add_assoc_zval_ex(p_db1, md5hash, strlen(md5hash) + 1, object);
-		zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db1 TSRMLS_CC);
-		zval_ptr_dtor(&p_db1);
+	MAKE_STD_ZVAL(p_db1);
+	if (p_db && Z_TYPE_P(p_db) == IS_ARRAY) {
+		ZVAL_ZVAL(p_db1, p_db, 1, 0);
 	} else {
-		add_assoc_zval_ex(p_db, md5hash, strlen(md5hash) + 1, object);
-		zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db TSRMLS_CC);
+		array_init(p_db1);
 	}
+	add_assoc_zval_ex(p_db1, md5hash, strlen(md5hash) + 1, object);
+	zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db1 TSRMLS_CC);
+	zval_ptr_dtor(&p_db1);
 
 	ZVAL_ZVAL(retval, object, 1, 0);
 	efree(md5hash);
@@ -424,7 +423,7 @@ int yod_database_dbconfig(yod_database_t *object, zval *config, long linknum, zv
 	}
 
 	if (linknum == 1) {
-		if (zend_hash_find(Z_ARRVAL_P(config), ZEND_STRS("slaves"), (void **)&slaves) == FAILURE ||
+		if (zend_hash_find(Z_ARRVAL_P(retval), ZEND_STRS("slaves"), (void **)&slaves) == FAILURE ||
 			Z_TYPE_PP(slaves) != IS_ARRAY
 		) {
 			linknum = 0;

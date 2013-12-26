@@ -149,7 +149,7 @@ ZEND_END_ARG_INFO()
 /** {{{ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zval *retval TSRMLS_DC)
 */
 static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zval *retval TSRMLS_DC) {
-	zval *dbconfig, *linkids, *linkid, *linkid1, *argv[4], *query, **ppval;
+	zval *dbconfig, *linkids, *linkids1, *linkid, *linkid1, *argv[4], *query, **ppval;
 	zval persist, errmode, warning;
 	zend_class_entry **pce = NULL;
 	char *squery;
@@ -307,20 +307,18 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 				zend_call_method_with_2_params(&linkid, Z_OBJCE_P(linkid), NULL, "setattribute", NULL, &errmode, &warning);
 			}
 
+			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkid"), linkid TSRMLS_CC);
+			MAKE_STD_ZVAL(linkids1);
+			if (linkids && Z_TYPE_P(linkids) == IS_ARRAY) {
+				ZVAL_ZVAL(linkids1, linkids, 1, 0);
+			} else {
+				array_init(linkids1);
+			}
 			MAKE_STD_ZVAL(linkid1);
 			ZVAL_ZVAL(linkid1, linkid, 1, 0);
-			if (linkids && Z_TYPE_P(linkids) == IS_ARRAY) {
-				add_index_zval(linkids, linknum, linkid1);
-				zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkids"), linkids TSRMLS_CC);
-			} else {
-				MAKE_STD_ZVAL(linkids);
-				array_init(linkids);
-				add_index_zval(linkids, linknum, linkid1);
-				zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkids"), linkids TSRMLS_CC);
-				zval_ptr_dtor(&linkids);
-			}
-			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkid"), linkid TSRMLS_CC);
-			zval_ptr_dtor(&linkid1);
+			add_index_zval(linkids1, linknum, linkid1);
+			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkids"), linkids1 TSRMLS_CC);
+			zval_ptr_dtor(&linkids1);
 
 			if (retval) {
 				ZVAL_ZVAL(retval, linkid, 1, 0);
@@ -602,12 +600,11 @@ int yod_dbpdo_free(yod_dbpdo_t *object, zval *result TSRMLS_DC) {
 	}
 
 	if (result) {
+		zend_object_store_ctor_failed(result TSRMLS_CC);
+		zval_ptr_dtor(&result);
 		ZVAL_NULL(result);
-	}
-
-	result = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_result"), 1 TSRMLS_CC);
-	if (result) {
-		ZVAL_NULL(result);
+	} else {
+		zend_update_property_null(Z_OBJCE_P(object), object, ZEND_STRL("_result") TSRMLS_CC);
 	}
 
 	return 1;
@@ -658,7 +655,6 @@ PHP_METHOD(yod_dbpdo, fields) {
 	zval *result, *data, **value, **ppval;
 	char *squery, *squery1;
 	uint squery_len;
-	HashPosition pos;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &table) == FAILURE) {
 		return;
@@ -692,61 +688,74 @@ PHP_METHOD(yod_dbpdo, fields) {
 
 	MAKE_STD_ZVAL(result);
 	yod_dbpdo_query(object, query, NULL, result TSRMLS_CC);
+	zval_ptr_dtor(&query);
+
+	MAKE_STD_ZVAL(data);
 	if (result) {
-		MAKE_STD_ZVAL(data);
 		yod_dbpdo_fetchall(object, result, data TSRMLS_CC);
-		if (data && Z_TYPE_P(data) == IS_ARRAY) {
-			zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(data), &pos);
-			while (zend_hash_get_current_data_ex(Z_ARRVAL_P(data), (void **)&value, &pos) == SUCCESS) {
-				if (value && Z_TYPE_PP(value) == IS_ARRAY) {
-					zval *field;
-					MAKE_STD_ZVAL(field);
-					array_init(field);
-					// name
-					add_assoc_null_ex(field, ZEND_STRS("name"));
-					// type
-					if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Type"), (void**)&ppval) == SUCCESS) {
-						add_assoc_zval_ex(field, ZEND_STRS("type"), *ppval);
-					}
-					// notnull
-					if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Null"), (void**)&ppval) == SUCCESS) {
-						if (Z_TYPE_PP(ppval) == IS_STRING && Z_STRLEN_PP(ppval) == 0) {
-							add_assoc_bool_ex(field, ZEND_STRS("notnull"), 1);
-						} else {
-							add_assoc_bool_ex(field, ZEND_STRS("notnull"), 0);
-						}
-					}
-					// default
-					if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Default"), (void**)&ppval) == SUCCESS) {
-						add_assoc_zval_ex(field, ZEND_STRS("default"), *ppval);
-					}
-					// primary
-					if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Key"), (void**)&ppval) == SUCCESS) {
-						if (Z_TYPE_PP(ppval) == IS_STRING && strcasecmp(Z_STRVAL_PP(ppval), "pri") == 0) {
-							add_assoc_bool_ex(field, ZEND_STRS("primary"), 1);
-						} else {
-							add_assoc_bool_ex(field, ZEND_STRS("primary"), 0);
-						}
-					}
-					// autoinc
-					if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Extra"), (void**)&ppval) == SUCCESS) {
-						if (Z_TYPE_PP(ppval) == IS_STRING && strcasecmp(Z_STRVAL_PP(ppval), "auto_increment") == 0) {
-							add_assoc_bool_ex(field, ZEND_STRS("autoinc"), 1);
-						} else {
-							add_assoc_bool_ex(field, ZEND_STRS("autoinc"), 0);
-						}
-					}
-					if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Field"), (void**)&ppval) == SUCCESS) {
-						add_assoc_zval_ex(field, ZEND_STRS("name"), *ppval);
-						add_assoc_zval_ex(return_value, Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval) + 1, field);
-					}
-				}
-				zend_hash_move_forward_ex(Z_ARRVAL_P(data), &pos);
+		zval_ptr_dtor(&result);
+	}
+	if (!data || Z_TYPE_P(data) != IS_ARRAY) {
+		zval_ptr_dtor(&data);
+		RETURN_NULL();
+	}
+
+	zend_hash_internal_pointer_reset(Z_ARRVAL_P(data));
+	while (zend_hash_get_current_data(Z_ARRVAL_P(data), (void **)&value) == SUCCESS) {
+		zval *field = NULL;
+
+		if (Z_TYPE_PP(value) != IS_ARRAY) {
+			zend_hash_move_forward(Z_ARRVAL_P(data));
+			continue;
+		}
+
+		MAKE_STD_ZVAL(field);
+		array_init(field);
+		// name
+		add_assoc_null_ex(field, ZEND_STRS("name"));
+		// type
+		if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Type"), (void**)&ppval) == SUCCESS) {
+			Z_ADDREF_PP(ppval);
+			add_assoc_zval_ex(field, ZEND_STRS("type"), *ppval);
+		}
+		// notnull
+		if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Null"), (void**)&ppval) == SUCCESS) {
+			if (Z_TYPE_PP(ppval) == IS_STRING && Z_STRLEN_PP(ppval) == 0) {
+				add_assoc_bool_ex(field, ZEND_STRS("notnull"), 1);
+			} else {
+				add_assoc_bool_ex(field, ZEND_STRS("notnull"), 0);
 			}
 		}
-		zval_ptr_dtor(&result);
-		zval_ptr_dtor(&data);
+		// default
+		if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Default"), (void**)&ppval) == SUCCESS) {
+			Z_ADDREF_PP(ppval);
+			add_assoc_zval_ex(field, ZEND_STRS("default"), *ppval);
+		}
+		// primary
+		if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Key"), (void**)&ppval) == SUCCESS) {
+			if (Z_TYPE_PP(ppval) == IS_STRING && strcasecmp(Z_STRVAL_PP(ppval), "pri") == 0) {
+				add_assoc_bool_ex(field, ZEND_STRS("primary"), 1);
+			} else {
+				add_assoc_bool_ex(field, ZEND_STRS("primary"), 0);
+			}
+		}
+		// autoinc
+		if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Extra"), (void**)&ppval) == SUCCESS) {
+			if (Z_TYPE_PP(ppval) == IS_STRING && strcasecmp(Z_STRVAL_PP(ppval), "auto_increment") == 0) {
+				add_assoc_bool_ex(field, ZEND_STRS("autoinc"), 1);
+			} else {
+				add_assoc_bool_ex(field, ZEND_STRS("autoinc"), 0);
+			}
+		}
+		if (zend_hash_find(Z_ARRVAL_PP(value), ZEND_STRS("Field"), (void**)&ppval) == SUCCESS) {
+			Z_ADDREF_PP(ppval);
+			add_assoc_zval_ex(field, ZEND_STRS("name"), *ppval);
+			add_assoc_zval_ex(return_value, Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval) + 1, field);
+		}
+
+		zend_hash_move_forward(Z_ARRVAL_P(data));
 	}
+	zval_ptr_dtor(&data);
 }
 /* }}} */
 
@@ -971,15 +980,8 @@ PHP_METHOD(yod_dbpdo, close) {
 
 	object = getThis();
 	
-	linkids = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkids"), 1 TSRMLS_CC);
-	if (linkids) {
-		zend_update_property_null(Z_OBJCE_P(object), object, ZEND_STRL("_linkids") TSRMLS_CC);
-	}
-
-	linkid = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkid"), 1 TSRMLS_CC);
-	if (linkid) {
-		zval_ptr_dtor(&linkid);
-	}
+	zend_update_property_null(Z_OBJCE_P(object), object, ZEND_STRL("_linkid") TSRMLS_CC);
+	zend_update_property_null(Z_OBJCE_P(object), object, ZEND_STRL("_linkids") TSRMLS_CC);
 }
 /* }}} */
 

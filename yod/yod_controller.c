@@ -153,28 +153,27 @@ static int yod_extract(zval *array TSRMLS_DC) {
 		zend_rebuild_symbol_table(TSRMLS_C);
 	}
 #endif
+	
 	zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(array), &pos);
 	while (zend_hash_get_current_data_ex(Z_ARRVAL_P(array), (void **)&data, &pos) == SUCCESS) {
+		if (zend_hash_get_current_key_ex(Z_ARRVAL_P(array), &str_key, &key_len, &num_key, 0, &pos) == HASH_KEY_IS_STRING) {
+			if (key_len == sizeof("GLOBALS")-1 && !strcmp(str_key, "GLOBALS")) {
+				zend_hash_move_forward_ex(Z_ARRVAL_P(array), &pos);
+				continue;
+			}
 
-		if (zend_hash_get_current_key_ex(Z_ARRVAL_P(array), &str_key, &key_len, &num_key, 0, &pos) != HASH_KEY_IS_STRING) {
-			continue;
+			if (key_len == sizeof("this")-1  && !strcmp(str_key, "this") && EG(scope) && EG(scope)->name_length != 0) {
+				zend_hash_move_forward_ex(Z_ARRVAL_P(array), &pos);
+				continue;
+			}
+
+			if (key_len && yod_valid_varname(str_key, key_len - 1)) {
+				MAKE_STD_ZVAL(value);
+				*value = **data;
+				zval_copy_ctor(value);
+				ZEND_SET_SYMBOL_WITH_LENGTH(EG(active_symbol_table), str_key, key_len, value, 1, 0);
+			}
 		}
-
-		if (key_len == sizeof("GLOBALS")-1 && !strcmp(str_key, "GLOBALS")) {
-			continue;
-		}
-
-		if (key_len == sizeof("this")-1  && !strcmp(str_key, "this") && EG(scope) && EG(scope)->name_length != 0) {
-			continue;
-		}
-
-		if (key_len && yod_valid_varname(str_key, key_len - 1)) {
-			MAKE_STD_ZVAL(value);
-			*value = **data;
-			zval_copy_ctor(value);
-			ZEND_SET_SYMBOL_WITH_LENGTH(EG(active_symbol_table), str_key, key_len, value, 1, 0);
-		}
-
 		zend_hash_move_forward_ex(Z_ARRVAL_P(array), &pos);
 	}
 
