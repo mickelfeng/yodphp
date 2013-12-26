@@ -19,9 +19,13 @@
 #ifndef PHP_YOD_DEBUG_H
 #define PHP_YOD_DEBUG_H
 
-extern zend_class_entry *yod_debug_ce;
+#define YOD_DOTLINE					"----------------------------------------------------------------------"
+#define YOD_DIVLINE					"======================================================================"
 
-PHP_MINIT_FUNCTION(yod_debug);
+void yod_debugf(const char *format,...);
+void yod_debugl(char *sline TSRMLS_DC);
+void yod_debugz(zval *pzval, int dump TSRMLS_DC);
+void yod_debugs(TSRMLS_D);
 
 #endif
 /*

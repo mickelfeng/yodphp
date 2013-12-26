@@ -27,6 +27,9 @@
 #include "yod_database.h"
 #include "yod_dbpdo.h"
 
+#if PHP_YOD_DEBUG
+#include "yod_debug.h"
+#endif
 
 zend_class_entry *yod_dbpdo_ce;
 

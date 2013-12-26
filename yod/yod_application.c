@@ -29,6 +29,10 @@
 #include "yod_application.h"
 #include "yod_request.h"
 
+#if PHP_YOD_DEBUG
+#include "yod_debug.h"
+#endif
+
 zend_class_entry *yod_application_ce;
 
 /** {{{ ARG_INFO
@@ -313,7 +317,7 @@ static void yod_application_init_configs(yod_application_t *object, zval *config
 */
 static void yod_application_construct(yod_application_t *object, zval *config TSRMLS_DC) {
 	yod_request_t *request;
-	zval *imports, runmode;
+	zval *imports;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_application_construct()");
@@ -329,13 +333,6 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 	} else {
 		MAKE_STD_ZVAL(YOD_G(yodapp));
 		object_init_ex(YOD_G(yodapp), yod_application_ce);
-	}
-
-	// runmode
-	if (zend_get_constant(ZEND_STRL("YOD_RUNMODE"), &runmode TSRMLS_CC)) {
-		convert_to_long(&runmode);
-		EG(error_reporting) = Z_LVAL(runmode);
-		zval_dtor(&runmode);
 	}
 
 	// autoload

@@ -52,19 +52,17 @@ extern zend_module_entry yod_module_entry;
 
 #if PHP_YOD_DEBUG
 #define YOD_VERSION					"1.2.0-dev"
+#define YOD_RUNMODE					7
 #else
 #define YOD_VERSION					"1.2.0"
+#define YOD_RUNMODE					1
 #endif
-#define YOD_FORWARD					5
+
 #define YOD_CHARSET					"utf-8"
 #define YOD_PATHVAR					""
+#define YOD_FORWARD					5
 
 #define YOD_APP_CNAME				"Yod_Application"
-
-#if PHP_YOD_DEBUG
-#define YOD_DOTLINE					"----------------------------------------------------------------------"
-#define YOD_DIVLINE					"======================================================================"
-#endif
 
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION == 2)) || (PHP_MAJOR_VERSION > 5)
 #define Z_SET_REFCOUNT_P(pz, rc)	  (pz)->refcount = rc
@@ -110,24 +108,19 @@ extern zend_module_entry yod_module_entry;
 #define yod_database_t		zval
 #define yod_dbpdo_t			zval
 
-#if PHP_YOD_DEBUG
-void yod_debugf(const char *format,...);
-void yod_debugl(char *sline TSRMLS_DC);
-void yod_debugz(zval *pzval, int dump TSRMLS_DC);
-void yod_debugs(TSRMLS_D);
-#endif
-
 void yod_do_exit(TSRMLS_D);
-long yod_forward(TSRMLS_D);
+long yod_runmode(TSRMLS_D);
 char *yod_charset(TSRMLS_D);
 char *yod_pathvar(TSRMLS_D);
 char *yod_extpath(TSRMLS_D);
 char *yod_runpath(TSRMLS_D);
+long yod_forward(TSRMLS_D);
 int yod_include(char *filepath, zval **retval, int dtor TSRMLS_DC);
 int yod_call_method(zval *object, char *func, int func_len, zval **result, int pcount, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC);
 
 ZEND_BEGIN_MODULE_GLOBALS(yod)
 	double		runtime;
+	long		runmode;
 	char		*charset;
 	char		*pathvar;
 	char		*extpath;

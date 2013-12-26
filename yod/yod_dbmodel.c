@@ -28,6 +28,10 @@
 #include "yod_dbmodel.h"
 #include "yod_dbpdo.h"
 
+#if PHP_YOD_DEBUG
+#include "yod_debug.h"
+#endif
+
 zend_class_entry *yod_dbmodel_ce;
 
 /** {{{ ARG_INFO
@@ -871,9 +875,9 @@ static int yod_dbmodel_find(yod_dbmodel_t *object, char *where, uint where_len, 
 	if (query && Z_TYPE_P(query) == IS_STRING) {
 
 #if PHP_YOD_DEBUG
-		yod_debugl(YOD_DOTLINE);
+		yod_debugl("-" TSRMLS_CC);
 		yod_debugf(Z_STRVAL_P(query));
-		yod_debugl(YOD_DOTLINE);
+		yod_debugl("-" TSRMLS_CC);
 #endif
 
 		MAKE_STD_ZVAL(result);
@@ -942,9 +946,9 @@ static int yod_dbmodel_findall(yod_dbmodel_t *object, char *where, uint where_le
 	if (query && Z_TYPE_P(query) == IS_STRING) {
 
 #if PHP_YOD_DEBUG
-		yod_debugl(YOD_DOTLINE);
+		yod_debugl("-" TSRMLS_CC);
 		yod_debugf(Z_STRVAL_P(query));
-		yod_debugl(YOD_DOTLINE);
+		yod_debugl("-" TSRMLS_CC);
 #endif
 
 		MAKE_STD_ZVAL(result);
@@ -1016,9 +1020,9 @@ static int yod_dbmodel_count(yod_dbmodel_t *object, char *where, uint where_len,
 	if (query && Z_TYPE_P(query) == IS_STRING) {
 
 #if PHP_YOD_DEBUG
-		yod_debugl(YOD_DOTLINE);
+		yod_debugl("-" TSRMLS_CC);
 		yod_debugf(Z_STRVAL_P(query));
-		yod_debugl(YOD_DOTLINE);
+		yod_debugl("-" TSRMLS_CC);
 #endif
 
 		MAKE_STD_ZVAL(result);

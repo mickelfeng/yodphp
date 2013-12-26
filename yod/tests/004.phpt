@@ -1,11 +1,13 @@
 --TEST--
 Check for yod controller
 --SKIPIF--
-<?php if (!extension_loaded("yod") || defined('YOD_RUNMODE')) print "skip"; ?>
+<?php if (!extension_loaded("yod")) print "skip"; ?>
 --FILE--
 <?php
 error_reporting(E_ALL);
 date_default_timezone_set('Asia/Shanghai');
+
+defined('YOD_RUNMODE') or define('YOD_RUNMODE', 1);
 
 define('TESTS_PATH', dirname(__FILE__));
 include TESTS_PATH . '/clean.php';

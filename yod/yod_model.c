@@ -29,6 +29,10 @@
 //#include "yod_dbmodel.h"
 #include "yod_database.h"
 
+#if PHP_YOD_DEBUG
+#include "yod_debug.h"
+#endif
+
 zend_class_entry *yod_model_ce;
 
 /** {{{ ARG_INFO

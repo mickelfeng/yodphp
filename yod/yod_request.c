@@ -29,6 +29,10 @@
 #include "yod_request.h"
 #include "yod_controller.h"
 
+#if PHP_YOD_DEBUG
+#include "yod_debug.h"
+#endif
+
 zend_class_entry *yod_request_ce;
 
 /** {{{ ARG_INFO

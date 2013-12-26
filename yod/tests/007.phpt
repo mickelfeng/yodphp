@@ -2,7 +2,7 @@
 Check for yod database
 --SKIPIF--
 <?php
-if (!extension_loaded("yod") || defined('YOD_RUNMODE') || !class_exists('PDO', false)) {
+if (!extension_loaded("yod") || !class_exists('PDO', false)) {
 	print "skip";
 }
 ?>
@@ -10,6 +10,8 @@ if (!extension_loaded("yod") || defined('YOD_RUNMODE') || !class_exists('PDO', f
 <?php
 error_reporting(E_ALL);
 date_default_timezone_set('Asia/Shanghai');
+
+defined('YOD_RUNMODE') or define('YOD_RUNMODE', 1);
 
 define('TESTS_PATH', dirname(__FILE__));
 include TESTS_PATH . '/clean.php';

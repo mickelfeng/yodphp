@@ -22,9 +22,9 @@
 
 #include "php.h"
 #include "Zend/zend_interfaces.h"
-#include "ext/standard/php_array.h"
 #include "ext/standard/md5.h"
 #include "ext/standard/php_var.h"
+#include "ext/standard/php_array.h"
 #include "ext/standard/php_rand.h"
 #include "ext/standard/php_smart_str.h"
 
@@ -33,6 +33,10 @@
 #include "yod_model.h"
 #include "yod_database.h"
 #include "yod_dbpdo.h"
+
+#if PHP_YOD_DEBUG
+#include "yod_debug.h"
+#endif
 
 zend_class_entry *yod_database_ce;
 
