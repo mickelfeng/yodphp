@@ -972,7 +972,6 @@ PHP_METHOD(yod_dbpdo, free) {
 */
 PHP_METHOD(yod_dbpdo, close) {
 	yod_dbpdo_t *object;
-	zval *linkids, *linkid;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_dbpdo_close()");
