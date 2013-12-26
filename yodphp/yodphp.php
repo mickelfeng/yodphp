@@ -46,11 +46,6 @@ final class Yod_Application
 			return;
 		}
 
-		// runmode
-		if (defined('YOD_RUNMODE')) {
-			error_reporting(YOD_RUNMODE);
-		}
-
 		// autoload
 		spl_autoload_register(array('Yod_Application', 'autoload'));
 
