@@ -29,7 +29,6 @@
 #include "ext/standard/flock_compat.h"
 #include "ext/standard/php_var.h"
 
-
 #ifdef HAVE_SYS_FILE_H
 # include <sys/file.h>
 #endif
@@ -44,14 +43,10 @@
 #endif
 #endif
 
-#endif
-
 #include "php_yod.h"
 #include "yod_debug.h"
 
 #define MICRO_IN_SEC 1000000.00
-
-#if PHP_YOD_DEBUG
 
 /** {{{ void yod_debugf(const char *format,...)
 */
