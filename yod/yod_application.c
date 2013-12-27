@@ -338,6 +338,11 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 	// autoload
 	yod_application_init_autoload(TSRMLS_C);
 
+	// runmode
+	if ((yod_runmode(TSRMLS_C) & 1) == 0) {
+		EG(error_reporting) = 0;
+	}
+
 	// config
 	yod_application_init_configs(YOD_G(yodapp), config TSRMLS_CC);
 
