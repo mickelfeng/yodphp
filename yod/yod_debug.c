@@ -16,17 +16,19 @@
 
 /* $Id$ */
 
-#if PHP_YOD_DEBUG
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include "php.h"
+
+#if PHP_YOD_DEBUG
+
 #include "main/SAPI.h"
 #include "ext/standard/file.h"
 #include "ext/standard/flock_compat.h"
 #include "ext/standard/php_var.h"
+
 
 #ifdef HAVE_SYS_FILE_H
 # include <sys/file.h>
@@ -42,10 +44,14 @@
 #endif
 #endif
 
+#endif
+
 #include "php_yod.h"
 #include "yod_debug.h"
 
 #define MICRO_IN_SEC 1000000.00
+
+#if PHP_YOD_DEBUG
 
 /** {{{ void yod_debugf(const char *format,...)
 */
