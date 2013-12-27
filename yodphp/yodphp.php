@@ -49,6 +49,11 @@ final class Yod_Application
 		// autoload
 		spl_autoload_register(array('Yod_Application', 'autoload'));
 
+		// runmode
+		if (defined('YOD_RUNMODE') && (YOD_RUNMODE & 1) == 0) {
+			error_reporting(0);
+		}
+
 		// config
 		if (is_array($config)) {
 			$this->_config = $config;
