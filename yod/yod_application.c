@@ -616,7 +616,7 @@ static int yod_application_autoload(char *classname, uint classname_len TSRMLS_D
 PHP_METHOD(yod_application, __construct) {
 	zval *config = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &config) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z!", &config) == FAILURE) {
 		return;
 	}
 
@@ -668,7 +668,7 @@ PHP_METHOD(yod_application, import) {
 PHP_METHOD(yod_application, app) {
 	zval *config = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &config) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z!", &config) == FAILURE) {
 		return;
 	}
 

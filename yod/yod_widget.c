@@ -139,7 +139,7 @@ PHP_METHOD(yod_widget, __construct) {
 	char *action = NULL;
 	uint action_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|sz", &request, &action, &action_len, &params) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|sz!", &request, &action, &action_len, &params) == FAILURE) {
 		return;
 	}
 

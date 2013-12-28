@@ -190,7 +190,7 @@ int yod_debugw(char *data, uint data_len TSRMLS_DC) {
 /** {{{ void yod_debugs(TSRMLS_D)
 */
 void yod_debugs(TSRMLS_D) {
-	zval **ppzval;
+	zval **data;
 	long runmode;
 	double runtime;
 	struct timeval tp = {0};
@@ -230,9 +230,9 @@ void yod_debugs(TSRMLS_D) {
 	}
 
 	zend_hash_internal_pointer_reset(Z_ARRVAL_P(YOD_G(debugs)));
-	while (zend_hash_get_current_data(Z_ARRVAL_P(YOD_G(debugs)), (void **) &ppzval) == SUCCESS) {
-		if (Z_TYPE_PP(ppzval) == IS_STRING) {
-			PHPWRITE(Z_STRVAL_PP(ppzval), Z_STRLEN_PP(ppzval));
+	while (zend_hash_get_current_data(Z_ARRVAL_P(YOD_G(debugs)), (void **) &data) == SUCCESS) {
+		if (Z_TYPE_PP(data) == IS_STRING) {
+			PHPWRITE(Z_STRVAL_PP(data), Z_STRLEN_PP(data));
 		}
 		zend_hash_move_forward(Z_ARRVAL_P(YOD_G(debugs)));
 	}
@@ -256,8 +256,6 @@ void yod_debugs(TSRMLS_D) {
 			}
 			zval_ptr_dtor(&ob_buffer);
 		}
-
-
 
 		// runmode
 		if (runmode & 2) {

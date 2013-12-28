@@ -578,7 +578,7 @@ PHP_METHOD(yod_request, erroraction) {
 PHP_METHOD(yod_request, error404) {
 	zval *html = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &html) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z!", &html) == FAILURE) {
 		return;
 	}
 

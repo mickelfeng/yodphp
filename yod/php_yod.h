@@ -51,10 +51,10 @@ extern zend_module_entry yod_module_entry;
 #endif
 
 #if PHP_YOD_DEBUG
-#define YOD_VERSION					"1.2.0-dev"
+#define YOD_VERSION					"1.2.1-dev"
 #define YOD_RUNMODE					7
 #else
-#define YOD_VERSION					"1.2.0"
+#define YOD_VERSION					"1.2.1"
 #define YOD_RUNMODE					1
 #endif
 

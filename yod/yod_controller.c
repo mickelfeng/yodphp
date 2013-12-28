@@ -32,7 +32,7 @@
 #include "yod_action.h"
 #include "yod_widget.h"
 #include "yod_model.h"
-//#include "yod_dbmodel.h"
+#include "yod_dbmodel.h"
 
 #if PHP_YOD_DEBUG
 #include "yod_debug.h"
@@ -65,7 +65,11 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_model_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, name)
 	ZEND_ARG_INFO(0, config)
-	ZEND_ARG_INFO(0, dbmod)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(yod_controller_dbmodel_arginfo, 0, 0, 0)
+	ZEND_ARG_INFO(0, name)
+	ZEND_ARG_INFO(0, config)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_assign_arginfo, 0, 0, 1)
@@ -809,58 +813,52 @@ PHP_METHOD(yod_controller, import) {
 }
 /* }}} */
 
-/** {{{ proto protected Yod_Controller::model($name = '', $config = '', $dbmod = false)
+/** {{{ proto protected Yod_Controller::model($name = '', $config = '')
 */
 PHP_METHOD(yod_controller, model) {
 	yod_controller_t *object;
-	zval *z_name = NULL, *config = NULL, *p_name;
+	zval *name1, *config = NULL;
 	char *name = NULL;
 	uint name_len = 0;
-	int dbmod = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|zzb", &z_name, &config, &dbmod) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz!", &name, &name_len, &config) == FAILURE) {
 		return;
 	}
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_controller_model()");
+	yod_debugf("yod_controller_model(%s)", name ? name : "");
 #endif
 
 	object = getThis();
 
-	if (z_name) {
-		if (Z_TYPE_P(z_name) == IS_BOOL) {
-			dbmod = Z_BVAL_P(z_name);
-		} else if (Z_TYPE_P(z_name) == IS_STRING) {
-			name_len = Z_STRLEN_P(z_name);
-			name = estrndup(Z_STRVAL_P(z_name), name_len);
-		}
-	}
-	if (config && Z_TYPE_P(config) == IS_BOOL) {
-		dbmod = Z_BVAL_P(config);
-		ZVAL_NULL(config);
-	}
-
 	if (name_len == 0) {
-		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
-		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
-			name_len = Z_STRLEN_P(p_name);
-			name = estrndup(Z_STRVAL_P(p_name), name_len);
-			*name = toupper(*name);
+		name1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
+		if (name && Z_TYPE_P(name1) == IS_STRING) {
+			name_len = Z_STRLEN_P(name1);
+			name = Z_STRVAL_P(name1);
 		}
 	}
 
-	if (dbmod) {
-		//yod_dbmodel_getinstance(name, name_len, config, return_value TSRMLS_CC);
-		yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
-	} else {
-		yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
+	yod_model_getinstance(name, name_len, config, return_value TSRMLS_CC);
+}
+/* }}} */
+
+/** {{{ proto protected Yod_Controller::dbmodel($name = '', $config = '')
+*/
+PHP_METHOD(yod_controller, dbmodel) {
+	zval *config = NULL;
+	char *name = NULL;
+	uint name_len = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz!", &name, &name_len, &config) == FAILURE) {
+		return;
 	}
 
-	if (name) {
-		efree(name);
-	}
-	
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_controller_dbmodel(%s)", name ? name : "");
+#endif
+
+	yod_dbmodel_getinstance(name, name_len, config, return_value TSRMLS_CC);
 }
 /* }}} */
 
@@ -869,7 +867,7 @@ PHP_METHOD(yod_controller, model) {
 PHP_METHOD(yod_controller, assign) {
 	zval *name = NULL, *value = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|z", &name, &value) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|z!", &name, &value) == FAILURE) {
 		return;
 	}
 
@@ -886,7 +884,7 @@ PHP_METHOD(yod_controller, render) {
 	char *view = NULL;
 	uint view_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &view, &view_len, &data) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz!", &view, &view_len, &data) == FAILURE) {
 		return;
 	}
 
@@ -902,7 +900,7 @@ PHP_METHOD(yod_controller, display) {
 	char *view = NULL;
 	uint view_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz", &view, &view_len, &data) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|sz!", &view, &view_len, &data) == FAILURE) {
 		return;
 	}
 
@@ -970,7 +968,7 @@ PHP_METHOD(yod_controller, error404) {
 	yod_request_t *request;
 	zval *html = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z", &html) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|z!", &html) == FAILURE) {
 		return;
 	}
 
@@ -998,6 +996,7 @@ zend_function_entry yod_controller_methods[] = {
 	PHP_ME(yod_controller, config,			yod_controller_config_arginfo,		ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, import,			yod_controller_import_arginfo,		ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, model,			yod_controller_model_arginfo,		ZEND_ACC_PROTECTED)
+	PHP_ME(yod_controller, dbmodel,			yod_controller_dbmodel_arginfo,		ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, assign,			yod_controller_assign_arginfo,		ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, render,			yod_controller_render_arginfo,		ZEND_ACC_PROTECTED)
 	PHP_ME(yod_controller, display,			yod_controller_display_arginfo,		ZEND_ACC_PROTECTED)
