@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Yod_DbModel
  * 
@@ -21,8 +20,6 @@ class Yod_DbModel extends Yod_Model
 		parent::__construct($name, $config);
 
 		$this->initQuery();
-
-		self::$_model[$name] = $this;
 	}
 
 	/**
@@ -32,27 +29,12 @@ class Yod_DbModel extends Yod_Model
 	 * @param mixed		$config
 	 * @return Yod_DbModel
 	 */
-	public static function getInstance($name, $config = '')
+	public static function getInstance($name = '', $config = '')
 	{
-		if (empty($name)) {
-			$classname = 'Yod_DbModel';
-		} else {
-			$classname = $name . 'Model';
-		}
+		$name = ucfirst($name);
 		if (empty(self::$_model[$name])) {
-			$classpath = YOD_RUNPATH . '/models/' . $classname . '.php';
-			if (is_file($classpath)) {
-				include $classpath;
-				self::$_model[$name] = new $classname($name, $config);
-			} else {
-				if (class_exists($classname, false)) {
-					self::$_model[$name] = new $classname($name, $config);
-				} else {
-					self::$_model[$name] = new self($name, $config);
-				}
-			}
+			self::$_model[$name] = new self($name, $config);
 		}
-
 		return self::$_model[$name];
 	}
 
@@ -137,6 +119,9 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * save
 	 * @access public
+	 * @param array		$data
+	 * @param string	$where
+	 * @param array		$params
 	 * @return boolean
 	 */
 	public function save($data, $where = '', $params = array())
@@ -159,6 +144,8 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * remove
 	 * @access public
+	 * @param string	$where
+	 * @param array		$params
 	 * @return boolean
 	 */
 	public function remove($where, $params = array())
@@ -176,6 +163,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * select
 	 * @access public
+	 * @param mixed		$select
 	 * @return Yod_DbModel
 	 */
 	public function select($select)
@@ -197,6 +185,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * from
 	 * @access public
+	 * @param string	$table
 	 * @return Yod_DbModel
 	 */
 	public function from($table)
@@ -210,6 +199,9 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * join
 	 * @access public
+	 * @param string	$table
+	 * @param string	$where
+	 * @param string	$mode
 	 * @return Yod_DbModel
 	 */
 	public function join($table, $where = '', $mode = 'LEFT')
@@ -222,6 +214,9 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * where
 	 * @access public
+	 * @param string	$where
+	 * @param array		$params
+	 * @param string	$mode
 	 * @return Yod_DbModel
 	 */
 	public function where($where, $params = array(), $mode = 'AND')
@@ -243,6 +238,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * group
 	 * @access public
+	 * @param string	$group
 	 * @return Yod_DbModel
 	 */
 	public function group($group)
@@ -254,6 +250,8 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * having
 	 * @access public
+	 * @param string	$having
+	 * @param array		$params
 	 * @return Yod_DbModel
 	 */
 	public function having($having, $params = array())
@@ -266,6 +264,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * order
 	 * @access public
+	 * @param string	$order
 	 * @return Yod_DbModel
 	 */
 	public function order($order)
@@ -277,6 +276,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * limit
 	 * @access public
+	 * @param mixed		$limit
 	 * @return Yod_DbModel
 	 */
 	public function limit($limit)
@@ -288,17 +288,21 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * union
 	 * @access public
+	 * @param mixed		$union
+	 * @param array		$params
 	 * @return Yod_DbModel
 	 */
-	public function union($union)
+	public function union($union, $params = array())
 	{
 		$this->_query['UNION'] = $union;
+		$this->params($params);
 		return $this;
 	}
 
 	/**
 	 * comment
 	 * @access public
+	 * @param string	$comment
 	 * @return Yod_DbModel
 	 */
 	public function comment($comment)
@@ -310,6 +314,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * params
 	 * @access public
+	 * @param array		$params
 	 * @return Yod_DbModel
 	 */
 	public function params($params)
@@ -325,10 +330,11 @@ class Yod_DbModel extends Yod_Model
 
 	/**
 	 * parseQuery
-	 * @access protected
+	 * @access public
+	 * @param mixed		$query
 	 * @return mixed
 	 */
-	protected function parseQuery($query = null)
+	public function parseQuery($query = null)
 	{
 		$parse = array();
 		$query = empty($query) ? $this->_query : $query;
