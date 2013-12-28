@@ -9,6 +9,7 @@
 	<li><a href="<?php echo $WEBROOT; ?>/controller/config" target="_blank">config</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/controller/import" target="_blank">import</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/controller/model" target="_blank">model</a></li>
+	<li><a href="<?php echo $WEBROOT; ?>/controller/dbmodel" target="_blank">dbmodel</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/controller/assign" target="_blank">assign</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/controller/render" target="_blank">render</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/controller/display" target="_blank">display</a></li>

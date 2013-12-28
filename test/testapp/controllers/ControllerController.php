@@ -42,6 +42,15 @@ class ControllerController extends Yod_Controller
 		$this->display('model', array('model' => $model));
 	}
 
+	public function dbmodelAction()
+	{
+		$this->assign('title', 'Yod_Controller::dbmodel()');
+
+		$dbmodel = $this->dbmodel();
+
+		$this->display('dbmodel', array('dbmodel' => $dbmodel));
+	}
+
 	public function assignAction()
 	{
 		$this->assign('title', 'Yod_Controller::assign()');

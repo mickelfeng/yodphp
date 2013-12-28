@@ -16,6 +16,7 @@
 	<li><a href="<?php echo $WEBROOT; ?>/model/config" target="_blank">config</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/model/import" target="_blank">import</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/model/model" target="_blank">model</a></li>
+	<li><a href="<?php echo $WEBROOT; ?>/model/dbmodel" target="_blank">dbmodel</a></li>
 </ul>
 <?php $this->widget('public/footer'); ?>
 </body>

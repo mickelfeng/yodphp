@@ -128,4 +128,13 @@ class ModelController extends Yod_Controller
 		$this->display('model', array('model' => $model));
 	}
 
+	public function dbmodelAction()
+	{
+		$this->assign('title', 'Yod_Model::dbmodel()');
+
+		$dbmodel = $this->dbmodel('db_mysql');
+
+		$this->display('dbmodel', array('dbmodel' => $dbmodel));
+	}
+
 }
