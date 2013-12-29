@@ -13,9 +13,11 @@
 defined('YOD_RUNTIME') or define('YOD_RUNTIME', microtime(true));
 defined('YOD_VERSION') or define('YOD_VERSION', '1.2.1');
 defined('YOD_FORWARD') or define('YOD_FORWARD', 5);
+defined('YOD_RUNMODE') or define('YOD_RUNMODE', 3);
 defined('YOD_CHARSET') or define('YOD_CHARSET', 'utf-8');
 defined('YOD_PATHVAR') or define('YOD_PATHVAR', '');
 defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__));
+defined('YOD_LOGPATH') or define('YOD_LOGPATH', dirname(__FILE__));
 
 // yodphp autorun
 register_shutdown_function(array('Yod_Application', 'autorun'));
@@ -49,9 +51,9 @@ final class Yod_Application
 		// autoload
 		spl_autoload_register(array('Yod_Application', 'autoload'));
 
-		// runmode
-		if (defined('YOD_RUNMODE') && (YOD_RUNMODE & 1) == 0) {
-			error_reporting(0);
+		// errorlog
+		if (YOD_RUNMODE & 2) {
+			set_error_handler(array('Yod_Application', 'errorlog'));
 		}
 
 		// config
@@ -192,16 +194,18 @@ final class Yod_Application
 	 */
 	public static function autorun()
 	{
-		if (defined('YOD_RUNPATH')) {
-			Yod_Application::app();
-		} else {
-			define('YOD_RUNPATH', dirname(__FILE__));
+		if (YOD_RUNMODE & 1) {
+			if (defined('YOD_RUNPATH')) {
+				Yod_Application::app();
+			} else {
+				define('YOD_RUNPATH', dirname(__FILE__));
+			}
 		}
 	}
 
 	/**
 	 * autoload
-	 * 
+	 * @access public
 	 * @param string $classname
 	 * @return boolean
 	 */
@@ -235,6 +239,61 @@ final class Yod_Application
 		if (is_file($classpath)) include $classpath;
 
 		return class_exists($classname, false) || interface_exists($classname, false);
+	}
+
+	/**
+	 * errorlog
+	 * @access public
+	 * @param int $errno
+	 * @param string $errstr
+	 * @param string $errfile
+	 * @param int $errline
+	 * @param array $errcontext
+	 * @return boolean
+	 */
+	public static function errorlog($errno, $errstr, $errfile = '', $errline = 0, $errcontext = array())
+	{
+		switch ($errno) {
+		 	case E_ERROR:
+		 	case E_CORE_ERROR:
+		 	case E_COMPILE_ERROR:
+		 	case E_USER_ERROR:
+		 	case E_RECOVERABLE_ERROR:
+		 		$errtype = 'Error';
+		 		break;
+		 	case E_WARNING:
+		 	case E_CORE_WARNING:
+		 	case E_COMPILE_WARNING:
+		 	case E_USER_WARNING:
+		 		$errtype = 'Warning';
+		 		break;
+		 	case E_PARSE:
+		 		$errtype = 'Parse';
+		 		break;
+		 	case E_NOTICE:
+		 	case E_USER_NOTICE:
+		 		$errtype = 'Notice';
+		 		break;
+		 	case E_STRICT:
+		 		$errtype = 'Strict';
+		 		break;
+		 	case E_DEPRECATED:
+		 	case E_USER_DEPRECATED:
+		 		$errtype = 'Deprecated';
+		 		break;
+		 	default:
+		 		$errtype = 'Unknown';
+		 		break;
+		}
+		$logtime = date('Y-m-d H:i:s');
+		$logusec = (microtime(true) - time()) * 1000000;
+		$errfile = empty($errfile) ? 'Unknown' : $errfile;
+		$logdata = sprintf("[%s %06d] %s: %s in %s(%d)\n", $logtime, $logusec, $errtype, $errstr, $errfile, $errline);
+		$logfile = YOD_LOGPATH . '/errors.log';
+		is_dir(YOD_LOGPATH) or mkdir(YOD_LOGPATH);
+		file_put_contents($logfile, $logdata, FILE_APPEND);
+
+		return false;
 	}
 
 	/**
@@ -1308,11 +1367,15 @@ class Yod_DbModel extends Yod_Model
 	 * @access public
 	 * @param mixed		$union
 	 * @param array		$params
+	 * @param string	$mode
 	 * @return Yod_DbModel
 	 */
-	public function union($union, $params = array())
+	public function union($union, $params = array(), $mode = '')
 	{
-		$this->_query['UNION'] = $union;
+		if (is_array($union)) {
+			$union = $this->parseQuery($union);
+		}
+		$this->_query['UNION'][] = 'UNION ' . (empty($mode) ? '' : $mode . ' ') . "({$union})";
 		$this->params($params);
 		return $this;
 	}
@@ -1354,7 +1417,6 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public function parseQuery($query = null)
 	{
-		$parse = array();
 		$query = empty($query) ? $this->_query : $query;
 		if (empty($query['FROM'])) {
 			if (empty($this->_table)) {
@@ -1363,26 +1425,30 @@ class Yod_DbModel extends Yod_Model
 			}
 			$query['FROM'] = "{$this->_prefix}{$this->_table} AS t1";
 		}
+
+		$result = '';
 		foreach ($query as $key => $value) {
 			if (empty($value)) {
 				continue;
 			}
 			if (is_array($value)) {
 				if ($key == 'UNION') {
-					$value = $this->parseQuery($value);
+					$result = '(' . $result . ') ' . implode(' ', $value);
 				} elseif ($key == 'JOIN') {
-					$value = implode(' ', $value);
-					$key = '';
+					$result .= ' ' . implode(' ', $value);
 				}
+				continue;
 			}
-			if ($key == 'COMMENT') {
-				$value = '/* ' . $value . ' */';
-				$key = '';
+			if ($key == 'SELECT') {
+				$result = $key . ' ' . $value;
+			} elseif ($key == 'COMMENT') {
+				$result .= ' /* ' . $value . ' */';
+			} else {
+				$result .= ' ' . $key . ' ' . $value;
 			}
-			$parse[] = $key . ' ' . $value;
 		}
 
-		return implode(' ', $parse);
+		return $result;
 	}
 
 	/**
