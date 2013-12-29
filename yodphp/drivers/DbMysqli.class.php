@@ -60,9 +60,7 @@ class Yod_DbMysqli extends Yod_Database
 		if($dbversion >'5.0.1'){
 			$this->_linkids[$linknum]->query("SET sql_mode=''");
 		}
-		if (error_reporting()) {
-			mysqli_report(MYSQLI_REPORT_ERROR);
-		}
+		mysqli_report(MYSQLI_REPORT_ERROR);
 		return $this->_linkid = $this->_linkids[$linknum];
 	}
 

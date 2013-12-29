@@ -1875,9 +1875,7 @@ class Yod_DbPdo extends Yod_Database
 		}
 
 		$this->_linkids[$linknum]->exec('SET NAMES '. $config['charset']);
-		if (error_reporting()) {
-			$this->_linkids[$linknum]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
-		}
+		$this->_linkids[$linknum]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
 		return $this->_linkid = $this->_linkids[$linknum];
 	}
 
