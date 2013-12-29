@@ -290,26 +290,26 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 			zval_ptr_dtor(&query);
 			efree(squery);
 
-			if (EG(error_reporting)) {
+			// errmode
 #ifndef ZEND_FETCH_CLASS_SILENT
-				if (!zend_get_constant_ex(ZEND_STRL("PDO::ATTR_ERRMODE"), &errmode, NULL TSRMLS_CC)) {
+			if (!zend_get_constant_ex(ZEND_STRL("PDO::ATTR_ERRMODE"), &errmode, NULL TSRMLS_CC)) {
 #else
-				if (!zend_get_constant_ex(ZEND_STRL("PDO::ATTR_ERRMODE"), &errmode, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC)) {
+			if (!zend_get_constant_ex(ZEND_STRL("PDO::ATTR_ERRMODE"), &errmode, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC)) {
 #endif
-					INIT_PZVAL(&errmode);
-					ZVAL_LONG(&errmode, 3);
-				}
-#ifndef ZEND_FETCH_CLASS_SILENT
-				if (!zend_get_constant_ex(ZEND_STRL("PDO::ERRMODE_WARNING"), &warning, NULL TSRMLS_CC)) {
-#else
-				if (!zend_get_constant_ex(ZEND_STRL("PDO::ERRMODE_WARNING"), &warning, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC)) {
-#endif
-					INIT_PZVAL(&warning);
-					ZVAL_LONG(&warning, 1);
-				}
-				zend_call_method_with_2_params(&linkid, Z_OBJCE_P(linkid), NULL, "setattribute", NULL, &errmode, &warning);
+				INIT_PZVAL(&errmode);
+				ZVAL_LONG(&errmode, 3);
 			}
+#ifndef ZEND_FETCH_CLASS_SILENT
+			if (!zend_get_constant_ex(ZEND_STRL("PDO::ERRMODE_WARNING"), &warning, NULL TSRMLS_CC)) {
+#else
+			if (!zend_get_constant_ex(ZEND_STRL("PDO::ERRMODE_WARNING"), &warning, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC)) {
+#endif
+				INIT_PZVAL(&warning);
+				ZVAL_LONG(&warning, 1);
+			}
+			zend_call_method_with_2_params(&linkid, Z_OBJCE_P(linkid), NULL, "setattribute", NULL, &errmode, &warning);
 
+			// linkid
 			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_linkid"), linkid TSRMLS_CC);
 			MAKE_STD_ZVAL(linkids1);
 			if (linkids && Z_TYPE_P(linkids) == IS_ARRAY) {
