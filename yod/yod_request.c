@@ -117,7 +117,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 		}
 	}
 
-	yod_do_exit(TSRMLS_C);
+	yod_do_exit(0 TSRMLS_CC);
 }
 /* }}} */
 

@@ -747,7 +747,7 @@ static void yod_controller_forward(yod_controller_t *object, char *route, uint r
 	}
 
 	if (exited) {
-		yod_do_exit(TSRMLS_C);
+		yod_do_exit(0 TSRMLS_CC);
 	}
 
 }

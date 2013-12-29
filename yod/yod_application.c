@@ -22,8 +22,25 @@
 
 #include "php.h"
 #include "main/SAPI.h"
+#include "ext/standard/file.h"
+#include "ext/standard/flock_compat.h"
+#include "ext/standard/php_filestat.h"
 #include "ext/standard/php_array.h"
 #include "ext/standard/php_string.h"
+
+#ifdef HAVE_SYS_FILE_H
+# include <sys/file.h>
+#endif
+
+#ifdef PHP_WIN32
+#include "win32/time.h"
+#else
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#else
+#include <time.h>
+#endif
+#endif
 
 #include "php_yod.h"
 #include "yod_application.h"
@@ -62,6 +79,14 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_application_autoload_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, classname)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(yod_application_errorlog_arginfo, 0, 0, 4)
+	ZEND_ARG_INFO(0, errno)
+	ZEND_ARG_INFO(0, errstr)
+	ZEND_ARG_INFO(0, errfile)
+	ZEND_ARG_INFO(0, errline)
+	ZEND_ARG_INFO(0, errcontext)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_application_destruct_arginfo, 0, 0, 0)
@@ -168,52 +193,6 @@ static int closedir(DIR *dp) {
 }
 /* }}} */
 #endif
-
-/** {{{ static int yod_application_init_autoload(TSRMLS_D)
- * */
-static int yod_application_init_autoload(TSRMLS_D) {
-	zval *param1, *function, *retval = NULL;
-	zval **params[1] = {&param1};
-	zend_fcall_info fci;
-
-#if PHP_YOD_DEBUG
-	yod_debugf("yod_application_init_autoload()");
-#endif
-
-	MAKE_STD_ZVAL(param1);
-	array_init(param1);
-	add_next_index_string(param1, YOD_APP_CNAME, 1);
-	add_next_index_string(param1, "autoload", 1);
-
-	MAKE_STD_ZVAL(function);
-	ZVAL_STRING(function, "spl_autoload_register", 1);
-
-	fci.size = sizeof(fci);
-	fci.function_table = EG(function_table);
-	fci.function_name = function;
-	fci.symbol_table = NULL;
-	fci.retval_ptr_ptr = &retval;
-	fci.param_count = 1;
-	fci.params = (zval ***)params;
-#if PHP_API_VERSION > 20041225
-	fci.object_ptr = NULL;
-#else
-	fci.object_pp = NULL;
-#endif
-	fci.no_separation = 1;
-
-	zend_call_function(&fci, NULL TSRMLS_CC);
-
-	zval_ptr_dtor(&function);
-	zval_ptr_dtor(&param1);
-
-	if (retval) {
-		zval_ptr_dtor(&retval);
-		return 1;
-	}
-	return 0;
-}
-/* }}} */
 
 /** {{{ static void yod_application_init_configs(yod_application_t *object, zval *config TSRMLS_DC)
 */
@@ -336,11 +315,11 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 	}
 
 	// autoload
-	yod_application_init_autoload(TSRMLS_C);
+	yod_register("spl_autoload_register", "autoload" TSRMLS_CC);
 
-	// runmode
-	if ((yod_runmode(TSRMLS_C) & 1) == 0) {
-		EG(error_reporting) = 0;
+	// errorlog
+	if (yod_runmode(TSRMLS_C) & 2) {
+		yod_register("set_error_handler", "errorlog" TSRMLS_CC);
 	}
 
 	// config
@@ -528,6 +507,10 @@ void yod_application_app(zval *config TSRMLS_DC) {
 static void yod_application_autorun(TSRMLS_D) {
 	zval runpath;
 
+	if ((yod_runmode(TSRMLS_C) & 1) == 0) {
+		return;
+	}
+
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_application_autorun()");
 #endif
@@ -608,6 +591,87 @@ static int yod_application_autoload(char *classname, uint classname_len TSRMLS_D
 		return 1;
 	}
 	return 0;
+}
+/* }}} */
+
+/** {{{ static int yod_application_errorlog(long errnum, char *errstr, uint errstr_len, char *errfile, uint errfile_len, long errline, zval *errcontext TSRMLS_DC)
+*/
+static int yod_application_errorlog(long errnum, char *errstr, uint errstr_len, char *errfile, uint errfile_len, long errline, zval *errcontext TSRMLS_DC) {
+	struct timeval tp = {0};
+	struct tm *ta, tmbuf;
+	time_t curtime;
+	char *datetime, asctimebuf[52];
+	uint datetime_len;
+
+	zval *zcontext = NULL;
+	php_stream_context *context = NULL;
+	php_stream *stream;
+
+	struct stat st;
+	char *logdata, *logpath, *logfile, *errtype;
+	uint logdata_len;
+
+	switch (errnum) {
+	 	case E_ERROR:
+	 	case E_CORE_ERROR:
+	 	case E_COMPILE_ERROR:
+	 	case E_USER_ERROR:
+	 	case E_RECOVERABLE_ERROR:
+	 		errtype = "Error";
+	 		break;
+	 	case E_WARNING:
+	 	case E_CORE_WARNING:
+	 	case E_COMPILE_WARNING:
+	 	case E_USER_WARNING:
+	 		errtype = "Warning";
+	 		break;
+	 	case E_PARSE:
+	 		errtype = "Parse";
+	 		break;
+	 	case E_NOTICE:
+	 	case E_USER_NOTICE:
+	 		errtype = "Notice";
+	 		break;
+	 	case E_STRICT:
+	 		errtype = "Strict";
+	 		break;
+	 	case E_DEPRECATED:
+	 	case E_USER_DEPRECATED:
+	 		errtype = "Deprecated";
+	 		break;
+	 	default:
+	 		errtype = "Unknown";
+	 		break;
+	}
+
+	logpath = yod_logpath(TSRMLS_C);
+	if (0 != VCWD_STAT(logpath, &st) || S_IFDIR != (st.st_mode & S_IFMT)) {
+		php_stream_mkdir(logpath, 0750,  PHP_STREAM_MKDIR_RECURSIVE, NULL);
+	}
+	spprintf(&logfile, 0, "%s/errors.log", logpath);
+	context = php_stream_context_from_zval(zcontext, 0);
+	stream = php_stream_open_wrapper_ex(logfile, "ab", 0, NULL, context);
+	if (stream) {
+		if (php_stream_supports_lock(stream)) {
+			php_stream_lock(stream, LOCK_EX);
+		}
+
+		time(&curtime);
+		ta = php_localtime_r(&curtime, &tmbuf);
+		datetime = php_asctime_r(ta, asctimebuf);
+		datetime_len = strlen(datetime);
+		datetime[datetime_len - 1] = 0;
+
+		if (!gettimeofday(&tp, NULL)) {
+			logdata_len = spprintf(&logdata, 0, "[%s %06d] %s: %s in %s(%d)\n", datetime, tp.tv_usec, errtype, (errstr_len ? errstr : ""), (errfile_len ? errfile : "Unknown"), errline);
+			php_stream_write(stream, logdata, logdata_len);
+			efree(logdata);
+		}
+		php_stream_close(stream);
+	}
+	efree(logfile);
+
+	return 1;
 }
 /* }}} */
 
@@ -703,6 +767,24 @@ PHP_METHOD(yod_application, autoload) {
 }
 /* }}} */
 
+/** {{{ proto public static Yod_Application::errorlog($errno, $errstr, $errfile = '', $errline = 0, $errcontext = array())
+*/
+PHP_METHOD(yod_application, errorlog) {
+	zval *errcontext = NULL;
+	char *errstr, *errfile = NULL;
+	uint errstr_len, errfile_len = 0;
+	long errnum, errline = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls|slz!", &errnum, &errstr, &errstr_len, &errfile, &errfile_len, &errline, &errcontext) == FAILURE) {
+		return;
+	}
+
+	yod_application_errorlog(errnum, errstr, errstr_len, errfile, errfile_len, errline, errcontext TSRMLS_CC);
+
+	RETURN_FALSE;
+}
+/* }}} */
+
 /** {{{ proto public Yod_Application::__destruct()
 */
 PHP_METHOD(yod_application, __destruct) {
@@ -723,6 +805,7 @@ zend_function_entry yod_application_methods[] = {
 	PHP_ME(yod_application, app,			yod_application_app_arginfo,		ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(yod_application, autorun,		yod_application_autorun_arginfo,	ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(yod_application, autoload,		yod_application_autoload_arginfo,	ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(yod_application, errorlog,		yod_application_errorlog_arginfo,	ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(yod_application, __destruct,		yod_application_destruct_arginfo,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	{NULL, NULL, NULL}
 };
