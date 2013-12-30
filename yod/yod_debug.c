@@ -63,6 +63,10 @@ void yod_debugf(const char *format,...) {
 	size_t datetime_len;
 	
 	TSRMLS_FETCH();
+	
+	if ((yod_runmode(TSRMLS_C) & 12) == 0) {
+		return;
+	}
 
 	time(&curtime);
 	ta = php_localtime_r(&curtime, &tmbuf);
@@ -92,6 +96,10 @@ void yod_debugl(char *sline TSRMLS_DC) {
 	char *buffer;
 	uint buffer_len;
 
+	if ((yod_runmode(TSRMLS_C) & 12) == 0) {
+		return;
+	}
+
 	if (sline) {
 		switch (sline[0]) {
 			case '-' :
@@ -117,6 +125,10 @@ void yod_debugl(char *sline TSRMLS_DC) {
 void yod_debugz(zval *pzval, int dump TSRMLS_DC) {
 	zval *ob_buffer;
 	int ob_start;
+
+	if ((yod_runmode(TSRMLS_C) & 12) == 0) {
+		return;
+	}
 
 #ifdef PHP_OUTPUT_NEWAPI
 	ob_start = php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS TSRMLS_CC);
