@@ -419,7 +419,7 @@ static int yod_controller_assign(yod_controller_t *object, zval *name, zval *val
 static int yod_controller_render(yod_controller_t *object, zval *response, char *view, uint view_len, zval *data TSRMLS_DC) {
 	zend_class_entry *scope;
 
-	zval *p_action, *p_name, *tpl_view, *retval;
+	zval *action, *name, *tpl_view, *retval;
 	zval **tpl_path, **tpl_data;
 
 	char *tpl_file, *view1, *view2;
@@ -436,9 +436,9 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 #endif
 
 	if (view_len == 0) {
-		p_action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
-		if (p_action || Z_TYPE_P(p_action) == IS_STRING) {
-			view_len = spprintf(&view1, 0, "%s", Z_STRVAL_P(p_action));
+		action = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_action"), 1 TSRMLS_CC);
+		if (action || Z_TYPE_P(action) == IS_STRING) {
+			view_len = spprintf(&view1, 0, "%s", Z_STRVAL_P(action));
 		}
 	} else {
 		view_len = spprintf(&view1, 0, "%s", view);
@@ -459,9 +459,9 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 	}
 
 	if (view1[0] != '/') {
-		p_name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
-		if (p_name && Z_TYPE_P(p_name) == IS_STRING) {
-			view_len = spprintf(&view2, 0, "/%s/%s", Z_STRVAL_P(p_name), view1);
+		name = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_name"), 1 TSRMLS_CC);
+		if (name && Z_TYPE_P(name) == IS_STRING && Z_STRLEN_P(name)) {
+			view_len = spprintf(&view2, 0, "/%s/%s", Z_STRVAL_P(name), view1);
 		} else {
 			view_len = spprintf(&view2, 0, "/%s", view1);
 		}
@@ -488,7 +488,7 @@ static int yod_controller_render(yod_controller_t *object, zval *response, char 
 		}
 	}
 
-	tpl_file_len = spprintf(&tpl_file, 0, "%s%s.php", Z_STRVAL_PP(tpl_path), view1);
+	tpl_file_len = spprintf(&tpl_file, 0, "%s%s%s", Z_STRVAL_PP(tpl_path), view1, yod_viewext(TSRMLS_C));
 	add_assoc_stringl(tpl_view, "tpl_file", tpl_file, tpl_file_len, 1);
 	efree(view1);
 

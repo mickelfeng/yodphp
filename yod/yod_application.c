@@ -102,7 +102,7 @@ static void yod_application_init_configs(yod_application_t *object, zval *config
 	ulong num_key;
 	HashPosition pos;
 
-	php_stream *stream;
+	php_stream *stream = NULL;
 	php_stream_dirent dirent;
 	php_stream_context *context = NULL;
 
@@ -124,37 +124,39 @@ static void yod_application_init_configs(yod_application_t *object, zval *config
 			yod_include(filepath, &config1, 0 TSRMLS_CC);
 		} else {
 			array_init(config1);
-
 			filepath_len = php_dirname(filepath, strlen(filepath));
-			stream = php_stream_opendir(filepath, ENFORCE_SAFE_MODE, context);
+			if (VCWD_ACCESS(filepath, F_OK) == 0) {
+				stream = php_stream_opendir(filepath, ENFORCE_SAFE_MODE | REPORT_ERRORS, context);	
+			}
+
 			if (stream) {
 				while (php_stream_readdir(stream, &dirent)) {
 					entry_len = strlen(dirent.d_name);
-
-					if (entry_len > 11 && strncmp(dirent.d_name + entry_len - 11, ".config.php", 11) == 0) {
-						spprintf(&filename, 0, "%s/%s", filepath, dirent.d_name);
-						if (VCWD_ACCESS(filename, F_OK) == 0) {
-							yod_include(filename, &value1, 0 TSRMLS_CC);
-							if (Z_TYPE_P(value1) == IS_ARRAY) {
-								if (entry_len == 15 && strncmp(dirent.d_name, "base", 4) == 0) {
-									php_array_merge(Z_ARRVAL_P(config1), Z_ARRVAL_P(value1), 0 TSRMLS_CC);
-								} else {
-									key_len = entry_len - 11;
-									str_key = estrndup(dirent.d_name, key_len);
-
-									if (zend_hash_find(Z_ARRVAL_P(config1), str_key, key_len + 1, (void **)&ppval) == SUCCESS &&
-										Z_TYPE_PP(ppval) == IS_ARRAY
-									) {
-										php_array_merge(Z_ARRVAL_P(value1), Z_ARRVAL_PP(ppval), 0 TSRMLS_CC);
-									}
-									add_assoc_zval_ex(config1, str_key, key_len + 1, value1);
-									efree(str_key);
-								}
-							}
-						}
-						efree(filename);
+					if (entry_len < 12 || strncmp(dirent.d_name + entry_len - 11, ".config.php", 11)) {
+						continue;
 					}
 
+					spprintf(&filename, 0, "%s/%s", filepath, dirent.d_name);
+					if (VCWD_ACCESS(filename, F_OK) == 0) {
+						yod_include(filename, &value1, 0 TSRMLS_CC);
+						if (Z_TYPE_P(value1) == IS_ARRAY) {
+							if (entry_len == 15 && strncmp(dirent.d_name, "base", 4) == 0) {
+								php_array_merge(Z_ARRVAL_P(config1), Z_ARRVAL_P(value1), 0 TSRMLS_CC);
+							} else {
+								key_len = entry_len - 11;
+								str_key = estrndup(dirent.d_name, key_len);
+
+								if (zend_hash_find(Z_ARRVAL_P(config1), str_key, key_len + 1, (void **)&ppval) == SUCCESS &&
+									Z_TYPE_PP(ppval) == IS_ARRAY
+								) {
+									php_array_merge(Z_ARRVAL_P(value1), Z_ARRVAL_PP(ppval), 0 TSRMLS_CC);
+								}
+								add_assoc_zval_ex(config1, str_key, key_len + 1, value1);
+								efree(str_key);
+							}
+						}
+					}
+					efree(filename);
 				}
 				php_stream_closedir(stream);
 			}
@@ -547,8 +549,9 @@ static int yod_application_errorlog(long errnum, char *errstr, uint errstr_len, 
 
 	logpath = yod_logpath(TSRMLS_C);
 	if (0 != VCWD_STAT(logpath, &st) || S_IFDIR != (st.st_mode & S_IFMT)) {
-		php_stream_mkdir(logpath, 0750,  PHP_STREAM_MKDIR_RECURSIVE, NULL);
+		php_stream_mkdir(logpath, 0750, REPORT_ERRORS, NULL);
 	}
+
 	spprintf(&logfile, 0, "%s/errors.log", logpath);
 	context = php_stream_context_from_zval(zcontext, 0);
 	stream = php_stream_open_wrapper_ex(logfile, "ab", 0, NULL, context);

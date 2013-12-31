@@ -60,6 +60,7 @@ extern zend_module_entry yod_module_entry;
 
 #define YOD_FORWARD					5
 #define YOD_CHARSET					"utf-8"
+#define YOD_VIEWEXT					".php"
 #define YOD_PATHVAR					""
 
 #define YOD_APP_CNAME				"Yod_Application"
@@ -111,6 +112,7 @@ extern zend_module_entry yod_module_entry;
 long yod_runmode(TSRMLS_D);
 long yod_forward(TSRMLS_D);
 char *yod_charset(TSRMLS_D);
+char *yod_viewext(TSRMLS_D);
 char *yod_pathvar(TSRMLS_D);
 char *yod_runpath(TSRMLS_D);
 char *yod_extpath(TSRMLS_D);
@@ -126,6 +128,7 @@ ZEND_BEGIN_MODULE_GLOBALS(yod)
 	long		forward;
 	long		runmode;
 	char		*charset;
+	char		*viewext;
 	char		*pathvar;
 	char		*runpath;
 	char		*extpath;

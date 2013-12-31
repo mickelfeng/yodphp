@@ -185,8 +185,9 @@ int yod_debugw(char *data, uint data_len TSRMLS_DC) {
 
 	logpath = yod_logpath(TSRMLS_C);
 	if (0 != VCWD_STAT(logpath, &st) || S_IFDIR != (st.st_mode & S_IFMT)) {
-		php_stream_mkdir(logpath, 0750,  PHP_STREAM_MKDIR_RECURSIVE, NULL);
+		php_stream_mkdir(logpath, 0750,  REPORT_ERRORS, NULL);
 	}
+	
 	spprintf(&logfile, 0, "%s/debugs.log", logpath);
 	context = php_stream_context_from_zval(zcontext, 0);
 	stream = php_stream_open_wrapper_ex(logfile, "ab", 0, NULL, context);

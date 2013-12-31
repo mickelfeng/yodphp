@@ -278,6 +278,30 @@ char *yod_charset(TSRMLS_D) {
 }
 /* }}} */
 
+/** {{{ char *yod_viewext(TSRMLS_D)
+*/
+char *yod_viewext(TSRMLS_D) {
+	zval viewext;
+
+	if (!YOD_G(viewext)) {
+		if (zend_get_constant(ZEND_STRL("YOD_VIEWEXT"), &viewext TSRMLS_CC)) {
+			YOD_G(viewext) = Z_STRVAL(viewext);
+		} else {
+			INIT_ZVAL(viewext);
+			ZVAL_STRING(&viewext, YOD_VIEWEXT, 1);
+			YOD_G(viewext) = estrndup(YOD_VIEWEXT, strlen(YOD_VIEWEXT));
+			zend_register_string_constant(ZEND_STRS("YOD_VIEWEXT"), Z_STRVAL(viewext), CONST_CS, 0 TSRMLS_CC);
+		}
+	}
+
+#if PHP_YOD_DEBUG
+	yod_debugf("yod_viewext():%s", YOD_G(viewext));
+#endif
+
+	return YOD_G(viewext);
+}
+/* }}} */
+
 /** {{{ char *yod_pathvar(TSRMLS_D)
 */
 char *yod_pathvar(TSRMLS_D) {
@@ -465,6 +489,7 @@ PHP_GINIT_FUNCTION(yod)
 	yod_globals->forward	= 0;
 	yod_globals->runmode	= 0;
 	yod_globals->charset	= NULL;
+	yod_globals->viewext	= NULL;
 	yod_globals->pathvar	= NULL;
 	yod_globals->runpath	= NULL;
 	yod_globals->extpath	= NULL;
@@ -525,6 +550,7 @@ PHP_RINIT_FUNCTION(yod)
 	YOD_G(forward)			= 0;
 	YOD_G(runmode)			= 0;
 	YOD_G(charset)			= NULL;
+	YOD_G(viewext)			= NULL;
 	YOD_G(pathvar)			= NULL;
 	YOD_G(runpath)			= NULL;
 	YOD_G(extpath)			= NULL;
@@ -560,6 +586,11 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 	if (YOD_G(charset)) {
 		efree(YOD_G(charset));
 		YOD_G(charset) = NULL;
+	}
+
+	if (YOD_G(viewext)) {
+		efree(YOD_G(viewext));
+		YOD_G(viewext) = NULL;
 	}
 	
 	if (YOD_G(pathvar)) {
