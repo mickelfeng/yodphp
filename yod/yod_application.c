@@ -126,7 +126,7 @@ static void yod_application_init_configs(yod_application_t *object, zval *config
 			array_init(config1);
 
 			filepath_len = php_dirname(filepath, strlen(filepath));
-			stream = php_stream_opendir(filepath, ENFORCE_SAFE_MODE | REPORT_ERRORS, context);
+			stream = php_stream_opendir(filepath, ENFORCE_SAFE_MODE, context);
 			if (stream) {
 				while (php_stream_readdir(stream, &dirent)) {
 					entry_len = strlen(dirent.d_name);
