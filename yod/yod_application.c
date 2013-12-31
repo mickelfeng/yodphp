@@ -93,107 +93,6 @@ ZEND_BEGIN_ARG_INFO_EX(yod_application_destruct_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-#ifdef PHP_WIN32
-/** {{{ DIR *opendir(const char *dir)
- * */
-static DIR *opendir(const char *dir) {
-	DIR *dp;
-	char *filespec;
-	HANDLE handle;
-	int index;
-	char resolved_path_buff[MAXPATHLEN];
-	TSRMLS_FETCH();
-
-	if (!VCWD_REALPATH(dir, resolved_path_buff)) {
-		return NULL;
-	}
-
-	filespec = (char *)malloc(strlen(resolved_path_buff) + 2 + 1);
-	if (filespec == NULL) {
-		return NULL;
-	}
-	strcpy(filespec, resolved_path_buff);
-	index = strlen(filespec) - 1;
-	if (index >= 0 && (filespec[index] == '/' || 
-	   (filespec[index] == '\\' && (index == 0 || !IsDBCSLeadByte(filespec[index-1])))))
-		filespec[index] = '\0';
-	strcat(filespec, "\\*");
-
-	dp = (DIR *) malloc(sizeof(DIR));
-	if (dp == NULL) {
-		return NULL;
-	}
-	dp->offset = 0;
-	dp->finished = 0;
-
-	if ((handle = FindFirstFile(filespec, &(dp->fileinfo))) == INVALID_HANDLE_VALUE) {
-		DWORD err = GetLastError();
-		if (err == ERROR_NO_MORE_FILES || err == ERROR_FILE_NOT_FOUND) {
-			dp->finished = 1;
-		} else {
-			free(dp);
-			free(filespec);
-			return NULL;
-		}
-	}
-	dp->dir = strdup(resolved_path_buff);
-	dp->handle = handle;
-	free(filespec);
-
-	return dp;
-}
-/* }}} */
-
-/** {{{ int readdir_r(DIR *dp, struct dirent *entry, struct dirent **result)
- * */
-static int readdir_r(DIR *dp, struct dirent *entry, struct dirent **result) {
-	if (!dp || dp->finished) {
-		*result = NULL;
-		return 0;
-	}
-
-	if (dp->offset != 0) {
-		if (FindNextFile(dp->handle, &(dp->fileinfo)) == 0) {
-			dp->finished = 1;
-			*result = NULL;
-			return 0;
-		}
-	}
-	dp->offset++;
-
-	strlcpy(dp->dent.d_name, dp->fileinfo.cFileName, _MAX_FNAME+1);
-	dp->dent.d_ino = 1;
-	dp->dent.d_reclen = strlen(dp->dent.d_name);
-	dp->dent.d_off = dp->offset;
-
-	memcpy(entry, &dp->dent, sizeof(*entry));
-
-	*result = &dp->dent;
-
-	return 0;
-}
-/* }}} */
-
-/** {{{ int closedir(DIR *dp)
- * */
-static int closedir(DIR *dp) {
-	if (!dp)
-		return 0;
-	/* It is valid to scan an empty directory but we have an invalid
-	   handle in this case (no first file found). */
-	if (dp->handle != INVALID_HANDLE_VALUE) {
-		FindClose(dp->handle);
-	}
-	if (dp->dir)
-		free(dp->dir);
-	if (dp)
-		free(dp);
-
-	return 0;
-}
-/* }}} */
-#endif
-
 /** {{{ static void yod_application_init_configs(yod_application_t *object, zval *config TSRMLS_DC)
 */
 static void yod_application_init_configs(yod_application_t *object, zval *config TSRMLS_DC) {
@@ -203,9 +102,9 @@ static void yod_application_init_configs(yod_application_t *object, zval *config
 	ulong num_key;
 	HashPosition pos;
 
-	DIR *dir = NULL;
-	char dentry[sizeof(struct dirent) + MAXPATHLEN];
-	struct dirent *entry = (struct dirent *) &dentry;
+	php_stream *stream;
+	php_stream_dirent dirent;
+	php_stream_context *context = NULL;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_application_init_configs()");
@@ -227,21 +126,21 @@ static void yod_application_init_configs(yod_application_t *object, zval *config
 			array_init(config1);
 
 			filepath_len = php_dirname(filepath, strlen(filepath));
-			dir = VCWD_OPENDIR(filepath);
-			if (dir) {
-				while (php_readdir_r(dir, (struct dirent *) dentry, &entry) == 0 && entry) {
-					entry_len = strlen(entry->d_name);
+			stream = php_stream_opendir(filepath, ENFORCE_SAFE_MODE | REPORT_ERRORS, context);
+			if (stream) {
+				while (php_stream_readdir(stream, &dirent)) {
+					entry_len = strlen(dirent.d_name);
 
-					if (entry_len > 11 && strncmp(entry->d_name + entry_len - 11, ".config.php", 11) == 0) {
-						spprintf(&filename, 0, "%s/%s", filepath, entry->d_name);
+					if (entry_len > 11 && strncmp(dirent.d_name + entry_len - 11, ".config.php", 11) == 0) {
+						spprintf(&filename, 0, "%s/%s", filepath, dirent.d_name);
 						if (VCWD_ACCESS(filename, F_OK) == 0) {
 							yod_include(filename, &value1, 0 TSRMLS_CC);
 							if (Z_TYPE_P(value1) == IS_ARRAY) {
-								if (entry_len == 15 && strncmp(entry->d_name, "base", 4) == 0) {
+								if (entry_len == 15 && strncmp(dirent.d_name, "base", 4) == 0) {
 									php_array_merge(Z_ARRVAL_P(config1), Z_ARRVAL_P(value1), 0 TSRMLS_CC);
 								} else {
 									key_len = entry_len - 11;
-									str_key = estrndup(entry->d_name, key_len);
+									str_key = estrndup(dirent.d_name, key_len);
 
 									if (zend_hash_find(Z_ARRVAL_P(config1), str_key, key_len + 1, (void **)&ppval) == SUCCESS &&
 										Z_TYPE_PP(ppval) == IS_ARRAY
@@ -255,9 +154,9 @@ static void yod_application_init_configs(yod_application_t *object, zval *config
 						}
 						efree(filename);
 					}
-					
+
 				}
-				closedir(dir);
+				php_stream_closedir(stream);
 			}
 		}
 		efree(filepath);
@@ -635,10 +534,12 @@ static int yod_application_errorlog(long errnum, char *errstr, uint errstr_len, 
 	 	case E_STRICT:
 	 		errtype = "Strict";
 	 		break;
+#ifdef E_DEPRECATED
 	 	case E_DEPRECATED:
 	 	case E_USER_DEPRECATED:
 	 		errtype = "Deprecated";
 	 		break;
+#endif
 	 	default:
 	 		errtype = "Unknown";
 	 		break;
