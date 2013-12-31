@@ -15,6 +15,7 @@ defined('YOD_VERSION') or define('YOD_VERSION', '1.2.1');
 defined('YOD_FORWARD') or define('YOD_FORWARD', 5);
 defined('YOD_RUNMODE') or define('YOD_RUNMODE', 3);
 defined('YOD_CHARSET') or define('YOD_CHARSET', 'utf-8');
+defined('YOD_VIEWEXT') or define('YOD_VIEWEXT', '.php');
 defined('YOD_PATHVAR') or define('YOD_PATHVAR', '');
 defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__));
 defined('YOD_LOGPATH') or define('YOD_LOGPATH', dirname(__FILE__));
@@ -653,13 +654,17 @@ abstract class Yod_Controller
 		}
 
 		if (substr($view, 0, 1) != '/') {
-			$view = '/' . $this->_name . '/' . $view;
+			if (empty($this->_name)) {
+				$view = '/' . $view;
+			} else {
+				$view = '/' . $this->_name . '/' . $view;
+			}
 		}
 		if (empty($this->_view['tpl_path']) || !is_string($this->_view['tpl_path'])) {
 			trigger_error('Unavailable property ' . __CLASS__ . '::$_view', E_USER_WARNING);
 			return null;
 		}
-		$this->_view['tpl_file'] = $this->_view['tpl_path'] . strtolower($view) . '.php';
+		$this->_view['tpl_file'] = $this->_view['tpl_path'] . strtolower($view) . YOD_VIEWEXT;
 		unset($view);
 
 		// tpl_data
@@ -820,6 +825,9 @@ abstract class Yod_Widget extends Yod_Controller
 		$this->_action = empty($action) ? 'index' : strtolower($action);
 		$this->_request = $request;
 		$this->_view['tpl_path'] = YOD_RUNPATH . '/widgets';
+		if ($tpl_data = $this->config('tpl_data')) {
+			$this->_view['tpl_data'] = $tpl_data;
+		}
 
 		$this->init();
 
