@@ -162,10 +162,6 @@ int yod_register(char *moduel, char *method TSRMLS_DC) {
 	zval **params[1] = {&param1};
 	zend_fcall_info fci;
 
-#if PHP_YOD_DEBUG
-	yod_debugf("yod_register(%s)", method);
-#endif
-
 	MAKE_STD_ZVAL(param1);
 	array_init(param1);
 	add_next_index_string(param1, YOD_APP_CNAME, 1);
