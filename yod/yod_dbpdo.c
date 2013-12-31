@@ -228,20 +228,20 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 
 			// argv.user
 			if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("user"), (void **)&ppval) == SUCCESS &&
-				Z_TYPE_PP(ppval) == IS_STRING && Z_STRLEN_PP(ppval)
+				Z_TYPE_PP(ppval) == IS_STRING
 			) {
 				ZVAL_STRINGL(argv[1], Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
 			} else {
-				ZVAL_STRING(argv[1], "", 1);
+				ZVAL_NULL(argv[1]);
 			}
 
 			// argv.pass
 			if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("pass"), (void **)&ppval) == SUCCESS &&
-				Z_TYPE_PP(ppval) == IS_STRING && Z_STRLEN_PP(ppval)
+				Z_TYPE_PP(ppval) == IS_STRING
 			) {
 				ZVAL_STRINGL(argv[2], Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
 			} else {
-				ZVAL_STRING(argv[2], "", 1);
+				ZVAL_NULL(argv[2]);
 			}
 
 			// argv.options
