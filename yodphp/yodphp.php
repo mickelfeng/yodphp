@@ -703,7 +703,7 @@ abstract class Yod_Controller
 	 * @param string $route
 	 * @return void
 	 */
-	protected function widget($route)
+	protected function widget($route, $params = array())
 	{
 		$route = str_replace('\\', '/', $route);
 		$route = str_replace('//', '/', $route);
@@ -711,15 +711,18 @@ abstract class Yod_Controller
 
 		$widget = empty($route[0]) ? 'Index' : ucfirst(strtolower($route[0]));
 		$action = empty($route[1]) ? 'index' : strtolower($route[1]);
-		$params = array();
+		$params1 = array();
 		$count = count($route);
 		for ($i=2; $i<$count; $i+=2) {
-			$params[$route[$i]] = empty($route[$i+1]) ? '' : $route[$i+1];
+			$params1[$route[$i]] = empty($route[$i+1]) ? '' : $route[$i+1];
+		}
+		if (is_array($params1)) {
+			$params1 = array_merge($params1, $params);
 		}
 
 		$classname = $widget . 'Widget';
 		if (class_exists($classname, false)) {
-			new $classname($this->_request, $action, $params);
+			new $classname($this->_request, $action, $params1);
 		} else {
 			$classpath = YOD_RUNPATH . '/widgets/' . $widget . 'Widget.php';
 			if (is_file($classpath)) {
