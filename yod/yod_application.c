@@ -429,12 +429,6 @@ static void yod_application_autorun(TSRMLS_D) {
 		}
 		zval_dtor(&runpath);
 	}
-
-#if PHP_YOD_DEBUG
-	if (YOD_G(yodapp)) {
-		yod_debugs(TSRMLS_C);
-	}
-#endif
 }
 /* }}} */
 
@@ -696,6 +690,10 @@ PHP_METHOD(yod_application, __destruct) {
 	if (!YOD_G(running) && !YOD_G(exited)) {
 		yod_application_run(TSRMLS_C);
 	}
+
+#if PHP_YOD_DEBUG
+	yod_debugs(TSRMLS_C);
+#endif
 }
 /* }}} */
 

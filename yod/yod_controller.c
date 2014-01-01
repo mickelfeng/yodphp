@@ -89,6 +89,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_widget_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, route)
+	ZEND_ARG_INFO(0, params)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(yod_controller_forward_arginfo, 0, 0, 1)
@@ -586,11 +587,11 @@ static int yod_controller_display(yod_controller_t *object, char *view, size_t v
 }
 /* }}} */
 
-/** {{{ static void yod_controller_widget(yod_controller_t *object, char *route, uint route_len TSRMLS_DC)
+/** {{{ static void yod_controller_widget(yod_controller_t *object, char *route, uint route_len, zval *params TSRMLS_DC)
 */
-static void yod_controller_widget(yod_controller_t *object, char *route, uint route_len TSRMLS_DC) {
+static void yod_controller_widget(yod_controller_t *object, char *route, uint route_len, zval *params TSRMLS_DC) {
 	yod_request_t *request;
-	zval *params, *target, *action1, *retval, *pzval;
+	zval *params1, *target, *action1, *retval, *pzval;
 	char *widget, *action, *classpath, *route1, *route2;
 	char *classname, *key, *value, *token;
 	uint classname_len, key_len;
@@ -644,8 +645,8 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	}
 
 	// params
-	MAKE_STD_ZVAL(params);
-	array_init(params);
+	MAKE_STD_ZVAL(params1);
+	array_init(params1);
 
 	while (key = php_strtok_r(NULL, "/", &token)) {
 		key_len = strlen(key);
@@ -657,11 +658,15 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 			} else {
 				ZVAL_NULL(pzval);
 			}
-			zend_hash_update(Z_ARRVAL_P(params), key, key_len + 1, (void **)&pzval, sizeof(zval *), NULL);
+			zend_hash_update(Z_ARRVAL_P(params1), key, key_len + 1, (void **)&pzval, sizeof(zval *), NULL);
 			if (HASH_OF(PG(http_globals)[TRACK_VARS_GET])) {
 				zend_hash_update(HASH_OF(PG(http_globals)[TRACK_VARS_GET]), key, key_len + 1, (void **)&pzval, sizeof(zval *), NULL);
 			}
 		}
+	}
+
+	if (params && Z_TYPE_P(params) == IS_ARRAY) {
+		php_array_merge(Z_ARRVAL_P(params1), Z_ARRVAL_P(params), 0 TSRMLS_CC);
 	}
 
 	MAKE_STD_ZVAL(action1);
@@ -677,7 +682,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 		MAKE_STD_ZVAL(target);
 		object_init_ex(target, *pce);
 		if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-			yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params, NULL TSRMLS_CC);
+			yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params1, NULL TSRMLS_CC);
 		}
 		zval_ptr_dtor(&target);
 	} else {
@@ -692,7 +697,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 				MAKE_STD_ZVAL(target);
 				object_init_ex(target, *pce);
 				if (zend_hash_exists(&(*pce)->function_table, ZEND_STRS(ZEND_CONSTRUCTOR_FUNC_NAME))) {
-					yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params, NULL TSRMLS_CC);
+					yod_call_method(target, ZEND_STRL(ZEND_CONSTRUCTOR_FUNC_NAME), NULL, 3, request, action1, params1, NULL TSRMLS_CC);
 				}
 				zval_ptr_dtor(&target);
 			} else {
@@ -704,7 +709,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 		efree(classpath);
 	}
 	zval_ptr_dtor(&action1);
-	zval_ptr_dtor(&params);
+	zval_ptr_dtor(&params1);
 	efree(classname);
 	efree(route1);
 	efree(action);
@@ -909,17 +914,18 @@ PHP_METHOD(yod_controller, display) {
 }
 /* }}} */
 
-/** {{{ proto protected Yod_Controller::widget($route)
+/** {{{ proto protected Yod_Controller::widget($route, $params = array())
 */
 PHP_METHOD(yod_controller, widget) {
-	char *route;
-	uint route_len;
+	zval *params = NULL;
+	char *route = NULL;
+	uint route_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &route, &route_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|z!", &route, &route_len, &params) == FAILURE) {
 		return;
 	}
 
-	yod_controller_widget(getThis(), route, route_len TSRMLS_CC);
+	yod_controller_widget(getThis(), route, route_len, params TSRMLS_CC);
 }
 /* }}} */
 

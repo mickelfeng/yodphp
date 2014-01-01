@@ -24,6 +24,7 @@
 #include "Zend/zend_interfaces.h"
 
 #include "php_yod.h"
+#include "yod_application.h"
 #include "yod_controller.h"
 #include "yod_widget.h"
 
