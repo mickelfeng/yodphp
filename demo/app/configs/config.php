@@ -9,8 +9,8 @@ return array(
 		'dbname' => 'yodphp',
 		'prefix' => 'yod_',
 		'charset' => 'utf8',
-	),
-	'db_slave' => array(
+		'slaves' => array(
 
+		),
 	),
 );
