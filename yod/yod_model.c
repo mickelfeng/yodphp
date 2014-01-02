@@ -321,7 +321,7 @@ int yod_model_getinstance(char *name, uint name_len, zval *config, zval *retval 
 }
 /* }}} */
 
-/** {{{ proto public Yod_Model::__construct($name = '', $config = '')
+/** {{{ proto public Yod_Model::__construct($name = '', $config = null)
 */
 PHP_METHOD(yod_model, __construct) {
 	char *name = NULL;
@@ -343,7 +343,7 @@ PHP_METHOD(yod_model, init) {
 }
 /* }}} */
 
-/** {{{ proto public Yod_Model::getInstance($name = '', $config = '')
+/** {{{ proto public Yod_Model::getInstance($name = '', $config = null)
 */
 PHP_METHOD(yod_model, getInstance) {
 	char *name = NULL;
@@ -643,7 +643,7 @@ PHP_METHOD(yod_model, import) {
 }
 /* }}} */
 
-/** {{{ proto public Yod_Model::model($name = '', $config = '')
+/** {{{ proto public Yod_Model::model($name = '', $config = null)
 */
 PHP_METHOD(yod_model, model) {
 	zval *config = NULL;
@@ -666,7 +666,7 @@ PHP_METHOD(yod_model, model) {
 }
 /* }}} */
 
-/** {{{ proto public Yod_Model::dbmodel($name = '', $config = '')
+/** {{{ proto public Yod_Model::dbmodel($name = '', $config = null)
 */
 PHP_METHOD(yod_model, dbmodel) {
 	zval *config = NULL;

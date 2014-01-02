@@ -1189,7 +1189,7 @@ static int yod_dbmodel_remove(yod_dbmodel_t *object, char *where, uint where_len
 }
 /* }}} */
 
-/** {{{ proto public Yod_DbModel::__construct($name = '', $config = '')
+/** {{{ proto public Yod_DbModel::__construct($name = '', $config = null)
 */
 PHP_METHOD(yod_dbmodel, __construct) {
 	zval *config = NULL;
@@ -1205,7 +1205,7 @@ PHP_METHOD(yod_dbmodel, __construct) {
 }
 /* }}} */
 
-/** {{{ proto public Yod_DbModel::getInstance($name = '', $config = '')
+/** {{{ proto public Yod_DbModel::getInstance($name = '', $config = null)
 */
 PHP_METHOD(yod_dbmodel, getInstance) {
 	zval *config = NULL;
