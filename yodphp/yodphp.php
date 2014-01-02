@@ -127,8 +127,8 @@ final class Yod_Application
 	/**
 	 * config
 	 * @access public
-	 * @param mixed
-	 * @return array
+	 * @param string $name
+	 * @return mixed
 	 */
 	public function config($name = null)
 	{
@@ -462,7 +462,7 @@ final class Yod_Request
 	/**
 	 * error404
 	 * @access public
-	 * @param mixed $html
+	 * @param string $html
 	 * @return void
 	 */
 	public function error404($html = null)
@@ -510,8 +510,7 @@ abstract class Yod_Controller
 	 * __construct
 	 * @access public
 	 * @param Yod_Request $request
-	 * @param mixed $action
-	 * @param mixed $params
+	 * @param string $action
 	 * @return void
 	 */
 	public function __construct($request, $action = null)
@@ -618,7 +617,7 @@ abstract class Yod_Controller
 	/**
 	 * assign
 	 * @access protected
-	 * @param mixed $name
+	 * @param string $name
 	 * @param mixed $value
 	 * @return Yod_Controller
 	 */
@@ -637,7 +636,7 @@ abstract class Yod_Controller
 	/**
 	 * render
 	 * @access protected
-	 * @param mixed $view
+	 * @param string $view
 	 * @param array $data
 	 * @return string
 	 */
@@ -687,7 +686,7 @@ abstract class Yod_Controller
 	/**
 	 * display
 	 * @access protected
-	 * @param mixed $view
+	 * @param string $view
 	 * @param array $data
 	 * @return void
 	 */
@@ -701,6 +700,7 @@ abstract class Yod_Controller
 	 * widget
 	 * @access protected
 	 * @param string $route
+	 * @param array $params
 	 * @return void
 	 */
 	protected function widget($route, $params = array())
@@ -817,8 +817,8 @@ abstract class Yod_Widget extends Yod_Controller
 	 * __construct
 	 * @access public
 	 * @param Yod_Request $request
-	 * @param mixed $action
-	 * @param mixed $params
+	 * @param string $action
+	 * @param array $params
 	 * @return void
 	 */
 	public function __construct($request, $action = null, $params = null)
@@ -873,9 +873,11 @@ class Yod_Model
 	/**
 	 * __construct
 	 * @access public
+	 * @param string $name
+	 * @param mixed $config
 	 * @return void
 	 */
-	public function __construct($name = '', $config = '')
+	public function __construct($name = '', $config = null)
 	{
 		if (empty($name)) {
 			if (empty($this->_name)) {
@@ -920,7 +922,7 @@ class Yod_Model
 	 * @param mixed		$config
 	 * @return Yod_Model
 	 */
-	public static function getInstance($name = '', $config = '')
+	public static function getInstance($name = '', $config = null)
 	{
 		if (empty($name)) {
 			$classname = 'Yod_Model';
@@ -1081,7 +1083,7 @@ class Yod_Model
 	 * @param mixed $config
 	 * @return Yod_Model
 	 */
-	protected function dbmodel($name = '', $config = '')
+	protected function dbmodel($name = '', $config = null)
 	{
 		return Yod_DbModel::getInstance($name, $config);
 	}
@@ -1101,9 +1103,11 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * __construct
 	 * @access public
+	 * @param string $name
+	 * @param mixed $config
 	 * @return void
 	 */
-	public function __construct($name = '', $config = '')
+	public function __construct($name = '', $config = null)
 	{
 		parent::__construct($name, $config);
 
@@ -1117,7 +1121,7 @@ class Yod_DbModel extends Yod_Model
 	 * @param mixed		$config
 	 * @return Yod_DbModel
 	 */
-	public static function getInstance($name = '', $config = '')
+	public static function getInstance($name = '', $config = null)
 	{
 		$name = ucfirst($name);
 		if (empty(self::$_model[$name])) {
@@ -1423,7 +1427,7 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * parseQuery
 	 * @access public
-	 * @param mixed		$query
+	 * @param array		$query
 	 * @return mixed
 	 */
 	public function parseQuery($query = null)
@@ -1509,6 +1513,7 @@ abstract class Yod_Database
 	/**
 	 * __construct
 	 * @access public
+	 * @param array $config
 	 * @return void
 	 */
 	public function __construct($config)
@@ -1520,6 +1525,7 @@ abstract class Yod_Database
 	/**
 	 * __construct
 	 * @access public
+	 * @param void
 	 * @return void
 	 */
 	public function __destruct()
@@ -1577,7 +1583,8 @@ abstract class Yod_Database
 	/**
 	 * config
 	 * @access public
-	 * @param void
+	 * @param string $name
+	 * @param mixed $value
 	 * @return array
 	 */
 	public function config($name = '', $value = null)
@@ -1609,6 +1616,9 @@ abstract class Yod_Database
 	/**
 	 * create
 	 * @access public
+	 * @param mixed $fields
+	 * @param string $table
+	 * @param string $extend
 	 * @return mixed
 	 */
 	public function create($fields, $table, $extend = '')
@@ -1624,6 +1634,9 @@ abstract class Yod_Database
 	/**
 	 * insert
 	 * @access public
+	 * @param array $data
+	 * @param string $table
+	 * @param boolean $replace
 	 * @return mixed
 	 */
 	public function insert($data, $table, $replace=false)
@@ -1645,6 +1658,10 @@ abstract class Yod_Database
 	/**
 	 * update
 	 * @access public
+	 * @param array $data
+	 * @param string $table
+	 * @param string $where
+	 * @param array $params
 	 * @return integer
 	 */
 	public function update($data, $table, $where = null, $params = array())
@@ -1666,6 +1683,9 @@ abstract class Yod_Database
 	/**
 	 * delete
 	 * @access public
+	 * @param string $table
+	 * @param string $where
+	 * @param array $params
 	 * @return integer
 	 */
 	public function delete($table, $where = null, $params = array())
@@ -1678,6 +1698,11 @@ abstract class Yod_Database
 	/**
 	 * select
 	 * @access public
+	 * @param string $select
+	 * @param string $table
+	 * @param string $where
+	 * @param array $params
+	 * @param string $extend
 	 * @return mixed
 	 */
 	public function select($select, $table, $where = null, $params = array(), $extend = null)
@@ -1698,6 +1723,7 @@ abstract class Yod_Database
 	/**
 	 * lastQuery
 	 * @access public
+	 * @param void
 	 * @return string
 	 */
 	public function lastQuery()
@@ -1708,11 +1734,12 @@ abstract class Yod_Database
 	/**
 	 * dbconfig
 	 * @access protected
-	 * @return void
+	 * @param array $config
+	 * @param integer $linknum
+	 * @return array
 	 */
 	protected function dbconfig($config, $linknum = 0)
 	{
-
 		if (empty($config)) {
 			$config = $this->_config;
 		}
@@ -1750,6 +1777,7 @@ abstract class Yod_Database
 	/**
 	* fields
 	* @access public
+	* @param string $table
 	* @return array
 	*/
 	abstract public function fields($table);
@@ -1757,6 +1785,9 @@ abstract class Yod_Database
 	/**
 	 * execute
 	 * @access public
+	 * @param string $query
+	 * @param array $params
+	 * @param boolean $affected
 	 * @return mixed
 	 */
 	abstract public function execute($query, $params = array(), $affected = false);
@@ -1764,6 +1795,8 @@ abstract class Yod_Database
 	/**
 	 * query
 	 * @access public
+	 * @param string $query
+	 * @param array $params
 	 * @return mixed
 	 */
 	abstract public function query($query, $params = array());
@@ -1771,6 +1804,7 @@ abstract class Yod_Database
 	/**
 	 * fetch
 	 * @access public
+	 * @param mixed $result
 	 * @return mixed
 	 */
 	abstract public function fetch($result = null);
@@ -1778,6 +1812,7 @@ abstract class Yod_Database
 	/**
 	 * fetchAll
 	 * @access public
+	 * @param mixed $result
 	 * @return mixed
 	 */
 	abstract public function fetchAll($result = null);
@@ -1785,6 +1820,7 @@ abstract class Yod_Database
 	/**
 	 * transaction
 	 * @access public
+	 * @param void
 	 * @return boolean 
 	 */
 	abstract public function transaction();
@@ -1792,6 +1828,7 @@ abstract class Yod_Database
 	/**
 	 * commit
 	 * @access public
+	 * @param void
 	 * @return boolean 
 	 */
 	abstract public function commit();
@@ -1799,6 +1836,7 @@ abstract class Yod_Database
 	/**
 	 * rollback
 	 * @access public
+	 * @param void
 	 * @return boolean 
 	 */
 	abstract public function rollback();
@@ -1806,6 +1844,7 @@ abstract class Yod_Database
 	/**
 	 * insertid
 	 * @access public
+	 * @param void
 	 * @return integer
 	 */
 	abstract public function insertid();
@@ -1813,6 +1852,7 @@ abstract class Yod_Database
 	/**
 	 * quote
 	 * @access public
+	 * @param string $string
 	 * @return string
 	 */
 	abstract public function quote($string);
@@ -1820,14 +1860,16 @@ abstract class Yod_Database
 	/**
 	 * free
 	 * @access public
-	 * @return mixed
+	 * @param mixed $result
+	 * @return void
 	 */
 	abstract public function free($result = null);
 
 	/**
 	 * close
 	 * @access public
-	 * @return mixed
+	 * @param void
+	 * @return void
 	 */
 	abstract public function close();
 
@@ -1842,7 +1884,7 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * __construct
 	 * @access public
-	 * @param mixed $config
+	 * @param array $config
 	 * @return void
 	 */
 	public function __construct($config)
@@ -1891,10 +1933,11 @@ class Yod_DbPdo extends Yod_Database
 	}
 
 	/**
-	* fields
-	* @access public
-	* @return array
-	*/
+	 * fields
+	 * @access public
+	 * @param string $table
+	 * @return array
+	 */
 	public function fields($table)
 	{
 		$fields = array();
@@ -1919,6 +1962,9 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * execute
 	 * @access public
+	 * @param string $query
+	 * @param array $params
+	 * @param boolean $affected
 	 * @return boolean
 	 */
 	public function execute($query, $params = array(), $affected = false)
@@ -1952,6 +1998,8 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * query
 	 * @access public
+	 * @param string $query
+	 * @param array $params
 	 * @return mixed
 	 */
 	public function query($query, $params = array())
@@ -1980,6 +2028,7 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * fetch
 	 * @access public
+	 * @param mixed $result
 	 * @return mixed
 	 */
 	public function fetch($result = null)
@@ -1996,6 +2045,7 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * fetchAll
 	 * @access public
+	 * @param mixed $result
 	 * @return mixed
 	 */
 	public function fetchAll($result = null)
@@ -2012,7 +2062,8 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * transaction
 	 * @access public
-	 * @return boolean 
+	 * @param void
+	 * @return boolean
 	 */
 	public function transaction()
 	{
@@ -2024,7 +2075,8 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * commit
 	 * @access public
-	 * @return boolean 
+	 * @param void
+	 * @return boolean
 	 */
 	public function commit()
 	{
@@ -2036,7 +2088,8 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * rollback
 	 * @access public
-	 * @return boolean 
+	 * @param void
+	 * @return boolean
 	 */
 	public function rollback()
 	{
@@ -2048,6 +2101,7 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * insertid
 	 * @access public
+	 * @param void
 	 * @return integer
 	 */
 	public function insertid()
@@ -2058,6 +2112,7 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * quote
 	 * @access public
+	 * @param string $result
 	 * @return string
 	 */
 	public function quote($string)
@@ -2068,7 +2123,8 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * free
 	 * @access public
-	 * @return mixed
+	 * @param mixed $result
+	 * @return void
 	 */
 	public function free($result = null)
 	{
@@ -2082,7 +2138,8 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * close
 	 * @access public
-	 * @return mixed
+	 * @param void
+	 * @return void
 	 */
 	public function close()
 	{
@@ -2099,6 +2156,7 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * errno
 	 * @access public
+	 * @param void
 	 * @return mixed
 	 */
 	public function errno()
@@ -2115,6 +2173,7 @@ class Yod_DbPdo extends Yod_Database
 	/**
 	 * error
 	 * @access public
+	 * @param void
 	 * @return mixed
 	 */
 	public function error()
