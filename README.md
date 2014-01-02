@@ -71,7 +71,7 @@ class HelloController extends Yod_Controller
 {
 	public function indexAction()
 	{
-		$this->assign($content, 'Hello World');
+		$this->assign('content', 'Hello World');
 		$this->display('/index/index');
 	}
 
