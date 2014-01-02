@@ -23,6 +23,7 @@
 #include "php.h"
 #include "main/SAPI.h"
 #include "Zend/zend_interfaces.h"
+#include "ext/standard/php_array.h"
 #include "ext/standard/php_string.h"
 
 #include "php_yod.h"
