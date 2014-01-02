@@ -1482,7 +1482,7 @@ class Yod_DbModel extends Yod_Model
 			'HAVING' => '',
 			'ORDER BY' => '',
 			'LIMIT' => '',
-			'UNION' => '',
+			'UNION' => array(),
 			'COMMENT' => '',
 		);
 		$this->_params = array();
