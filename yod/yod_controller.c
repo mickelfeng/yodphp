@@ -254,8 +254,8 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 			}
 		} else {
 			if (zend_hash_exists(&(Z_OBJCE_P(object))->function_table, ZEND_STRS("erroraction"))) {
-				if (p_params) {
-					zend_call_method_with_1_params(&object, Z_OBJCE_P(object), NULL, "erroraction", NULL, p_params);
+				if (params) {
+					zend_call_method_with_1_params(&object, Z_OBJCE_P(object), NULL, "erroraction", NULL, params);
 				} else {
 					zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "erroraction", NULL);
 				}
