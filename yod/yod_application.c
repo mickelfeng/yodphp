@@ -434,9 +434,12 @@ static void yod_application_autorun(TSRMLS_D) {
 static int yod_application_autoload(char *classname, uint classname_len TSRMLS_DC) {
 	zend_class_entry **pce = NULL;
 	char *classfile, *classpath;
-	zval *retval;
+	zval runpath;
 
-	if (!YOD_G(yodapp)) return 0;
+	if (!zend_get_constant(ZEND_STRL("YOD_RUNPATH"), &runpath TSRMLS_CC)) {
+		return 0;
+	}
+	zval_dtor(&runpath);
 
 	classfile = estrndup(classname, classname_len);
 	// class name with namespace in PHP 5.3
@@ -466,7 +469,7 @@ static int yod_application_autoload(char *classname, uint classname_len TSRMLS_D
 	efree(classfile);
 
 	if (VCWD_ACCESS(classpath, F_OK) == 0) {
-		yod_include(classpath, &retval, 1 TSRMLS_CC);
+		yod_include(classpath, NULL, 1 TSRMLS_CC);
 	}
 	
 #if PHP_YOD_DEBUG
