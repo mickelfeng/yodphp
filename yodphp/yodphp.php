@@ -20,6 +20,10 @@ defined('YOD_PATHVAR') or define('YOD_PATHVAR', '');
 defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__));
 defined('YOD_LOGPATH') or define('YOD_LOGPATH', dirname(__FILE__));
 
+
+// autoload
+spl_autoload_register(array('Yod_Application', 'autoload'));
+
 // yodphp autorun
 register_shutdown_function(array('Yod_Application', 'autorun'));
 
@@ -48,9 +52,6 @@ final class Yod_Application
 			trigger_error('Only one application can be initialized', E_USER_ERROR);
 			return;
 		}
-
-		// autoload
-		spl_autoload_register(array('Yod_Application', 'autoload'));
 
 		// errorlog
 		if (YOD_RUNMODE & 2) {
