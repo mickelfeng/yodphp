@@ -565,14 +565,25 @@ PHP_RINIT_FUNCTION(yod)
 #endif
 
 /*
-	zval *params;
-	MAKE_STD_ZVAL(params);
-	array_init(params);
-	add_next_index_string(params, YOD_APP_CNAME, 1);
-	add_next_index_string(params, "autorun", 1);
-	zend_call_method_with_1_params(NULL, NULL, NULL, "register_shutdown_function", NULL, params);
-	zval_ptr_dtor(&params);
+	zval *params1, *params2;
+
+	MAKE_STD_ZVAL(params1);
+	array_init(params1);
+	add_next_index_string(params1, YOD_APP_CNAME, 1);
+	add_next_index_string(params1, "autoload", 1);
+	zend_call_method_with_1_params(NULL, NULL, NULL, "spl_autoload_register", NULL, params1);
+	zval_ptr_dtor(&params1);
+
+	MAKE_STD_ZVAL(params2);
+	array_init(params2);
+	add_next_index_string(params2, YOD_APP_CNAME, 1);
+	add_next_index_string(params2, "autorun", 1);
+	zend_call_method_with_1_params(NULL, NULL, NULL, "register_shutdown_function", NULL, params2);
+	zval_ptr_dtor(&params2);
 */
+
+	// register
+	yod_register("spl_autoload_register", "autoload" TSRMLS_CC);
 	yod_register("register_shutdown_function", "autorun" TSRMLS_CC);
 
 	return SUCCESS;

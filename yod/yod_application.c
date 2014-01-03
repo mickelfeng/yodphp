@@ -215,9 +215,6 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 		object_init_ex(YOD_G(yodapp), yod_application_ce);
 	}
 
-	// autoload
-	yod_register("spl_autoload_register", "autoload" TSRMLS_CC);
-
 	// errorlog
 	if (yod_runmode(TSRMLS_C) & 2) {
 		yod_register("set_error_handler", "errorlog" TSRMLS_CC);
