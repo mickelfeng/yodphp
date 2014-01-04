@@ -1304,7 +1304,7 @@ class Yod_DbModel extends Yod_Model
 	public function join($table, $where = '', $mode = 'LEFT')
 	{
 		$join = count($this->_query['JOIN']) + 2;
-		$this->_query['JOIN'][] = "{$mode} JOIN {$this->_prefix}{$table} AS t{$join}". (empty($while) ? '' : " ON {$where}");
+		$this->_query['JOIN'][] = "{$mode} JOIN {$this->_prefix}{$table} AS t{$join}". (empty($where) ? '' : " ON {$where}");
 		return $this;
 	}
 
