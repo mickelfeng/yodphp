@@ -10,7 +10,7 @@
 <pre>
 <b>$this->import('Toolkit'):</b> <?php Toolkit::hello(); ?>
 <br />
-<b>$this->import('Utils.qrcode', '.php'):</b><br />
+<b>$this->import('utils.qrcode', '.php'):</b><br />
 <?php print_r($qrcode); ?>
 </pre>
 <br />
