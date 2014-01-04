@@ -34,7 +34,7 @@ class ApplicationController extends Yod_Controller
 
 		Yod_Application::app()->import('Toolkit');
 
-		$this->import('Utils.qrcode', '.php');
+		$this->import('utils.qrcode', '.php');
 		$qrcode = new ImageQrcode();
 
 		$this->display('import', array('qrcode' => $qrcode));

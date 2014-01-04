@@ -111,7 +111,7 @@ class ModelController extends Yod_Controller
 
 		$this->import('Toolkit');
 
-		$this->import('Utils.qrcode', '.php');
+		$this->import('utils.qrcode', '.php');
 		$qrcode = new ImageQrcode();
 
 		$this->display('import', array('qrcode' => $qrcode));

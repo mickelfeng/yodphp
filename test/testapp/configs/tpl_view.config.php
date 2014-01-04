@@ -1,6 +1,6 @@
 <?php
 return array(
-	'class' => 'Smarty.libs.SmartyBC',
+	'class' => 'views.Smarty',
 	'config' => array(
 		'caching' => false,
 		'template_dir' => YOD_RUNPATH . '/smarty/templates',
