@@ -173,10 +173,10 @@ void yod_debugz(zval *pzval, int dump TSRMLS_DC) {
 */
 int yod_debugw(char *data, uint data_len TSRMLS_DC) {
 	zval *zcontext = NULL;
-	php_stream_context *context = NULL;
+	php_stream_statbuf ssb;
+	php_stream_context *context;
 	php_stream *stream;
 	
-	struct stat st;
 	char *logpath, *logfile;
 
 	if (data_len == 0) {
@@ -184,13 +184,21 @@ int yod_debugw(char *data, uint data_len TSRMLS_DC) {
 	}
 
 	logpath = yod_logpath(TSRMLS_C);
-	if (0 != VCWD_STAT(logpath, &st) || S_IFDIR != (st.st_mode & S_IFMT)) {
-		php_stream_mkdir(logpath, 0750,  REPORT_ERRORS, NULL);
+	if (php_stream_stat_path(logpath, &ssb) == FAILURE) {
+		if (!php_stream_mkdir(logpath, 0750, REPORT_ERRORS, NULL)) {
+			return 0;
+		}
 	}
 	
 	spprintf(&logfile, 0, "%s/debugs.log", logpath);
 	context = php_stream_context_from_zval(zcontext, 0);
-	stream = php_stream_open_wrapper_ex(logfile, "ab", 0, NULL, context);
+
+#if PHP_API_VERSION < 20100412
+	stream = php_stream_open_wrapper_ex(logfile, "ab", ENFORCE_SAFE_MODE | REPORT_ERRORS, NULL, context);
+#else
+	stream = php_stream_open_wrapper_ex(logfile, "ab", REPORT_ERRORS, NULL, context);
+#endif
+
 	if (stream) {
 		if (php_stream_supports_lock(stream)) {
 			php_stream_lock(stream, LOCK_EX);

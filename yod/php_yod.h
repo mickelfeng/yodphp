@@ -117,6 +117,7 @@ char *yod_pathvar(TSRMLS_D);
 char *yod_runpath(TSRMLS_D);
 char *yod_extpath(TSRMLS_D);
 char *yod_logpath(TSRMLS_D);
+void yod_loading(TSRMLS_D);
 
 int yod_do_exit(long status TSRMLS_DC);
 int yod_register(char *moduel, char *method TSRMLS_DC);
@@ -136,6 +137,7 @@ ZEND_BEGIN_MODULE_GLOBALS(yod)
 	zval		*yodapp;
 	int			exited;
 	int			running;
+	int			loading;
 
 #if PHP_YOD_DEBUG
 	zval		*debugs;

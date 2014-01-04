@@ -215,6 +215,9 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 		object_init_ex(YOD_G(yodapp), yod_application_ce);
 	}
 
+	// loading
+	yod_loading(TSRMLS_C);
+
 	// errorlog
 	if (yod_runmode(TSRMLS_C) & 2) {
 		yod_register("set_error_handler", "errorlog" TSRMLS_CC);
@@ -441,6 +444,9 @@ static int yod_application_autoload(char *classname, uint classname_len TSRMLS_D
 	}
 	zval_dtor(&runpath);
 
+	// loading
+	yod_loading(TSRMLS_C);
+
 	classfile = estrndup(classname, classname_len);
 	// class name with namespace in PHP 5.3
 	if (strstr(classname, "\\")) {
@@ -499,10 +505,10 @@ static int yod_application_errorlog(long errnum, char *errstr, uint errstr_len, 
 	uint datetime_len;
 
 	zval *zcontext = NULL;
-	php_stream_context *context = NULL;
+	php_stream_statbuf ssb;
+	php_stream_context *context;
 	php_stream *stream;
 
-	struct stat st;
 	char *logdata, *logpath, *logfile, *errtype;
 	uint logdata_len;
 
@@ -542,13 +548,21 @@ static int yod_application_errorlog(long errnum, char *errstr, uint errstr_len, 
 	}
 
 	logpath = yod_logpath(TSRMLS_C);
-	if (0 != VCWD_STAT(logpath, &st) || S_IFDIR != (st.st_mode & S_IFMT)) {
-		php_stream_mkdir(logpath, 0750, REPORT_ERRORS, NULL);
+	if (php_stream_stat_path(logpath, &ssb) == FAILURE) {
+		if (!php_stream_mkdir(logpath, 0750, REPORT_ERRORS, NULL)) {
+			return 0;
+		}
 	}
 
 	spprintf(&logfile, 0, "%s/errors.log", logpath);
 	context = php_stream_context_from_zval(zcontext, 0);
-	stream = php_stream_open_wrapper_ex(logfile, "ab", 0, NULL, context);
+
+#if PHP_API_VERSION < 20100412
+	stream = php_stream_open_wrapper_ex(logfile, "ab", ENFORCE_SAFE_MODE | REPORT_ERRORS, NULL, context);
+#else
+	stream = php_stream_open_wrapper_ex(logfile, "ab", REPORT_ERRORS, NULL, context);
+#endif
+
 	if (stream) {
 		if (php_stream_supports_lock(stream)) {
 			php_stream_lock(stream, LOCK_EX);
