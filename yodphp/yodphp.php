@@ -20,12 +20,11 @@ defined('YOD_PATHVAR') or define('YOD_PATHVAR', '');
 defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__));
 defined('YOD_LOGPATH') or define('YOD_LOGPATH', dirname(__FILE__));
 
+// yodphp autorun
+Yod_Application::autorun();
 
 // autoload
 spl_autoload_register(array('Yod_Application', 'autoload'));
-
-// yodphp autorun
-register_shutdown_function(array('Yod_Application', 'autorun'));
 
 /**
  * Yod_Application
