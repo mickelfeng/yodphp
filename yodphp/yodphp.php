@@ -11,7 +11,7 @@
 
 // yodphp constant
 defined('YOD_RUNTIME') or define('YOD_RUNTIME', microtime(true));
-defined('YOD_VERSION') or define('YOD_VERSION', '1.2.1');
+defined('YOD_VERSION') or define('YOD_VERSION', '1.2.2');
 defined('YOD_FORWARD') or define('YOD_FORWARD', 5);
 defined('YOD_RUNMODE') or define('YOD_RUNMODE', 3);
 defined('YOD_CHARSET') or define('YOD_CHARSET', 'utf-8');
@@ -23,9 +23,6 @@ defined('YOD_LOGPATH') or define('YOD_LOGPATH', dirname(__FILE__));
 // yodphp autorun
 Yod_Application::autorun();
 
-// autoload
-spl_autoload_register(array('Yod_Application', 'autoload'));
-
 /**
  * Yod_Application
  * 
@@ -33,10 +30,10 @@ spl_autoload_register(array('Yod_Application', 'autoload'));
 final class Yod_Application
 {
 	protected static $_app;
+	protected static $_config = array();
+	protected static $_imports = array();
 
-	protected $_config = array();
 	protected $_request = null;
-	protected $_imports = array();
 	protected $_running = false;
 
 	/**
@@ -57,17 +54,20 @@ final class Yod_Application
 			set_error_handler(array('Yod_Application', 'errorlog'));
 		}
 
+		// autoload
+		spl_autoload_register(array('Yod_Application', 'autoload'));
+
 		// config
 		if (is_array($config)) {
-			$this->_config = $config;
+			self::$_config = $config;
 		} else {
 			if (!is_string($config)) {
 				$config = YOD_RUNPATH . '/configs/config.php';
 			}
 			if (is_file($config)) {
-				$this->_config = include($config);
+				self::$_config = include($config);
 			} else {
-				$this->_config = array();
+				self::$_config = array();
 				$scandir = dirname($config);
 				if (is_dir($scandir) && ($handle = opendir($scandir))) {
 					while (($file = readdir($handle)) != false) {
@@ -76,13 +76,13 @@ final class Yod_Application
 							$value = include($scandir .'/'. $file);
 							if (is_array($value)) {
 								if ($key == 'base') {
-									$this->_config = array_merge($this->_config, $value);
-								} elseif (isset($this->_config[$key])){
-									if (is_array($this->_config[$key])) {
-										$value = array_merge($this->_config[$key], $value);
+									self::$_config = array_merge(self::$_config, $value);
+								} elseif (isset(self::$_config[$key])){
+									if (is_array(self::$_config[$key])) {
+										$value = array_merge(self::$_config[$key], $value);
 									}
 								}
-								$this->_config[$key] = $value;
+								self::$_config[$key] = $value;
 							}
 						}
 					}
@@ -92,10 +92,10 @@ final class Yod_Application
 		}
 		if (isset($GLOBALS['config']) && is_array($GLOBALS['config'])) {
 			foreach ($GLOBALS['config'] as $key => $value) {
-				if (isset($this->_config[$key]) && is_array($this->_config[$key]) && is_array($value)) {
-					$this->_config[$key] = array_merge($this->_config[$key], $value);
+				if (isset(self::$_config[$key]) && is_array(self::$_config[$key]) && is_array($value)) {
+					self::$_config[$key] = array_merge(self::$_config[$key], $value);
 				} else {
-					$this->_config[$key] = $GLOBALS['config'][$key];
+					self::$_config[$key] = $GLOBALS['config'][$key];
 				}
 			}
 		}
@@ -125,20 +125,34 @@ final class Yod_Application
 	}
 
 	/**
+	 * app
+	 * @access public
+	 * @param mixed $config
+	 * @return Yod_Application
+	 */
+	public static function app($config = null)
+	{
+		if (self::$_app) {
+			return self::$_app;
+		}
+		return new self($config);
+	}
+
+	/**
 	 * config
 	 * @access public
 	 * @param string $name
 	 * @return mixed
 	 */
-	public function config($name = null)
+	public static function config($name = null)
 	{
 		if (is_null($name)) {
-			return $this->_config;
-		} elseif(isset($this->_config[$name])) {
-			return $this->_config[$name];
+			return self::$_config;
+		} elseif(isset(self::$_config[$name])) {
+			return self::$_config[$name];
 		} elseif(strstr($name, '.')) {
 			$name = explode('.', $name);
-			$value = $this->_config;
+			$value = self::$_config;
 			foreach ($name as $skey) {
 				if (isset($value[$skey])) {
 					$value = $value[$skey];
@@ -159,32 +173,18 @@ final class Yod_Application
 	 * @param string $classext
 	 * @return boolean
 	 */
-	public function import($alias, $classext = '.class.php')
+	public static function import($alias, $classext = '.class.php')
 	{
 		$classfile = trim(str_replace('\\', '/', str_replace('.', '/', $alias)), '/');
 		$classname = basename($classfile);
 
-		if (empty($this->_imports[$alias])) {
+		if (empty(self::$_imports[$alias])) {
 			$classpath = YOD_RUNPATH . '/extends/' . $classfile . $classext;
 			if (is_file($classpath)) include $classpath;
-			$this->_imports[$alias] = $classpath;
+			self::$_imports[$alias] = $classpath;
 		}
 
 		return class_exists($classname, false) || interface_exists($classname, false);
-	}
-
-	/**
-	 * app
-	 * @access public
-	 * @param mixed $config
-	 * @return Yod_Application
-	 */
-	public static function app($config = null)
-	{
-		if (self::$_app) {
-			return self::$_app;
-		}
-		return new self($config);
 	}
 
 	/**
@@ -577,7 +577,7 @@ abstract class Yod_Controller
 	 */
 	protected function config($name = null)
 	{
-		return Yod_Application::app()->config($name);
+		return Yod_Application::config($name);
 	}
 
 	/**
@@ -589,7 +589,7 @@ abstract class Yod_Controller
 	 */
 	protected function import($alias, $classext = '.class.php')
 	{
-		return Yod_Application::app()->import($alias, $classext);
+		return Yod_Application::import($alias, $classext);
 	}
 
 	/**
@@ -1051,7 +1051,7 @@ class Yod_Model
 	 */
 	protected function config($name = null)
 	{
-		return Yod_Application::app()->config($name);
+		return Yod_Application::config($name);
 	}
 	
 	/**
@@ -1063,7 +1063,7 @@ class Yod_Model
 	 */
 	protected function import($alias, $classext = '.class.php')
 	{
-		return Yod_Application::app()->import($alias, $classext);
+		return Yod_Application::import($alias, $classext);
 	}
 
 	/**
