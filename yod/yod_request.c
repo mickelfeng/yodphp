@@ -363,9 +363,9 @@ int yod_request_route(yod_request_t *object, char *route, uint route_len TSRMLS_
 }
 /* }}} */
 
-/** {{{ yod_request_t *yod_request_construct(yod_request_t *object, char *route, size_t route_len TSRMLS_DC)
+/** {{{ yod_request_t *yod_request_construct(yod_request_t *object, char *route, uint route_len TSRMLS_DC)
 */
-yod_request_t *yod_request_construct(yod_request_t *object, char *route, size_t route_len TSRMLS_DC) {
+yod_request_t *yod_request_construct(yod_request_t *object, char *route, uint route_len TSRMLS_DC) {
 	yod_request_t *retval;
 	zval *method;
 
