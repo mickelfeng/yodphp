@@ -474,13 +474,13 @@ static int yod_application_autoload(char *classname, uint classname_len TSRMLS_D
 	}
 	efree(classfile);
 
-	if (VCWD_ACCESS(classpath, F_OK) == 0) {
-		yod_include(classpath, NULL, 1 TSRMLS_CC);
-	}
-	
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_application_autoload(%s):%s", classname, classpath);
 #endif
+
+	if (VCWD_ACCESS(classpath, F_OK) == 0) {
+		yod_include(classpath, NULL, 1 TSRMLS_CC);
+	}
 
 	efree(classpath);
 
