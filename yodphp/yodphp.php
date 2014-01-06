@@ -179,7 +179,11 @@ final class Yod_Application
 		$classname = basename($classfile);
 
 		if (empty(self::$_imports[$alias])) {
-			$classpath = YOD_RUNPATH . '/extends/' . $classfile . $classext;
+			if (strtolower(substr($classfile, 0, 4)) == 'yod/') {
+				$classpath = YOD_EXTPATH . '/extends/' . substr($classfile, 4) . $classext;
+			} else {
+				$classpath = YOD_RUNPATH . '/extends/' . $classfile . $classext;
+			}
 			if (is_file($classpath)) include $classpath;
 			self::$_imports[$alias] = $classpath;
 		}
