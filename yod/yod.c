@@ -506,9 +506,11 @@ PHP_GINIT_FUNCTION(yod)
 	yod_globals->extpath	= NULL;
 	yod_globals->logpath	= NULL;
 	yod_globals->yodapp		= NULL;
+	yod_globals->config		= NULL;
 	yod_globals->exited		= 0;
 	yod_globals->running	= 0;
 	yod_globals->loading	= 0;
+	yod_globals->imports	= NULL;
 
 #if PHP_YOD_DEBUG
 	yod_globals->debugs		= NULL;
@@ -568,9 +570,13 @@ PHP_RINIT_FUNCTION(yod)
 	YOD_G(extpath)			= NULL;
 	YOD_G(logpath)			= NULL;
 	YOD_G(yodapp)			= NULL;
+	YOD_G(config)			= NULL;
 	YOD_G(exited)			= 0;
 	YOD_G(running)			= 0;
 	YOD_G(loading)			= 0;
+	
+	MAKE_STD_ZVAL(YOD_G(imports));
+	array_init(YOD_G(imports));
 
 #if PHP_YOD_DEBUG
 	MAKE_STD_ZVAL(YOD_G(debugs));
@@ -596,7 +602,6 @@ PHP_RINIT_FUNCTION(yod)
 */
 
 	// register
-	yod_register("spl_autoload_register", "autoload" TSRMLS_CC);
 	yod_register("register_shutdown_function", "autorun" TSRMLS_CC);
 
 	return SUCCESS;
@@ -640,6 +645,16 @@ PHP_RSHUTDOWN_FUNCTION(yod)
 	if (YOD_G(yodapp)) {
 		zval_ptr_dtor(&YOD_G(yodapp));
 		YOD_G(yodapp) = NULL;
+	}
+
+	if (YOD_G(config)) {
+		zval_ptr_dtor(&YOD_G(config));
+		YOD_G(config) = NULL;
+	}
+
+	if (YOD_G(imports)) {
+		zval_ptr_dtor(&YOD_G(imports));
+		YOD_G(imports) = NULL;
 	}
 
 #if PHP_YOD_DEBUG
