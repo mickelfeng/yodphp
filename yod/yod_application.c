@@ -440,6 +440,7 @@ static int yod_application_autoload(char *classname, uint classname_len TSRMLS_D
 	zval runpath;
 
 	if (!zend_get_constant(ZEND_STRL("YOD_RUNPATH"), &runpath TSRMLS_CC)) {
+		yod_register("spl_autoload_unregister", "autoload" TSRMLS_CC);
 		return 0;
 	}
 	zval_dtor(&runpath);
