@@ -8,7 +8,7 @@
 	<li>Yod_Application::import()</li>
 </ul>
 <pre>
-<b>Yod_Application::app()->import('Toolkit'):</b> <?php Toolkit::hello(); ?>
+<b>Yod_Application::import('Toolkit'):</b> <?php Toolkit::hello(); ?>
 <br />
 <b>$this->import('utils.qrcode', '.php'):</b><br />
 <?php print_r($qrcode); ?>

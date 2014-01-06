@@ -8,10 +8,10 @@
 	<li>Yod_Application::config()</li>
 </ul>
 <pre>
-<b>$app->config():</b><br>
+<b>Yod_Application::config():</b><br>
 <?php print_r($config); ?>
 
-<b>$app->config('db_dsn'):</b><br>
+<b>Yod_Application::config('db_dsn'):</b><br>
 <?php print_r($db_dsn); ?>
 
 <b>$this->config('tpl_data.PUBLIC'):</b> <?php print_r($this->config('tpl_data.PUBLIC')); ?>

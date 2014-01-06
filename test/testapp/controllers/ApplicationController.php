@@ -20,11 +20,9 @@ class ApplicationController extends Yod_Controller
 	{
 		$this->assign('title', 'Yod_Application::config()');
 
-		$app = Yod_Application::app();
-
 		$this->display('config', array(
-			'config' => $app->config(),
-			'db_dsn' => $app->config('db_dsn'),
+			'config' => Yod_Application::config(),
+			'db_dsn' => Yod_Application::config('db_dsn'),
 		));
 	}
 
@@ -32,7 +30,7 @@ class ApplicationController extends Yod_Controller
 	{
 		$this->assign('title', 'Yod_Application::import()');
 
-		Yod_Application::app()->import('Toolkit');
+		Yod_Application::import('Toolkit');
 
 		$this->import('utils.qrcode', '.php');
 		$qrcode = new ImageQrcode();

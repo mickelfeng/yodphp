@@ -13,6 +13,8 @@ defined('APP_WEBROOT') or define('APP_WEBROOT', '/smarty.php');
 
 class_exists('Yod_Application', false) or require YOD_EXTPATH . '/yodphp.php';
 
+Yod_Application::autoload('Yod_ViewController');
+
 class SmartyController extends Yod_ViewController
 {
 	public function indexAction()
