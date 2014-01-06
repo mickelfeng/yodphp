@@ -214,7 +214,9 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 	}
 
 	// loading
-	yod_loading(TSRMLS_C);
+	if (!YOD_G(loading)) {
+		yod_loading(TSRMLS_C);
+	}
 
 	// errorlog
 	if (yod_runmode(TSRMLS_C) & 2) {
@@ -273,13 +275,12 @@ int yod_application_config(char *name, uint name_len, zval *result TSRMLS_DC) {
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_application_config(%s)", name ? name : "");
 #endif
-
-	if (!YOD_G(yodapp)) {
-		ZVAL_NULL(result);
-		return 0;
+	
+	if (!YOD_G(loading)) {
+		yod_loading(TSRMLS_C);
 	}
 
-	if (Z_TYPE_P(YOD_G(config)) != IS_ARRAY) {
+	if (!YOD_G(config) || Z_TYPE_P(YOD_G(config)) != IS_ARRAY) {
 		ZVAL_NULL(result);
 		return 0;
 	}
@@ -327,7 +328,11 @@ int yod_application_import(char *alias, uint alias_len, char *classext, uint cla
 	yod_debugf("yod_application_import(%s)", alias ? alias : "");
 #endif
 
-	if (!YOD_G(yodapp) || alias_len == 0) {
+	if (!YOD_G(loading)) {
+		yod_loading(TSRMLS_C);
+	}
+
+	if (alias_len == 0) {
 		return 0;
 	}
 
@@ -357,10 +362,18 @@ int yod_application_import(char *alias, uint alias_len, char *classext, uint cla
 	php_basename(classfile, classfile_len, NULL, 0, &classname, &classname_len TSRMLS_CC);
 
 	if (zend_hash_find(Z_ARRVAL_P(YOD_G(imports)), alias, alias_len + 1, (void **)&ppval) == FAILURE) {
-		if (classext_len) {
-			spprintf(&classpath, 0, "%s/extends/%s%s", yod_runpath(TSRMLS_C), classfile, classext);
+		if (classfile_len > 4 && strncasecmp(classfile, "yod/", 4) == 0) {
+			if (classext_len) {
+				spprintf(&classpath, 0, "%s/extends/%s%s", yod_extpath(TSRMLS_C), classfile + 4, classext);
+			} else {
+				spprintf(&classpath, 0, "%s/extends/%s.class.php", yod_extpath(TSRMLS_C), classfile + 4);
+			}
 		} else {
-			spprintf(&classpath, 0, "%s/extends/%s.class.php", yod_runpath(TSRMLS_C), classfile);
+			if (classext_len) {
+				spprintf(&classpath, 0, "%s/extends/%s%s", yod_runpath(TSRMLS_C), classfile, classext);
+			} else {
+				spprintf(&classpath, 0, "%s/extends/%s.class.php", yod_runpath(TSRMLS_C), classfile);
+			}
 		}
 
 		if (VCWD_ACCESS(classpath, F_OK) == 0) {

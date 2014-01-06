@@ -400,12 +400,8 @@ void yod_loading(TSRMLS_D) {
 	if (YOD_G(loading)) {
 		return;
 	}
-
-#if PHP_YOD_DEBUG
-	yod_debugf("yod_loading()");
-#endif
-
 	YOD_G(loading) = 1;
+
 	yod_runtime(TSRMLS_C);
 	yod_forward(TSRMLS_C);
 	yod_runmode(TSRMLS_C);
