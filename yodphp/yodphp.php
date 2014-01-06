@@ -212,11 +212,6 @@ final class Yod_Application
 	 */
 	public static function autoload($classname)
 	{
-		if (!defined('YOD_RUNPATH')) {
-			spl_autoload_unregister(array('Yod_Application', 'autoload'));
-			return false;
-		}
-
 		$classfile = $classname;
 		// class name with namespace in PHP 5.3
 		if (strpos($classname, '\\') !== false) {
