@@ -13,7 +13,7 @@ defined('APP_WEBROOT') or define('APP_WEBROOT', '/smarty.php');
 
 class_exists('Yod_Application', false) or require YOD_EXTPATH . '/yodphp.php';
 
-Yod_Application::autoload('Yod_ViewController');
+Yod_Application::import('yod.ViewController');
 
 class SmartyController extends Yod_ViewController
 {
