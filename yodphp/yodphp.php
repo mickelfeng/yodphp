@@ -490,6 +490,73 @@ final class Yod_Request
 		}
 		exit($html);
 	}
+
+	/**
+	* isGet
+	* @access public
+	* @param void
+	* @return boolean
+	*/
+	public function isGet()
+	{
+		return (strtoupper($this->method) == 'GET');
+	}
+
+	/**
+	* isPost
+	* @access public
+	* @param void
+	* @return boolean
+	*/
+	public function isPost()
+	{
+		return (strtoupper($this->method) == 'POST');
+	}
+
+	/**
+	* isPut
+	* @access public
+	* @param void
+	* @return boolean
+	*/
+	public function isPut()
+	{
+		return (strtoupper($this->method) == 'PUT');
+	}
+
+	/**
+	* isHead
+	* @access public
+	* @param void
+	* @return boolean
+	*/
+	public function isHead()
+	{
+		return (strtoupper($this->method) == 'HEAD');
+	}
+
+	/**
+	* isOptions
+	* @access public
+	* @param void
+	* @return boolean
+	*/
+	public function isOptions()
+	{
+		return (strtoupper($this->method) == 'OPTIONS');
+	}
+
+	/**
+	* isCli
+	* @access public
+	* @param void
+	* @return boolean
+	*/
+	public function isCli()
+	{
+		return (strtoupper($this->method) == 'CLI');
+	}
+
 }
 
 /**
