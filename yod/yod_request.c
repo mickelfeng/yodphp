@@ -54,6 +54,24 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(yod_request_error404_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, html)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(yod_request_isget_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(yod_request_ispost_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(yod_request_isput_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(yod_request_ishead_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(yod_request_isoptions_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(yod_request_iscli_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ static void yod_request_err404_html(TSRMLS_D)
@@ -593,6 +611,84 @@ PHP_METHOD(yod_request, error404) {
 }
 /* }}} */
 
+/** {{{ proto public Yod_Request::isGet()
+*/
+PHP_METHOD(yod_request, isGet) {
+	zval * method;
+
+	method  = zend_read_property(yod_request_ce, getThis(), ZEND_STRL("method"), 0 TSRMLS_CC);
+	if (strncasecmp("GET", Z_STRVAL_P(method), 3) == 0) {
+		RETURN_TRUE;
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/** {{{ proto public Yod_Request::isPost()
+*/
+PHP_METHOD(yod_request, isPost) {
+	zval * method;
+
+	method  = zend_read_property(yod_request_ce, getThis(), ZEND_STRL("method"), 0 TSRMLS_CC);
+	if (strncasecmp("POST", Z_STRVAL_P(method), 4) == 0) {
+		RETURN_TRUE;
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/** {{{ proto public Yod_Request::isPut()
+*/
+PHP_METHOD(yod_request, isPut) {
+	zval * method;
+
+	method  = zend_read_property(yod_request_ce, getThis(), ZEND_STRL("method"), 0 TSRMLS_CC);
+	if (strncasecmp("PUT", Z_STRVAL_P(method), 4) == 0) {
+		RETURN_TRUE;
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/** {{{ proto public Yod_Request::isHead()
+*/
+PHP_METHOD(yod_request, isHead) {
+	zval * method;
+
+	method  = zend_read_property(yod_request_ce, getThis(), ZEND_STRL("method"), 0 TSRMLS_CC);
+	if (strncasecmp("HEAD", Z_STRVAL_P(method), 4) == 0) {
+		RETURN_TRUE;
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/** {{{ proto public Yod_Request::isOptions()
+*/
+PHP_METHOD(yod_request, isOptions) {
+	zval * method;
+
+	method  = zend_read_property(yod_request_ce, getThis(), ZEND_STRL("method"), 0 TSRMLS_CC);
+	if (strncasecmp("OPTIONS", Z_STRVAL_P(method), 7) == 0) {
+		RETURN_TRUE;
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/** {{{ proto public Yod_Request::isCli()
+*/
+PHP_METHOD(yod_request, isCli) {
+	zval * method;
+
+	method  = zend_read_property(yod_request_ce, getThis(), ZEND_STRL("method"), 0 TSRMLS_CC);
+	if (strncasecmp("CLI", Z_STRVAL_P(method), 3) == 0) {
+		RETURN_TRUE;
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
 /** {{{ proto public Yod_Request::__destruct()
 */
 PHP_METHOD(yod_request, __destruct) {
@@ -607,7 +703,13 @@ zend_function_entry yod_request_methods[] = {
 	PHP_ME(yod_request, route,			yod_request_route_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_request, dispatch,		yod_request_dispatch_arginfo,		ZEND_ACC_PUBLIC)
 	PHP_ME(yod_request, erroraction,	yod_request_erroraction_arginfo,	ZEND_ACC_PUBLIC)
-	PHP_ME(yod_request, error404,		yod_request_error404_arginfo,		ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(yod_request, error404,		yod_request_error404_arginfo,		ZEND_ACC_PUBLIC)
+	PHP_ME(yod_request, isGet,			yod_request_isget_arginfo,			ZEND_ACC_PUBLIC)
+	PHP_ME(yod_request, isPost,			yod_request_ispost_arginfo,			ZEND_ACC_PUBLIC)
+	PHP_ME(yod_request, isPut,			yod_request_isput_arginfo,			ZEND_ACC_PUBLIC)
+	PHP_ME(yod_request, isHead,			yod_request_ishead_arginfo,			ZEND_ACC_PUBLIC)
+	PHP_ME(yod_request, isOptions,		yod_request_isoptions_arginfo,		ZEND_ACC_PUBLIC)
+	PHP_ME(yod_request, isCli,			yod_request_iscli_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_request, __destruct,		NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	{NULL, NULL, NULL}
 };
