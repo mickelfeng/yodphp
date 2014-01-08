@@ -309,10 +309,9 @@ int yod_application_config(char *name, uint name_len, zval *result TSRMLS_DC) {
 			}
 			ZVAL_ZVAL(result, pzval, 1, 0);
 		}
-		zval_ptr_dtor(ppval);
 		efree(name1);
+		return 1;
 	}
-	return 1;
 }
 /* }}} */
 
