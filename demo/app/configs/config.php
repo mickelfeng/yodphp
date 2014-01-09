@@ -1,7 +1,7 @@
 <?php
 return array(
 	'db_dsn' => array(
-		'type'   => 'pdo_mysql',
+		'type'   => 'mysqli',
 		'host'   => 'localhost',
 		'port'   => '3306',
 		'user'   => 'yodphp',
