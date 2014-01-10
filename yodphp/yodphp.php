@@ -1235,7 +1235,7 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public function find($where = '', $params = array(), $select = '*')
 	{
-		$query = $this->select($select)->where($where, $params)->limit('1')->parseQuery();
+		$query = $this->field($select)->where($where, $params)->limit('1')->parseQuery();
 		if ($result = $this->_db->query($query, $this->_params)) {
 			$data = $this->_db->fetch($result);
 			$this->_db->free($result);
@@ -1256,7 +1256,7 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public function findAll($where = '', $params = array(), $select = '*')
 	{
-		$query = $this->select($select)->where($where, $params)->parseQuery();
+		$query = $this->field($select)->where($where, $params)->parseQuery();
 		if ($result = $this->_db->query($query, $this->_params)) {
 			$data = $this->_db->fetchAll($result);
 			$this->_db->free($result);
@@ -1289,7 +1289,7 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public function count($where = '', $params = array())
 	{
-		$query = $this->select('COUNT(*)')->where($where, $params)->parseQuery();
+		$query = $this->field('COUNT(*)')->where($where, $params)->parseQuery();
 		if ($result = $this->_db->query($query, $this->_params)) {
 			$count = 0;
 			if ($data = $this->_db->fetch($result)) {
