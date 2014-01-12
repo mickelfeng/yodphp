@@ -27,6 +27,7 @@
 #include "php_yod.h"
 #include "yod_model.h"
 #include "yod_dbmodel.h"
+#include "yod_database.h"
 #include "yod_dbpdo.h"
 
 #if PHP_YOD_DEBUG
@@ -1065,7 +1066,7 @@ static int yod_dbmodel_count(yod_dbmodel_t *object, char *where, uint where_len,
 */
 static int yod_dbmodel_save(yod_dbmodel_t *object, zval *data, char *where, uint where_len, zval *params, zval *retval TSRMLS_DC) {
 	yod_database_t *yoddb;
-	zval *table, *where1, *params1, *query, *pzval, **ppval;
+	zval *table, *params1, *query, **ppval;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_dbmodel_save(%s)", where ? where : "");
@@ -1108,26 +1109,9 @@ static int yod_dbmodel_save(yod_dbmodel_t *object, zval *data, char *where, uint
 
 		if (!ppval || Z_TYPE_PP(ppval) != IS_STRING || Z_STRLEN_PP(ppval) == 0) {
 			yod_database_insert(yoddb, data, Z_STRVAL_P(table), Z_STRLEN_P(table), 0, retval TSRMLS_CC);
-/*
-			zend_call_method_with_2_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "insert", &pzval, data, table);
-			if (retval) {
-				if (pzval) {
-					ZVAL_ZVAL(retval, pzval, 1, 1);
-				} else {
-					ZVAL_BOOL(retval, 0);
-				}
-			}
-*/
 		} else {
 			params1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), 1 TSRMLS_CC);
 			yod_database_update(yoddb, data, Z_STRVAL_P(table), Z_STRLEN_P(table), Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), params1, retval TSRMLS_CC);
-/*
-			MAKE_STD_ZVAL(where1);
-			ZVAL_STRINGL(where1, Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
-			params1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), 1 TSRMLS_CC);
-			yod_call_method(yoddb, ZEND_STRL("update"), &retval, 4, data, table, where1, params1 TSRMLS_CC);
-			zval_ptr_dtor(&where1);
-*/
 		}
 
 		yod_dbmodel_initquery(object, NULL TSRMLS_CC);

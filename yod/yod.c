@@ -316,16 +316,28 @@ char *yod_pathvar(TSRMLS_D) {
 /** {{{ char *yod_runpath(TSRMLS_D)
 */
 char *yod_runpath(TSRMLS_D) {
-	zval runpath;
+	zval runpath, **ppval;
 	uint runpath_len;
+	HashTable *_SERVER;
 
 	if (!YOD_G(runpath)) {
 		if (zend_get_constant(ZEND_STRL("YOD_RUNPATH"), &runpath TSRMLS_CC)) {
 			YOD_G(runpath) = Z_STRVAL(runpath);
 		} else {
 			INIT_ZVAL(runpath);
-			runpath_len = strlen(SG(request_info).path_translated);
-			YOD_G(runpath) = estrndup(SG(request_info).path_translated, runpath_len);
+			if (!PG(http_globals)[TRACK_VARS_SERVER]) {
+				zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC);
+			}
+			_SERVER = HASH_OF(PG(http_globals)[TRACK_VARS_SERVER]);
+			if (zend_hash_find(_SERVER, ZEND_STRS("SCRIPT_FILENAME"), (void **) &ppval) != FAILURE &&
+				Z_TYPE_PP(ppval) == IS_STRING
+			) {
+				runpath_len = Z_STRLEN_PP(ppval);
+				YOD_G(runpath) = estrndup(Z_STRVAL_PP(ppval), runpath_len);
+			} else {
+				runpath_len = strlen(SG(request_info).path_translated);
+				YOD_G(runpath) = estrndup(SG(request_info).path_translated, runpath_len);
+			}
 			runpath_len = php_dirname(YOD_G(runpath), runpath_len);
 			ZVAL_STRINGL(&runpath, YOD_G(runpath), runpath_len, 1);
 			zend_register_stringl_constant(ZEND_STRS("YOD_RUNPATH"), Z_STRVAL(runpath), runpath_len, CONST_CS, 0 TSRMLS_CC);
@@ -343,16 +355,28 @@ char *yod_runpath(TSRMLS_D) {
 /** {{{ char *yod_extpath(TSRMLS_D)
 */
 char *yod_extpath(TSRMLS_D) {
-	zval extpath;
+	zval extpath, **ppval;
 	uint extpath_len;
+	HashTable *_SERVER;
 
 	if (!YOD_G(extpath)) {
 		if (zend_get_constant(ZEND_STRL("YOD_EXTPATH"), &extpath TSRMLS_CC)) {
 			YOD_G(extpath) = Z_STRVAL(extpath);
 		} else {
 			INIT_ZVAL(extpath);
-			extpath_len = strlen(SG(request_info).path_translated);
-			YOD_G(extpath) = estrndup(SG(request_info).path_translated, extpath_len);
+			if (!PG(http_globals)[TRACK_VARS_SERVER]) {
+				zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC);
+			}
+			_SERVER = HASH_OF(PG(http_globals)[TRACK_VARS_SERVER]);
+			if (zend_hash_find(_SERVER, ZEND_STRS("SCRIPT_FILENAME"), (void **) &ppval) != FAILURE &&
+				Z_TYPE_PP(ppval) == IS_STRING
+			) {
+				extpath_len = Z_STRLEN_PP(ppval);
+				YOD_G(extpath) = estrndup(Z_STRVAL_PP(ppval), extpath_len);
+			} else {
+				extpath_len = strlen(SG(request_info).path_translated);
+				YOD_G(extpath) = estrndup(SG(request_info).path_translated, extpath_len);
+			}
 			extpath_len = php_dirname(YOD_G(extpath), extpath_len);
 			ZVAL_STRINGL(&extpath, YOD_G(extpath), extpath_len, 1);
 			zend_register_stringl_constant(ZEND_STRS("YOD_EXTPATH"), Z_STRVAL(extpath), extpath_len, CONST_CS, 0 TSRMLS_CC);
@@ -370,16 +394,28 @@ char *yod_extpath(TSRMLS_D) {
 /** {{{ char *yod_logpath(TSRMLS_D)
 */
 char *yod_logpath(TSRMLS_D) {
-	zval logpath;
+	zval logpath, **ppval;
 	uint logpath_len;
+	HashTable *_SERVER;
 
 	if (!YOD_G(logpath)) {
 		if (zend_get_constant(ZEND_STRL("YOD_LOGPATH"), &logpath TSRMLS_CC)) {
 			YOD_G(logpath) = Z_STRVAL(logpath);
 		} else {
 			INIT_ZVAL(logpath);
-			logpath_len = strlen(SG(request_info).path_translated);
-			YOD_G(logpath) = estrndup(SG(request_info).path_translated, logpath_len);
+			if (!PG(http_globals)[TRACK_VARS_SERVER]) {
+				zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC);
+			}
+			_SERVER = HASH_OF(PG(http_globals)[TRACK_VARS_SERVER]);
+			if (zend_hash_find(_SERVER, ZEND_STRS("SCRIPT_FILENAME"), (void **) &ppval) != FAILURE &&
+				Z_TYPE_PP(ppval) == IS_STRING
+			) {
+				logpath_len = Z_STRLEN_PP(ppval);
+				YOD_G(logpath) = estrndup(Z_STRVAL_PP(ppval), logpath_len);
+			} else {
+				logpath_len = strlen(SG(request_info).path_translated);
+				YOD_G(logpath) = estrndup(SG(request_info).path_translated, logpath_len);
+			}
 			logpath_len = php_dirname(YOD_G(logpath), logpath_len);
 			ZVAL_STRINGL(&logpath, YOD_G(logpath), logpath_len, 1);
 			zend_register_stringl_constant(ZEND_STRS("YOD_LOGPATH"), Z_STRVAL(logpath), logpath_len, CONST_CS, 0 TSRMLS_CC);
