@@ -132,8 +132,8 @@ class Yod_DbMysqli extends Yod_Database
 					return $retval;
 
 				}
-				$this->_errno = $mysqli_stmt->errno();
-				$this->_error = $mysqli_stmt->error();
+				$this->_errno = $mysqli_stmt->errno;
+				$this->_error = $mysqli_stmt->error;
 				$mysqli_stmt->close();
 			}
 		}
