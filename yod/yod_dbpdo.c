@@ -198,15 +198,21 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 	}
 
 	if (Z_TYPE_P(dbconfig) == IS_ARRAY) {
-		if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("dsn"), (void **)&ppval) == FAILURE ||
+		// db_dsn.pdsn
+		if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("pdsn"), (void **)&ppval) == FAILURE ||
 			Z_TYPE_PP(ppval) != IS_STRING || Z_STRLEN_PP(ppval) == 0
 		) {
-			php_error_docref(NULL TSRMLS_CC, E_ERROR, "Database DSN configure error");
-			zval_ptr_dtor(&dbconfig);
-			if (retval) {
-				ZVAL_BOOL(retval, 0);
+			// db_dsn.dsn
+			if (zend_hash_find(Z_ARRVAL_P(dbconfig), ZEND_STRS("dsn"), (void **)&ppval) == FAILURE ||
+				Z_TYPE_PP(ppval) != IS_STRING || Z_STRLEN_PP(ppval) == 0
+			) {
+				php_error_docref(NULL TSRMLS_CC, E_ERROR, "PDO DSN configure error");
+				zval_ptr_dtor(&dbconfig);
+				if (retval) {
+					ZVAL_BOOL(retval, 0);
+				}
+				return 0;
 			}
-			return 0;
 		}
 
 #if PHP_API_VERSION < 20100412
@@ -223,7 +229,7 @@ static int yod_dbpdo_connect(yod_dbpdo_t *object, zval *config, long linknum, zv
 			MAKE_STD_ZVAL(argv[2]);
 			MAKE_STD_ZVAL(argv[3]);
 
-			// argv.dsn
+			// argv.pdsn
 			ZVAL_STRINGL(argv[0] , Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), 1);
 
 			// argv.user
