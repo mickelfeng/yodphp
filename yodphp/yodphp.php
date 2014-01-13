@@ -1064,7 +1064,12 @@ class Yod_Model
 	 */
 	public function select($where = '', $params = array(), $select = '*')
 	{
-		return $this->findAll($where, $params, $select);
+		if ($result = $this->_db->select($select, $this->_table, $where, $params)) {
+			$data = $this->_db->fetchAll($result);
+			$this->_db->free($result);
+			return $data;
+		}
+		return false;
 	}
 
 	/**
@@ -1277,7 +1282,15 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public function select($where = '', $params = array(), $select = '*')
 	{
-		return $this->findAll($where, $params, $select);
+		$query = $this->field($select)->where($where, $params)->parseQuery();
+		if ($result = $this->_db->query($query, $this->_params)) {
+			$data = $this->_db->fetchAll($result);
+			$this->_db->free($result);
+			$this->initQuery();
+			return $data;
+		}
+
+		return false;
 	}
 
 	/**
