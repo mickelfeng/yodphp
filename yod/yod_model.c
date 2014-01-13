@@ -534,7 +534,7 @@ PHP_METHOD(yod_model, count) {
 
 		MAKE_STD_ZVAL(result);
 		MAKE_STD_ZVAL(select);
-		ZVAL_STRING(select, "COUNT(*)", 1);
+		ZVAL_STRINGL(select, "COUNT(*)", 8, 1);
 		yod_database_select(yoddb, select, Z_STRVAL_P(table), Z_STRLEN_P(table), where, where_len, params, ZEND_STRL("LIMIT 1"), result TSRMLS_CC);
 		zval_ptr_dtor(&select);
 		if (result) {

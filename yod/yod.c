@@ -123,7 +123,7 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 	}
 
 	MAKE_STD_ZVAL(method);
-	ZVAL_STRINGL(method, func,func_len, 1);
+	ZVAL_STRINGL(method, func, func_len, 1);
 
 	if (call_user_function(NULL, &object, method, &retval, pcount, argv TSRMLS_CC) == FAILURE) {
 		if (result) {
@@ -155,9 +155,9 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 }
 /* }}} */
 
-/** {{{ int yod_register(char *moduel, char *method TSRMLS_DC)
+/** {{{ int yod_register(const char *moduel, const char *method TSRMLS_DC)
  * */
-int yod_register(char *moduel, char *method TSRMLS_DC) {
+int yod_register(const char *moduel, const char *method TSRMLS_DC) {
 	zval *param1, *function, *retval = NULL;
 	zval **params[1] = {&param1};
 	zend_fcall_info fci;
@@ -259,8 +259,8 @@ char *yod_charset(TSRMLS_D) {
 			YOD_G(charset) = Z_STRVAL(charset);
 		} else {
 			INIT_ZVAL(charset);
-			ZVAL_STRING(&charset, YOD_CHARSET, 1);
-			YOD_G(charset) = estrndup(YOD_CHARSET, strlen(YOD_CHARSET));
+			ZVAL_STRINGL(&charset, YOD_CHARSET, sizeof(YOD_CHARSET)-1, 1);
+			YOD_G(charset) = estrndup(YOD_CHARSET, sizeof(YOD_CHARSET)-1);
 			zend_register_string_constant(ZEND_STRS("YOD_CHARSET"), Z_STRVAL(charset), CONST_CS, 0 TSRMLS_CC);
 		}
 	}
@@ -279,8 +279,8 @@ char *yod_viewext(TSRMLS_D) {
 			YOD_G(viewext) = Z_STRVAL(viewext);
 		} else {
 			INIT_ZVAL(viewext);
-			ZVAL_STRING(&viewext, YOD_VIEWEXT, 1);
-			YOD_G(viewext) = estrndup(YOD_VIEWEXT, strlen(YOD_VIEWEXT));
+			ZVAL_STRINGL(&viewext, YOD_VIEWEXT, sizeof(YOD_VIEWEXT)-1, 1);
+			YOD_G(viewext) = estrndup(YOD_VIEWEXT, sizeof(YOD_VIEWEXT)-1);
 			zend_register_string_constant(ZEND_STRS("YOD_VIEWEXT"), Z_STRVAL(viewext), CONST_CS, 0 TSRMLS_CC);
 		}
 	}
@@ -299,8 +299,8 @@ char *yod_pathvar(TSRMLS_D) {
 			YOD_G(pathvar) = Z_STRVAL(pathvar);
 		} else {
 			INIT_ZVAL(pathvar);
-			ZVAL_STRING(&pathvar, YOD_PATHVAR, 1);
-			YOD_G(pathvar) = estrndup(YOD_PATHVAR, strlen(YOD_PATHVAR));
+			ZVAL_STRINGL(&pathvar, YOD_PATHVAR, sizeof(YOD_PATHVAR)-1, 1);
+			YOD_G(pathvar) = estrndup(YOD_PATHVAR, sizeof(YOD_PATHVAR)-1);
 			zend_register_string_constant(ZEND_STRS("YOD_PATHVAR"), Z_STRVAL(pathvar), CONST_CS, 0 TSRMLS_CC);
 		}
 
@@ -616,21 +616,14 @@ PHP_RINIT_FUNCTION(yod)
 #endif
 
 /*
-	zval *params1, *params2;
+	zval *params1;
 
 	MAKE_STD_ZVAL(params1);
 	array_init(params1);
 	add_next_index_string(params1, YOD_APP_CNAME, 1);
-	add_next_index_string(params1, "autoload", 1);
-	zend_call_method_with_1_params(NULL, NULL, NULL, "spl_autoload_register", NULL, params1);
+	add_next_index_string(params1, "autorun", 1);
+	zend_call_method_with_1_params(NULL, NULL, NULL, "register_shutdown_function", NULL, params1);
 	zval_ptr_dtor(&params1);
-
-	MAKE_STD_ZVAL(params2);
-	array_init(params2);
-	add_next_index_string(params2, YOD_APP_CNAME, 1);
-	add_next_index_string(params2, "autorun", 1);
-	zend_call_method_with_1_params(NULL, NULL, NULL, "register_shutdown_function", NULL, params2);
-	zval_ptr_dtor(&params2);
 */
 
 	// register

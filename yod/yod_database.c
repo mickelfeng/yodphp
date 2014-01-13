@@ -289,7 +289,7 @@ int yod_database_getinstance(zval *config, yod_database_t *retval TSRMLS_DC) {
 
 	p_db = zend_read_static_property(yod_database_ce, ZEND_STRL("_db"), 1 TSRMLS_CC);
 	if (p_db && Z_TYPE_P(p_db) == IS_ARRAY) {
-		if (zend_hash_find(Z_ARRVAL_P(p_db), md5key, strlen(md5key) + 1, (void **)&ppval) == SUCCESS) {
+		if (zend_hash_find(Z_ARRVAL_P(p_db), md5key, 33, (void **)&ppval) == SUCCESS) {
 			ZVAL_ZVAL(retval, *ppval, 1, 0);
 			zval_ptr_dtor(&config1);
 			efree(classname);
@@ -338,7 +338,7 @@ int yod_database_getinstance(zval *config, yod_database_t *retval TSRMLS_DC) {
 	} else {
 		array_init(p_db1);
 	}
-	add_assoc_zval_ex(p_db1, md5key, strlen(md5key) + 1, object);
+	add_assoc_zval_ex(p_db1, md5key, 33, object);
 	zend_update_static_property(yod_database_ce, ZEND_STRL("_db"), p_db1 TSRMLS_CC);
 	zval_ptr_dtor(&p_db1);
 
@@ -456,7 +456,7 @@ int yod_database_dbconfig(yod_database_t *object, zval *config, long linknum, zv
 	}
 
 	if (Z_TYPE_P(retval) == IS_ARRAY) {
-		add_assoc_long(retval, "linknum", linknum);
+		add_assoc_long_ex(retval, ZEND_STRS("linknum"), linknum);
 	}
 
 	return 1;

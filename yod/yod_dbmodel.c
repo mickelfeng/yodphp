@@ -163,20 +163,20 @@ static int yod_dbmodel_initquery(yod_dbmodel_t *object, zval *retval TSRMLS_DC) 
 
 	MAKE_STD_ZVAL(query);
 	array_init(query);
-	add_assoc_stringl(query, "SELECT", "*", 1, 1);
-	add_assoc_stringl(query, "FROM", "", 0, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("SELECT"), "*", 1, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("FROM"), "", 0, 1);
 	MAKE_STD_ZVAL(joins);
 	array_init(joins);
-	add_assoc_zval(query, "JOIN", joins);
-	add_assoc_stringl(query, "WHERE", "", 0, 1);
-	add_assoc_stringl(query, "GROUP BY", "", 0, 1);
-	add_assoc_stringl(query, "HAVING", "", 0, 1);
-	add_assoc_stringl(query, "ORDER BY", "", 0, 1);
-	add_assoc_stringl(query, "LIMIT", "", 0, 1);
+	add_assoc_zval_ex(query, ZEND_STRS("JOIN"), joins);
+	add_assoc_stringl_ex(query, ZEND_STRS("WHERE"), "", 0, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("GROUP BY"), "", 0, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("HAVING"), "", 0, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("ORDER BY"), "", 0, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("LIMIT"), "", 0, 1);
 	MAKE_STD_ZVAL(unions);
 	array_init(unions);
-	add_assoc_zval(query, "UNION", unions);
-	add_assoc_stringl(query, "COMMENT", "", 0, 1);
+	add_assoc_zval_ex(query, ZEND_STRS("UNION"), unions);
+	add_assoc_stringl_ex(query, ZEND_STRS("COMMENT"), "", 0, 1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 	if (retval) {
 		ZVAL_ZVAL(retval, query, 1, 0);
@@ -251,7 +251,7 @@ static int yod_dbmodel_parsequery(yod_dbmodel_t *object, zval *query, zval *retv
 		} else {
 			table1_len = spprintf(&table1, 0, "%s AS t1", Z_STRVAL_P(table));
 		}
-		add_assoc_stringl(zquery, "FROM", table1, table1_len, 1);
+		add_assoc_stringl_ex(zquery, ZEND_STRS("FROM"), table1, table1_len, 1);
 		efree(table1);
 	}
 
@@ -488,7 +488,7 @@ static int yod_dbmodel_field(yod_dbmodel_t *object, zval *select TSRMLS_DC) {
 		if (fields_len > 2) {
 			fields_len = fields_len - 2;
 			fields = estrndup(fields1, fields_len);
-			add_assoc_stringl(query, "SELECT", fields, fields_len, 1);
+			add_assoc_stringl_ex(query, ZEND_STRS("SELECT"), fields, fields_len, 1);
 			zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 			efree(fields1);
 			efree(fields);
@@ -497,7 +497,7 @@ static int yod_dbmodel_field(yod_dbmodel_t *object, zval *select TSRMLS_DC) {
 	}
 
 	if (Z_TYPE_P(select) == IS_STRING && Z_STRLEN_P(select)) {
-		add_assoc_stringl(query, "SELECT", Z_STRVAL_P(select), Z_STRLEN_P(select), 1);
+		add_assoc_stringl_ex(query, ZEND_STRS("SELECT"), Z_STRVAL_P(select), Z_STRLEN_P(select), 1);
 		zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 		return 1;
 	}
@@ -532,7 +532,7 @@ static int yod_dbmodel_from(yod_dbmodel_t *object, char *table, uint table_len T
 	} else {
 		table1_len = spprintf(&table1, 0, "%s AS t1", table);
 	}
-	add_assoc_stringl(query, "FROM", table1, table1_len, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("FROM"), table1, table1_len, 1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 	efree(table1);
 
@@ -578,7 +578,7 @@ static int yod_dbmodel_join(yod_dbmodel_t *object, char *table, uint table_len, 
 		join_len = spprintf(&join, 0, "%s JOIN %s AS t%d%s%s", (mode ? mode : "LEFT"), table, num_elem, (where_len ? " ON " : ""), (where_len ? where : ""));
 	}
 	add_next_index_stringl(join1, join, join_len, 1);
-	add_assoc_zval(query, "JOIN", join1);
+	add_assoc_zval_ex(query, ZEND_STRS("JOIN"), join1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 	efree(join);
 
@@ -621,10 +621,10 @@ static int yod_dbmodel_where(yod_dbmodel_t *object, char *where, uint where_len,
 
 	if (Z_TYPE_PP(ppval) == IS_STRING && Z_STRLEN_PP(ppval)) {
 		where1_len = spprintf(&where1, 0, "(%s) %s (%s)", Z_STRVAL_PP(ppval), (mode_len ? mode : "AND"), where);
-		add_assoc_stringl(query, "WHERE", where1, where1_len, 1);
+		add_assoc_stringl_ex(query, ZEND_STRS("WHERE"), where1, where1_len, 1);
 		efree(where1);
 	} else {
-		add_assoc_stringl(query, "WHERE", where, where_len, 1);
+		add_assoc_stringl_ex(query, ZEND_STRS("WHERE"), where, where_len, 1);
 	}
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 
@@ -650,7 +650,7 @@ static int yod_dbmodel_group(yod_dbmodel_t *object, char *group, uint group_len 
 		return 0;
 	}
 
-	add_assoc_stringl(query, "GROUP BY", group, group_len, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("GROUP BY"), group, group_len, 1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 
 	return 1;
@@ -675,7 +675,7 @@ static int yod_dbmodel_having(yod_dbmodel_t *object, char *having, uint having_l
 		return 0;
 	}
 
-	add_assoc_stringl(query, "HAVING", having, having_len, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("HAVING"), having, having_len, 1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 
 	if (params && Z_TYPE_P(params) == IS_ARRAY) {
@@ -704,7 +704,7 @@ static int yod_dbmodel_order(yod_dbmodel_t *object, char *order, uint order_len 
 		return 0;
 	}
 
-	add_assoc_stringl(query, "ORDER BY", order, order_len, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("ORDER BY"), order, order_len, 1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 
 	return 1;
@@ -729,7 +729,7 @@ static int yod_dbmodel_limit(yod_dbmodel_t *object, char *limit, uint limit_len 
 		return 0;
 	}
 
-	add_assoc_stringl(query, "LIMIT", limit, limit_len, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("LIMIT"), limit, limit_len, 1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 
 	return 1;
@@ -783,7 +783,7 @@ static int yod_dbmodel_union(yod_dbmodel_t *object, zval *unions, zval *params, 
 	zval_ptr_dtor(&unions1);
 
 	add_next_index_stringl(union1, union2, union2_len, 1);
-	add_assoc_zval(query, "UNION", union1);
+	add_assoc_zval_ex(query, ZEND_STRS("UNION"), union1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 	efree(union2);
 
@@ -813,7 +813,7 @@ static int yod_dbmodel_comment(yod_dbmodel_t *object, char *comment, uint commen
 		return 0;
 	}
 
-	add_assoc_stringl(query, "COMMENT", comment, comment_len, 1);
+	add_assoc_stringl_ex(query, ZEND_STRS("COMMENT"), comment, comment_len, 1);
 	zend_update_property(Z_OBJCE_P(object), object, ZEND_STRL("_query"), query TSRMLS_CC);
 
 	return 1;
@@ -1003,7 +1003,7 @@ static int yod_dbmodel_count(yod_dbmodel_t *object, char *where, uint where_len,
 	}
 
 	MAKE_STD_ZVAL(select);
-	ZVAL_STRING(select, "COUNT(*)", 1);
+	ZVAL_STRINGL(select, "COUNT(*)", 8, 1);
 	yod_dbmodel_field(object, select TSRMLS_CC);
 	zval_ptr_dtor(&select);
 

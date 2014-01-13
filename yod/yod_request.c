@@ -108,7 +108,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 	sapi_header_line ctr = {0};
 	ctr.response_code = 404;
 	ctr.line = "HTTP/1.0 404 Not Found";
-	ctr.line_len = strlen(ctr.line);
+	ctr.line_len = sizeof("HTTP/1.0 404 Not Found")-1;
 	sapi_header_op(SAPI_HEADER_REPLACE, &ctr TSRMLS_CC);
 	sapi_send_headers(TSRMLS_C);
 
@@ -123,7 +123,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 			method = zend_read_property(yod_request_ce, object, ZEND_STRL("method"), 1 TSRMLS_CC);
 			if (method && Z_TYPE_P(method) == IS_STRING) {
 				if (strncasecmp(Z_STRVAL_P(method), "cli", 3) == 0 || strncasecmp(Z_STRVAL_P(method), "unknown", 7) == 0) {
-					PUTS("HTTP/1.0 404 Not Found");
+					php_body_write(ctr.line, ctr.line_len TSRMLS_CC);
 				} else {
 					yod_request_err404_html(TSRMLS_C);
 				}
@@ -131,7 +131,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 				yod_request_err404_html(TSRMLS_C);
 			}
 		} else {
-			PUTS("HTTP/1.0 404 Not Found");
+			php_body_write(ctr.line, ctr.line_len TSRMLS_CC);
 		}
 	}
 
