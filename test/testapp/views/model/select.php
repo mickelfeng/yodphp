@@ -5,11 +5,11 @@
 <body>
 <?php $this->widget('public/header'); ?>
 <ul>
-	<li>Yod_DbModel::select()</li>
+	<li>Yod_Model::select()</li>
 </ul>
 <pre>
 <b>$model->select():</b><br />
-<?php print_r($model); ?>
+<?php print_r($data); ?>
 <br />
 <b>$model:</b><br />
 <?php print_r($model); ?>

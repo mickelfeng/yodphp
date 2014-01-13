@@ -10,10 +10,11 @@
 	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/table" target="_blank">table</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/find" target="_blank">find</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/findall" target="_blank">findAll</a></li>
+	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/select" target="_blank">select</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/count" target="_blank">count</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/save" target="_blank">save</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/remove" target="_blank">remove</a></li>
-	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/select" target="_blank">select</a></li>
+	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/field" target="_blank">field</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/from" target="_blank">from</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/join" target="_blank">join</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/dbmodel/where" target="_blank">where</a></li>

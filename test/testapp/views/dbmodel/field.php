@@ -5,13 +5,10 @@
 <body>
 <?php $this->widget('public/header'); ?>
 <ul>
-	<li>Yod_DbModel::select()</li>
+	<li>Yod_DbModel::field()</li>
 </ul>
 <pre>
-<b>$model->select():</b><br />
-<?php print_r($model); ?>
-<br />
-<b>$model:</b><br />
+<b>$model->field(array('id', 'title', 'content', 'updated', 'created')):</b><br />
 <?php print_r($model); ?>
 </pre>
 <br />

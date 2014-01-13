@@ -59,6 +59,19 @@ class DbModelController extends Yod_Controller
 		$this->display('findall', array('model' => $model));
 	}
 
+	public function selectAction()
+	{
+		$this->assign('title', 'Yod_DbModel::select()');
+
+		$this->model('Test');
+
+		$model = $this->dbmodel('Test');
+
+		$this->assign('data', $model->select());
+
+		$this->display('select', array('model' => $model));
+	}
+	
 	public function countAction()
 	{
 		$this->assign('title', 'Yod_DbModel::count()');
@@ -107,15 +120,15 @@ class DbModelController extends Yod_Controller
 		$this->display('remove', array('model' => $model));
 	}
 
-	public function selectAction()
+	public function fieldAction()
 	{
-		$this->assign('title', 'Yod_DbModel::select()');
+		$this->assign('title', 'Yod_DbModel::field()');
 
 		$model = $this->dbmodel('Test');
 
-		$model->select(array('id', 'title', 'content', 'updated', 'created'));
+		$model->field(array('id', 'title', 'content', 'updated', 'created'));
 
-		$this->display('select', array('model' => $model));
+		$this->display('field', array('model' => $model));
 	}
 	
 	public function fromAction()
