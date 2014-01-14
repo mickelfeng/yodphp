@@ -831,6 +831,7 @@ PHP_METHOD(yod_controller, model) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_controller_model(%s)", name ? name : "");
 #endif
 
@@ -860,6 +861,7 @@ PHP_METHOD(yod_controller, dbmodel) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_controller_dbmodel(%s)", name ? name : "");
 #endif
 

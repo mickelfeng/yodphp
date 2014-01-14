@@ -455,7 +455,7 @@ static int yod_dbmodel_field(yod_dbmodel_t *object, zval *select TSRMLS_DC) {
 	HashPosition pos;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_dbmodel_select()");
+	yod_debugf("yod_dbmodel_field()");
 #endif
 
 	if (!select || !object) {
@@ -827,7 +827,8 @@ static int yod_dbmodel_find(yod_dbmodel_t *object, char *where, uint where_len, 
 	zval *params1, *query, *result, *data;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_dbmodel_find(%s)", where ? where : "");
+	yod_debugl(2 TSRMLS_CC);
+	yod_debugf("yod_dbmodel_find()");
 #endif
 
 	if (!object) {
@@ -857,9 +858,9 @@ static int yod_dbmodel_find(yod_dbmodel_t *object, char *where, uint where_len, 
 	if (query && Z_TYPE_P(query) == IS_STRING) {
 
 #if PHP_YOD_DEBUG
-		yod_debugl(NULL TSRMLS_CC);
+		yod_debugl(1 TSRMLS_CC);
 		yod_debugf(Z_STRVAL_P(query));
-		yod_debugl(NULL TSRMLS_CC);
+		yod_debugl(1 TSRMLS_CC);
 #endif
 
 		MAKE_STD_ZVAL(result);
@@ -905,7 +906,8 @@ static int yod_dbmodel_select(yod_dbmodel_t *object, char *where, uint where_len
 	zval *params1, *query, *result, *data;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_dbmodel_select(%s)", where ? where : "");
+	yod_debugl(2 TSRMLS_CC);
+	yod_debugf("yod_dbmodel_findall()");
 #endif
 
 	if (!object) {
@@ -934,9 +936,9 @@ static int yod_dbmodel_select(yod_dbmodel_t *object, char *where, uint where_len
 	if (query && Z_TYPE_P(query) == IS_STRING) {
 
 #if PHP_YOD_DEBUG
-		yod_debugl(NULL TSRMLS_CC);
+		yod_debugl(1 TSRMLS_CC);
 		yod_debugf(Z_STRVAL_P(query));
-		yod_debugl(NULL TSRMLS_CC);
+		yod_debugl(1 TSRMLS_CC);
 #endif
 
 		MAKE_STD_ZVAL(result);
@@ -982,7 +984,8 @@ static int yod_dbmodel_count(yod_dbmodel_t *object, char *where, uint where_len,
 	zval *select, *params1, *query, *result, *data, **value;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_dbmodel_count(%s)", where ? where : "");
+	yod_debugl(2 TSRMLS_CC);
+	yod_debugf("yod_dbmodel_count()");
 #endif
 
 	if (!object) {
@@ -1016,9 +1019,9 @@ static int yod_dbmodel_count(yod_dbmodel_t *object, char *where, uint where_len,
 	if (query && Z_TYPE_P(query) == IS_STRING) {
 
 #if PHP_YOD_DEBUG
-		yod_debugl(NULL TSRMLS_CC);
+		yod_debugl(1 TSRMLS_CC);
 		yod_debugf(Z_STRVAL_P(query));
-		yod_debugl(NULL TSRMLS_CC);
+		yod_debugl(1 TSRMLS_CC);
 #endif
 
 		MAKE_STD_ZVAL(result);
@@ -1069,7 +1072,8 @@ static int yod_dbmodel_save(yod_dbmodel_t *object, zval *data, char *where, uint
 	zval *table, *params1, *query, **ppval;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_dbmodel_save(%s)", where ? where : "");
+	yod_debugl(2 TSRMLS_CC);
+	yod_debugf("yod_dbmodel_save()");
 #endif
 
 	if (!data || Z_TYPE_P(data) != IS_ARRAY|| !object) {
@@ -1130,7 +1134,8 @@ static int yod_dbmodel_remove(yod_dbmodel_t *object, char *where, uint where_len
 	zval *table, *where1, *params1, *query, **ppval;
 
 #if PHP_YOD_DEBUG
-	yod_debugf("yod_dbmodel_remove(%s)", where ? where : "");
+	yod_debugl(2 TSRMLS_CC);
+	yod_debugf("yod_dbmodel_remove()");
 #endif
 
 	if (!object) {

@@ -379,6 +379,7 @@ PHP_METHOD(yod_model, find) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_model_find(%s)", where ? where : "");
 #endif
 
@@ -425,6 +426,7 @@ PHP_METHOD(yod_model, findAll) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_model_findall(%s)", where ? where : "");
 #endif
 
@@ -471,6 +473,7 @@ PHP_METHOD(yod_model, select) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_model_select(%s)", where ? where : "");
 #endif
 
@@ -517,6 +520,7 @@ PHP_METHOD(yod_model, count) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_model_count(%s)", where ? where : "");
 #endif
 
@@ -572,6 +576,7 @@ PHP_METHOD(yod_model, save) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_model_save(%s)", where ? where : "");
 #endif
 
@@ -616,6 +621,7 @@ PHP_METHOD(yod_model, remove) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_model_remove(%s)", where ? where : "");
 #endif
 
@@ -707,6 +713,7 @@ PHP_METHOD(yod_model, model) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_model_model(%s)", name ? name : "");
 #endif
 
@@ -730,6 +737,7 @@ PHP_METHOD(yod_model, dbmodel) {
 	}
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_model_dbmodel(%s)", name ? name : "");
 #endif
 

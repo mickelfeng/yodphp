@@ -90,9 +90,9 @@ void yod_debugf(const char *format,...) {
 }
 /* }}} */
 
-/** {{{ void yod_debugl(char *sline TSRMLS_DC)
+/** {{{ void yod_debugl(int ltype TSRMLS_DC)
 */
-void yod_debugl(char *sline TSRMLS_DC) {
+void yod_debugl(int ltype TSRMLS_DC) {
 	char *buffer;
 	uint buffer_len;
 
@@ -100,19 +100,15 @@ void yod_debugl(char *sline TSRMLS_DC) {
 		return;
 	}
 
-	if (sline) {
-		switch (sline[0]) {
-			case '-' :
-				buffer_len = spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
-				break;
-			case '=' :
-				buffer_len = spprintf(&buffer, 0, "%s\n", YOD_DIVLINE);
-				break;
-			default :
-				buffer_len = spprintf(&buffer, 0, "%s\n", sline ? sline : YOD_DOTLINE);
-		}
-	} else {
-		buffer_len = spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
+	switch (ltype) {
+		case 1 :
+			buffer_len = spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
+			break;
+		case 2 :
+			buffer_len = spprintf(&buffer, 0, "%s\n", YOD_DIVLINE);
+			break;
+		default :
+			buffer_len = spprintf(&buffer, 0, "%s\n", YOD_DOTLINE);
 	}
 
 	add_next_index_string(YOD_G(debugs), buffer, 1);
@@ -253,7 +249,7 @@ void yod_debugs(TSRMLS_D) {
 #endif
 
 	if (SG(request_info).request_method) {
-		php_printf("\n<pre><hr><font color=\"red\">Yod is running in debug mode (%d)</font>\n%s\n", runmode, YOD_DOTLINE);
+		php_printf("\n<pre><hr><font color=\"red\">Yod is running in debug mode (%d)</font>\n%s\n", runmode, YOD_DIVLINE);
 	} else {
 		php_printf("\n%s\nYod is running in debug mode (%d)\n%s\n", YOD_DIVLINE, runmode, YOD_DOTLINE);
 	}
@@ -266,7 +262,7 @@ void yod_debugs(TSRMLS_D) {
 		zend_hash_move_forward(Z_ARRVAL_P(YOD_G(debugs)));
 	}
 
-	buffer_len = spprintf(&buffer, 0, "%s\n[%fms]\n", YOD_DOTLINE, runtime);
+	buffer_len = spprintf(&buffer, 0, "%s\n[%fms]\n", YOD_DIVLINE, runtime);
 	PHPWRITE(buffer, buffer_len);
 	efree(buffer);
 
