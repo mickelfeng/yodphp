@@ -1037,24 +1037,6 @@ class Yod_Model
 	}
 
 	/**
-	 * findAll
-	 * @access public
-	 * @param string	$where
-	 * @param array		$params
-	 * @param mixed		$select
-	 * @return mixed
-	 */
-	public function findAll($where = '', $params = array(), $select = '*')
-	{
-		if ($result = $this->_db->select($select, $this->_table, $where, $params)) {
-			$data = $this->_db->fetchAll($result);
-			$this->_db->free($result);
-			return $data;
-		}
-		return false;
-	}
-
-	/**
 	 * select
 	 * @access public
 	 * @param string	$where
@@ -1070,6 +1052,19 @@ class Yod_Model
 			return $data;
 		}
 		return false;
+	}
+
+	/**
+	 * findAll
+	 * @access public
+	 * @param string	$where
+	 * @param array		$params
+	 * @param mixed		$select
+	 * @return mixed
+	 */
+	public function findAll($where = '', $params = array(), $select = '*')
+	{
+		return $this->select($where, $params, $select);
 	}
 
 	/**
@@ -1243,27 +1238,6 @@ class Yod_DbModel extends Yod_Model
 		$query = $this->field($select)->where($where, $params)->limit('1')->parseQuery();
 		if ($result = $this->_db->query($query, $this->_params)) {
 			$data = $this->_db->fetch($result);
-			$this->_db->free($result);
-			$this->initQuery();
-			return $data;
-		}
-
-		return false;
-	}
-
-	/**
-	 * findAll
-	 * @access public
-	 * @param string	$where
-	 * @param array		$params
-	 * @param mixed		$select
-	 * @return mixed
-	 */
-	public function findAll($where = '', $params = array(), $select = '*')
-	{
-		$query = $this->field($select)->where($where, $params)->parseQuery();
-		if ($result = $this->_db->query($query, $this->_params)) {
-			$data = $this->_db->fetchAll($result);
 			$this->_db->free($result);
 			$this->initQuery();
 			return $data;
