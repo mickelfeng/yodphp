@@ -1990,7 +1990,7 @@ class Yod_DbPdo extends Yod_Database
 		if (isset($this->_linkids[$linknum])) {
 			return $this->_linkid = $this->_linkids[$linknum];
 		}
-		if (empty($config['dsn']) || empty($config['pdsn'])) {
+		if (empty($config['dsn']) && empty($config['pdsn'])) {
 			trigger_error('PDO DSN configure error', E_USER_ERROR);
 			return false;
 		}
