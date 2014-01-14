@@ -58,12 +58,6 @@ ZEND_BEGIN_ARG_INFO_EX(yod_dbmodel_find_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, select)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(yod_dbmodel_findall_arginfo, 0, 0, 0)
-	ZEND_ARG_INFO(0, where)
-	ZEND_ARG_INFO(0, params)
-	ZEND_ARG_INFO(0, select)
-ZEND_END_ARG_INFO()
-
 ZEND_BEGIN_ARG_INFO_EX(yod_dbmodel_select_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, where)
 	ZEND_ARG_INFO(0, params)
@@ -1273,21 +1267,6 @@ PHP_METHOD(yod_dbmodel, select) {
 }
 /* }}} */
 
-/** {{{ proto public Yod_DbModel::findAll($where = '', $params = array(), $select = '*')
-*/
-PHP_METHOD(yod_dbmodel, findAll) {
-	zval *params = NULL, *select = NULL;
-	char *where = NULL;
-	uint where_len = 0;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|szz!", &where, &where_len, &params, &select) == FAILURE) {
-		return;
-	}
-
-	yod_dbmodel_select(getThis(), where, where_len, params, select, return_value TSRMLS_CC);
-}
-/* }}} */
-
 /** {{{ proto public Yod_DbModel::count($where = '', $params = array())
 */
 PHP_METHOD(yod_dbmodel, count) {
@@ -1577,7 +1556,6 @@ zend_function_entry yod_dbmodel_methods[] = {
 	PHP_ME(yod_dbmodel, table,			yod_dbmodel_find_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbmodel, find,			yod_dbmodel_find_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbmodel, select,			yod_dbmodel_select_arginfo,			ZEND_ACC_PUBLIC)
-	PHP_ME(yod_dbmodel, findAll,		yod_dbmodel_findall_arginfo,		ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbmodel, count,			yod_dbmodel_count_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbmodel, save,			yod_dbmodel_save_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbmodel, remove,			yod_dbmodel_remove_arginfo,			ZEND_ACC_PUBLIC)
@@ -1594,6 +1572,7 @@ zend_function_entry yod_dbmodel_methods[] = {
 	PHP_ME(yod_dbmodel, params,			yod_dbmodel_params_arginfo,			ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbmodel, parseQuery,		yod_dbmodel_parsequery_arginfo,		ZEND_ACC_PUBLIC)
 	PHP_ME(yod_dbmodel, initQuery,		yod_dbmodel_initquery_arginfo,		ZEND_ACC_PROTECTED)
+	PHP_MALIAS(yod_dbmodel, findAll,	select,		yod_dbmodel_select_arginfo,			ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
