@@ -206,8 +206,10 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 		return;
 	}
 
+	
 	if (object) {
 		YOD_G(yodapp) = object;
+		zval_add_ref(&object);
 	} else {
 		MAKE_STD_ZVAL(YOD_G(yodapp));
 		object_init_ex(YOD_G(yodapp), yod_application_ce);
@@ -240,6 +242,10 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 
 	// app
 	zend_update_static_property(yod_application_ce, ZEND_STRL("_app"), YOD_G(yodapp) TSRMLS_CC);
+
+#if PHP_YOD_DEBUG
+	yod_debugl(NULL TSRMLS_CC);
+#endif
 }
 /* }}} */
 
@@ -417,7 +423,7 @@ void yod_application_app(zval *config TSRMLS_DC) {
 static void yod_application_autorun(TSRMLS_D) {
 	zval runpath;
 
-	if ((yod_runmode(TSRMLS_C) & 1) == 0) {
+	if (YOD_G(running) || YOD_G(exited) || (yod_runmode(TSRMLS_C) & 1) == 0) {
 		return;
 	}
 
@@ -426,16 +432,15 @@ static void yod_application_autorun(TSRMLS_D) {
 #endif
 
 	if (zend_get_constant(ZEND_STRL("YOD_RUNPATH"), &runpath TSRMLS_CC)) {
-		if (!YOD_G(yodapp) && !YOD_G(exited)) {
-			SG(headers_sent) = 0;
+		SG(headers_sent) = 0;
 
-			yod_application_app(NULL TSRMLS_CC);
-			yod_application_run(TSRMLS_C);
+		yod_application_app(NULL TSRMLS_CC);
+		yod_application_run(TSRMLS_C);
 
-			if (!SG(headers_sent)) {
-				sapi_send_headers(TSRMLS_C);
-			}
+		if (!SG(headers_sent)) {
+			sapi_send_headers(TSRMLS_C);
 		}
+
 		zval_dtor(&runpath);
 	}
 }

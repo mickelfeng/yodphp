@@ -232,7 +232,7 @@ void yod_debugs(TSRMLS_D) {
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_debugs()");
 #endif
-	
+
 	runmode = yod_runmode(TSRMLS_C);
 
 	if ((runmode & 12) == 0) {

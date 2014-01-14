@@ -857,9 +857,9 @@ static int yod_dbmodel_find(yod_dbmodel_t *object, char *where, uint where_len, 
 	if (query && Z_TYPE_P(query) == IS_STRING) {
 
 #if PHP_YOD_DEBUG
-		yod_debugl("-" TSRMLS_CC);
+		yod_debugl(NULL TSRMLS_CC);
 		yod_debugf(Z_STRVAL_P(query));
-		yod_debugl("-" TSRMLS_CC);
+		yod_debugl(NULL TSRMLS_CC);
 #endif
 
 		MAKE_STD_ZVAL(result);
@@ -934,9 +934,9 @@ static int yod_dbmodel_select(yod_dbmodel_t *object, char *where, uint where_len
 	if (query && Z_TYPE_P(query) == IS_STRING) {
 
 #if PHP_YOD_DEBUG
-		yod_debugl("-" TSRMLS_CC);
+		yod_debugl(NULL TSRMLS_CC);
 		yod_debugf(Z_STRVAL_P(query));
-		yod_debugl("-" TSRMLS_CC);
+		yod_debugl(NULL TSRMLS_CC);
 #endif
 
 		MAKE_STD_ZVAL(result);
@@ -1016,9 +1016,9 @@ static int yod_dbmodel_count(yod_dbmodel_t *object, char *where, uint where_len,
 	if (query && Z_TYPE_P(query) == IS_STRING) {
 
 #if PHP_YOD_DEBUG
-		yod_debugl("-" TSRMLS_CC);
+		yod_debugl(NULL TSRMLS_CC);
 		yod_debugf(Z_STRVAL_P(query));
-		yod_debugl("-" TSRMLS_CC);
+		yod_debugl(NULL TSRMLS_CC);
 #endif
 
 		MAKE_STD_ZVAL(result);

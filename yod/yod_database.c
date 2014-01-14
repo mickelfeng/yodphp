@@ -521,9 +521,9 @@ int yod_database_create(yod_database_t *object, zval *fields, char *table, uint 
 	efree(values);
 
 #if PHP_YOD_DEBUG
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 	yod_debugf(squery);
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 #endif
 
 	MAKE_STD_ZVAL(query);
@@ -622,9 +622,9 @@ int yod_database_insert(yod_database_t *object, zval *data, char *table, uint ta
 	efree(values);
 
 #if PHP_YOD_DEBUG
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 	yod_debugf(squery);
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 #endif
 
 	MAKE_STD_ZVAL(query);
@@ -716,9 +716,9 @@ int yod_database_update(yod_database_t *object, zval *data, char *table, uint ta
 	efree(update);
 
 #if PHP_YOD_DEBUG
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 	yod_debugf(squery);
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 #endif
 
 	MAKE_STD_ZVAL(query);
@@ -765,9 +765,9 @@ int yod_database_delete(yod_database_t *object, char *table, uint table_len, cha
 	}
 	
 #if PHP_YOD_DEBUG
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 	yod_debugf(squery);
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 #endif
 
 	MAKE_STD_ZVAL(query);
@@ -859,9 +859,9 @@ int yod_database_select(yod_database_t *object, zval *select, char *table, uint 
 	}
 
 #if PHP_YOD_DEBUG
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 	yod_debugf(squery);
-	yod_debugl("-" TSRMLS_CC);
+	yod_debugl(NULL TSRMLS_CC);
 #endif
 
 	MAKE_STD_ZVAL(query);
