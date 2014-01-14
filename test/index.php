@@ -3,7 +3,7 @@
 error_reporting(E_ALL);
 date_default_timezone_set('Asia/Shanghai');
 
-defined('YOD_RUNMODE') or define('YOD_RUNMODE', 15);
+defined('YOD_RUNMODE') or define('YOD_RUNMODE', 1|2|4|8);
 defined('YOD_PATHVAR') or define('YOD_PATHVAR', 'r');
 defined('YOD_RUNPATH') or define('YOD_RUNPATH', dirname(__FILE__) . '/testapp');
 defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__) . '/../yodphp');
