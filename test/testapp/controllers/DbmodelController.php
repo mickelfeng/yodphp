@@ -253,7 +253,7 @@ class DbModelController extends Yod_Controller
 
 		$model = $this->dbmodel('Test');
 
-		$model->select(array('id', 'title', 'content', 'updated', 'created'));
+		$model->field(array('id', 'title', 'content', 'updated', 'created'));
 
 		$model->where('t1.id = :id', array(':id' => 1));
 
