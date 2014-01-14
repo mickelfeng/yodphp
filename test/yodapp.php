@@ -1,5 +1,5 @@
 <?php
-defined('YOD_RUNMODE') or define('YOD_RUNMODE', 2|4|8);
+defined('YOD_RUNMODE') or define('YOD_RUNMODE', 2|4);
 
 $yodapp = new Yod_Application();
 
