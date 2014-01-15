@@ -1634,7 +1634,7 @@ abstract class Yod_Database
 	public static function getInstance($config = 'db_dsn')
 	{
 		if (is_string($config)) {
-			$config = Yod_Application::app()->config($config);
+			$config = Yod_Application::config($config);
 		}
 
 		if (!is_array($config)) {
