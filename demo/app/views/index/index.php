@@ -15,6 +15,29 @@
 <p><h2>Download</h2></p>
 <p><ul><li><a href="https://github.com/zmrnet/yodphp" target="_blank">https://github.com/zmrnet/yodphp</a></li></ul></p>
 <p><h2>Tutorial</h2></p>
+<p><h3>installation</h3></p>
+<p><ul><li>Compiling Yod:</li></ul></p>
+<p><pre>-------------------------------------------------------------------------
+$PHP_BIN/phpize
+./configure --with-php-config=$PHP_BIN/php-config
+make
+make install
+-------------------------------------------------------------------------</pre></p>
+<p><ul><li>Compiling Yod with debug mode:</li></ul></p>
+<p><pre>-------------------------------------------------------------------------
+$PHP_BIN/phpize
+./configure --enable-yod-debug --with-php-config=$PHP_BIN/php-config
+make
+make install
+-------------------------------------------------------------------------</pre></p>
+<p><ul><li>Cross compiling Yod for i686-linux:</li></ul></p>
+<p><pre>-------------------------------------------------------------------------
+$PHP_BIN/phpize
+./configure --enable-yod-debug --with-php-config=$PHP_BIN/php-config \
+CCFLAGS="-m32" CPPFLAGS="-m32" CXXFLAGS="-m32" CFLAGS="-m32"
+make
+make install
+-------------------------------------------------------------------------</pre></p>
 <p><h3>layout</h3></p>
 <p><ul><li>A classic Application directory layout:</li></ul></p>
 <p><pre>-------------------------------------------------------------------------
