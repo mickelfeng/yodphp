@@ -120,7 +120,7 @@ char *yod_logpath(TSRMLS_D);
 void yod_loading(TSRMLS_D);
 
 int yod_do_exit(long status TSRMLS_DC);
-int yod_register(const char *moduel, const char *method TSRMLS_DC);
+int yod_register(char *moduel, char *method TSRMLS_DC);
 int yod_include(char *filepath, zval **retval, int dtor TSRMLS_DC);
 int yod_call_method(zval *object, char *func, int func_len, zval **result, int pcount, zval *arg1, zval *arg2, zval *arg3, zval *arg4 TSRMLS_DC);
 

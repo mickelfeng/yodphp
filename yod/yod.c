@@ -155,9 +155,9 @@ int yod_call_method(zval *object, char *func, int func_len, zval **result, int p
 }
 /* }}} */
 
-/** {{{ int yod_register(const char *moduel, const char *method TSRMLS_DC)
+/** {{{ int yod_register(char *moduel, char *method TSRMLS_DC)
  * */
-int yod_register(const char *moduel, const char *method TSRMLS_DC) {
+int yod_register(char *moduel, char *method TSRMLS_DC) {
 	zval *param1, *function, *retval = NULL;
 	zval **params[1] = {&param1};
 	zend_fcall_info fci;
