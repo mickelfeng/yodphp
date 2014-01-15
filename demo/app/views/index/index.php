@@ -7,7 +7,7 @@
 <meta name="description" content="yodphp - [ Yod PHP Framework ]" />
 </head>
 <body>
-<h1>yodphp <sup>[ Yod PHP Framework ]</sup></h1>
+<h1>yodphp <sup>[ Yod Framework for PHP ]</sup></h1>
 <hr>
 <p>It is a simple PHP framework</p>
 <p><h2>Requirement</h2></p>
