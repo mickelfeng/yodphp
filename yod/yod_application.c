@@ -242,10 +242,6 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 
 	// app
 	zend_update_static_property(yod_application_ce, ZEND_STRL("_app"), YOD_G(yodapp) TSRMLS_CC);
-
-#if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
-#endif
 }
 /* }}} */
 
@@ -255,6 +251,7 @@ void yod_application_run(TSRMLS_D) {
 	yod_request_t *request;
 
 #if PHP_YOD_DEBUG
+	yod_debugl(2 TSRMLS_CC);
 	yod_debugf("yod_application_run()");
 #endif
 
