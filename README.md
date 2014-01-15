@@ -1,4 +1,4 @@
-# yodphp - Yod PHP Framework
+# yodphp - Yod Framework for PHP
 
 It is a simple PHP framework
 
