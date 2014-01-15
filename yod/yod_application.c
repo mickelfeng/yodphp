@@ -221,7 +221,7 @@ static void yod_application_construct(yod_application_t *object, zval *config TS
 	}
 
 	// errorlog
-	if (yod_runmode(TSRMLS_C) & 2) {
+	if ((yod_runmode(TSRMLS_C) & 2) && YOD_G(logpath)) {
 		yod_register("set_error_handler", "errorlog" TSRMLS_CC);
 	}
 

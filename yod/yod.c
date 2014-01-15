@@ -401,28 +401,10 @@ char *yod_logpath(TSRMLS_D) {
 	if (!YOD_G(logpath)) {
 		if (zend_get_constant(ZEND_STRL("YOD_LOGPATH"), &logpath TSRMLS_CC)) {
 			YOD_G(logpath) = Z_STRVAL(logpath);
-		} else {
-			INIT_ZVAL(logpath);
-			if (!PG(http_globals)[TRACK_VARS_SERVER]) {
-				zend_is_auto_global(ZEND_STRL("_SERVER") TSRMLS_CC);
-			}
-			_SERVER = HASH_OF(PG(http_globals)[TRACK_VARS_SERVER]);
-			if (zend_hash_find(_SERVER, ZEND_STRS("SCRIPT_FILENAME"), (void **) &ppval) != FAILURE &&
-				Z_TYPE_PP(ppval) == IS_STRING
-			) {
-				logpath_len = Z_STRLEN_PP(ppval);
-				YOD_G(logpath) = estrndup(Z_STRVAL_PP(ppval), logpath_len);
-			} else {
-				logpath_len = strlen(SG(request_info).path_translated);
-				YOD_G(logpath) = estrndup(SG(request_info).path_translated, logpath_len);
-			}
-			logpath_len = php_dirname(YOD_G(logpath), logpath_len);
-			ZVAL_STRINGL(&logpath, YOD_G(logpath), logpath_len, 1);
-			zend_register_stringl_constant(ZEND_STRS("YOD_LOGPATH"), Z_STRVAL(logpath), logpath_len, CONST_CS, 0 TSRMLS_CC);
 		}
 	
 #if PHP_YOD_DEBUG
-		yod_debugf("yod_logpath():%s", YOD_G(logpath));
+		yod_debugf("yod_logpath():%s", YOD_G(logpath) ? YOD_G(logpath) : "");
 #endif
 	}
 
@@ -446,7 +428,6 @@ void yod_loading(TSRMLS_D) {
 	yod_pathvar(TSRMLS_C);
 	yod_runpath(TSRMLS_C);
 	yod_extpath(TSRMLS_C);
-	yod_logpath(TSRMLS_C);
 }
 /* }}} */
 
