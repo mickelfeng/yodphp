@@ -18,7 +18,6 @@ defined('YOD_CHARSET') or define('YOD_CHARSET', 'utf-8');
 defined('YOD_VIEWEXT') or define('YOD_VIEWEXT', '.php');
 defined('YOD_PATHVAR') or define('YOD_PATHVAR', '');
 defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__));
-defined('YOD_LOGPATH') or define('YOD_LOGPATH', dirname(__FILE__));
 
 // yodphp autorun
 Yod_Application::autorun();
@@ -50,7 +49,7 @@ final class Yod_Application
 		}
 
 		// errorlog
-		if (YOD_RUNMODE & 2) {
+		if ((YOD_RUNMODE & 2) && defined('YOD_LOGPATH')) {
 			set_error_handler(array('Yod_Application', 'errorlog'));
 		}
 
