@@ -7,6 +7,25 @@ It is a simple PHP framework
 
 ## Tutorial
 
+### installation
+- Compiling Yod:
+
+```
+$PHP_BIN/phpize
+./configure --with-php-config=$PHP_BIN/php-config
+make
+make install
+```
+
+- Compiling Yod enable debug mode:
+
+```
+$PHP_BIN/phpize
+./configure --enable-yod-debug --with-php-config=$PHP_BIN/php-config
+make
+make install
+```
+
 ### layout
 - A classic Application directory layout:
 
@@ -93,7 +112,7 @@ return array(
 	// db_dsn
 	'db_dsn' => array(
 		'type'   => 'pdo',
-		'dsn'    => 'mysql:host=localhost;port=3306;dbname=test',
+		'pdsn'   => 'mysql:host=localhost;port=3306;dbname=test',
 		'host'   => 'localhost',
 		'port'   => '3306',
 		'user'   => 'root',
