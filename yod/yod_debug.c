@@ -175,11 +175,12 @@ int yod_debugw(char *data, uint data_len TSRMLS_DC) {
 	
 	char *logpath, *logfile;
 
-	if (data_len == 0) {
+	logpath = yod_logpath(TSRMLS_C);
+
+	if (logpath == NULL || data_len == 0) {
 		return 0;
 	}
 
-	logpath = yod_logpath(TSRMLS_C);
 	if (php_stream_stat_path(logpath, &ssb) == FAILURE) {
 		if (!php_stream_mkdir(logpath, 0750, REPORT_ERRORS, NULL)) {
 			return 0;

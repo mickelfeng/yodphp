@@ -203,6 +203,7 @@ double yod_runtime(TSRMLS_D) {
 	zval runtime;
 
 	if (zend_get_constant(ZEND_STRL("YOD_RUNTIME"), &runtime TSRMLS_CC)) {
+		convert_to_double(&runtime);
 		YOD_G(runtime) = Z_DVAL(runtime);
 	} else {
 		zend_register_double_constant(ZEND_STRS("YOD_RUNTIME"), YOD_G(runtime), CONST_CS, 0 TSRMLS_CC);
@@ -256,6 +257,7 @@ char *yod_charset(TSRMLS_D) {
 
 	if (!YOD_G(charset)) {
 		if (zend_get_constant(ZEND_STRL("YOD_CHARSET"), &charset TSRMLS_CC)) {
+			convert_to_string(&charset);
 			YOD_G(charset) = Z_STRVAL(charset);
 		} else {
 			INIT_ZVAL(charset);
@@ -276,6 +278,7 @@ char *yod_viewext(TSRMLS_D) {
 
 	if (!YOD_G(viewext)) {
 		if (zend_get_constant(ZEND_STRL("YOD_VIEWEXT"), &viewext TSRMLS_CC)) {
+			convert_to_string(&viewext);
 			YOD_G(viewext) = Z_STRVAL(viewext);
 		} else {
 			INIT_ZVAL(viewext);
@@ -296,6 +299,7 @@ char *yod_pathvar(TSRMLS_D) {
 
 	if (!YOD_G(pathvar)) {
 		if (zend_get_constant(ZEND_STRL("YOD_PATHVAR"), &pathvar TSRMLS_CC)) {
+			convert_to_string(&pathvar);
 			YOD_G(pathvar) = Z_STRVAL(pathvar);
 		} else {
 			INIT_ZVAL(pathvar);
@@ -322,6 +326,7 @@ char *yod_runpath(TSRMLS_D) {
 
 	if (!YOD_G(runpath)) {
 		if (zend_get_constant(ZEND_STRL("YOD_RUNPATH"), &runpath TSRMLS_CC)) {
+			convert_to_string(&runpath);
 			YOD_G(runpath) = Z_STRVAL(runpath);
 		} else {
 			INIT_ZVAL(runpath);
@@ -361,6 +366,7 @@ char *yod_extpath(TSRMLS_D) {
 
 	if (!YOD_G(extpath)) {
 		if (zend_get_constant(ZEND_STRL("YOD_EXTPATH"), &extpath TSRMLS_CC)) {
+			convert_to_string(&extpath);
 			YOD_G(extpath) = Z_STRVAL(extpath);
 		} else {
 			INIT_ZVAL(extpath);
@@ -400,6 +406,7 @@ char *yod_logpath(TSRMLS_D) {
 
 	if (!YOD_G(logpath)) {
 		if (zend_get_constant(ZEND_STRL("YOD_LOGPATH"), &logpath TSRMLS_CC)) {
+			convert_to_string(&logpath);
 			YOD_G(logpath) = Z_STRVAL(logpath);
 		}
 	
