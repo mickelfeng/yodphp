@@ -17,11 +17,20 @@ make
 make install
 ```
 
-- Compiling Yod enable debug mode:
+- Compiling Yod with debug mode:
 
 ```
 $PHP_BIN/phpize
 ./configure --enable-yod-debug --with-php-config=$PHP_BIN/php-config
+make
+make install
+```
+
+- Cross compiling Yod for i686-linux:
+
+```
+$PHP_BIN/phpize
+./configure --with-php-config=$PHP_BIN/php-config CCFLAGS="-m32" CPPFLAGS="-m32" CXXFLAGS="-m32" CFLAGS="-m32"
 make
 make install
 ```
