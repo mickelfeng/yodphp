@@ -1,0 +1,1 @@
+./configure --enable-yod-debug --with-php-config=/usr/local/php5/bin/php-config  CCFLAGS="-m32 " CPPFLAGS="-m32 " CXXFLAGS="-m32" CFLAGS="-m32"
