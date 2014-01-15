@@ -30,7 +30,8 @@ make install
 
 ```
 $PHP_BIN/phpize
-./configure --with-php-config=$PHP_BIN/php-config CCFLAGS="-m32" CPPFLAGS="-m32" CXXFLAGS="-m32" CFLAGS="-m32"
+./configure --enable-yod-debug --with-php-config=$PHP_BIN/php-config \
+CCFLAGS="-m32" CPPFLAGS="-m32" CXXFLAGS="-m32" CFLAGS="-m32"
 make
 make install
 ```
