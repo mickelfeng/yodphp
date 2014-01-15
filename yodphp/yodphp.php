@@ -1994,6 +1994,7 @@ class Yod_DbPdo extends Yod_Database
 			trigger_error('PDO DSN configure error', E_USER_ERROR);
 			return false;
 		}
+		$config['pdsn'] = empty($config['pdsn']) ? $config['dsn'] : $config['pdsn'];
 		$config['user'] = empty($config['user']) ? null : $config['user'];
 		$config['pass'] = empty($config['pass']) ? null : $config['pass'];
 		$config['charset'] = empty($config['charset']) ? 'utf8' : $config['charset'];
@@ -2002,7 +2003,7 @@ class Yod_DbPdo extends Yod_Database
 			$config['options'][PDO::ATTR_PERSISTENT] = true;
 		}
 		try {
-			$this->_linkids[$linknum] = new PDO($config['dsn'], $config['user'], $config['pass'], $config['options']);
+			$this->_linkids[$linknum] = new PDO($config['pdsn'], $config['user'], $config['pass'], $config['options']);
 		} catch (PDOException $e) {
 			trigger_error($e->getMessage(), E_USER_ERROR);
 			return false;
