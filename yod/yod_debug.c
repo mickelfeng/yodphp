@@ -250,9 +250,9 @@ void yod_debugs(TSRMLS_D) {
 #endif
 
 	if (SG(request_info).request_method) {
-		php_printf("\n<pre><hr><font color=\"red\">Yod is running in debug mode (%d)</font>\n%s\n", runmode, YOD_DIVLINE);
+		php_printf("\n<pre><hr><font color=\"red\">Yod is running in debug mode (%d)</font>\n%s\n", runmode, YOD_DOTLINE);
 	} else {
-		php_printf("\n%s\nYod is running in debug mode (%d)\n%s\n", YOD_DIVLINE, runmode, YOD_DOTLINE);
+		php_printf("\n%s\nYod is running in debug mode (%d)\n%s\n", YOD_DOTLINE, runmode, YOD_DOTLINE);
 	}
 
 	zend_hash_internal_pointer_reset(Z_ARRVAL_P(YOD_G(debugs)));
@@ -263,7 +263,7 @@ void yod_debugs(TSRMLS_D) {
 		zend_hash_move_forward(Z_ARRVAL_P(YOD_G(debugs)));
 	}
 
-	buffer_len = spprintf(&buffer, 0, "%s\n[%fms]\n", YOD_DIVLINE, runtime);
+	buffer_len = spprintf(&buffer, 0, "%s\n[%fms]\n", YOD_DOTLINE, runtime);
 	PHPWRITE(buffer, buffer_len);
 	efree(buffer);
 

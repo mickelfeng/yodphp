@@ -251,7 +251,7 @@ void yod_application_run(TSRMLS_D) {
 	yod_request_t *request;
 
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
+	yod_debugl(1 TSRMLS_CC);
 	yod_debugf("yod_application_run()");
 #endif
 

@@ -821,7 +821,7 @@ static int yod_dbmodel_find(yod_dbmodel_t *object, char *where, uint where_len, 
 	zval *params1, *query, *result, *data;
 
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
+	yod_debugl(1 TSRMLS_CC);
 	yod_debugf("yod_dbmodel_find()");
 #endif
 
@@ -900,8 +900,8 @@ static int yod_dbmodel_select(yod_dbmodel_t *object, char *where, uint where_len
 	zval *params1, *query, *result, *data;
 
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
-	yod_debugf("yod_dbmodel_findall()");
+	yod_debugl(1 TSRMLS_CC);
+	yod_debugf("yod_dbmodel_select()");
 #endif
 
 	if (!object) {
@@ -978,7 +978,7 @@ static int yod_dbmodel_count(yod_dbmodel_t *object, char *where, uint where_len,
 	zval *select, *params1, *query, *result, *data, **value;
 
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
+	yod_debugl(1 TSRMLS_CC);
 	yod_debugf("yod_dbmodel_count()");
 #endif
 
@@ -1066,7 +1066,7 @@ static int yod_dbmodel_save(yod_dbmodel_t *object, zval *data, char *where, uint
 	zval *table, *params1, *query, **ppval;
 
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
+	yod_debugl(1 TSRMLS_CC);
 	yod_debugf("yod_dbmodel_save()");
 #endif
 
@@ -1128,7 +1128,7 @@ static int yod_dbmodel_remove(yod_dbmodel_t *object, char *where, uint where_len
 	zval *table, *where1, *params1, *query, **ppval;
 
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
+	yod_debugl(1 TSRMLS_CC);
 	yod_debugf("yod_dbmodel_remove()");
 #endif
 

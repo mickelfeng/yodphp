@@ -201,7 +201,7 @@ static void yod_controller_run(yod_controller_t *object TSRMLS_DC) {
 	zend_class_entry **pce = NULL;
 	
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
+	yod_debugl(1 TSRMLS_CC);
 	yod_debugf("yod_controller_run()");
 #endif
 
@@ -600,7 +600,7 @@ static void yod_controller_widget(yod_controller_t *object, char *route, uint ro
 	zend_class_entry **pce = NULL;
 
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
+	yod_debugl(1 TSRMLS_CC);
 	if (instanceof_function(Z_OBJCE_P(object), yod_widget_ce TSRMLS_CC)) {
 		yod_debugf("yod_widget_widget(%s)", route ? route : "");
 	} else if (instanceof_function(Z_OBJCE_P(object), yod_action_ce TSRMLS_CC)) {
@@ -833,7 +833,7 @@ PHP_METHOD(yod_controller, model) {
 	}
 
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
+	yod_debugl(1 TSRMLS_CC);
 	yod_debugf("yod_controller_model(%s)", name ? name : "");
 #endif
 
@@ -863,7 +863,7 @@ PHP_METHOD(yod_controller, dbmodel) {
 	}
 
 #if PHP_YOD_DEBUG
-	yod_debugl(2 TSRMLS_CC);
+	yod_debugl(1 TSRMLS_CC);
 	yod_debugf("yod_controller_dbmodel(%s)", name ? name : "");
 #endif
 
