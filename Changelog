@@ -1,0 +1,53 @@
+This file documents changes for Yod Framework release 1.2.2 and earlier.
+
+
+version 1.2.2:
+
+  - Change the autoload mechanism
+  - Add some public methods in the class Yod_Request
+  - Add a public method select in the class Yod_Model
+  - Add a public method field in the class Yod_DbModel
+  - Change the method select of class Yod_DbModel
+	
+version 1.2.1:
+
+  - Add constants YOD_VIEWEXT, YOD_LOGPATH
+  - Change the auto running mechanism
+  - Change the autoload mechanism
+  - Add the error handling
+  - Add a protected method dbmodel in the class Yod_Controller and Yod_Model
+  - Add the class Yod_DbPdo to the Yod extension
+
+version 1.2.0:
+
+  - Add a constant YOD_RUNMODE
+  - Change the auto running mechanism
+  - Change the autoload mechanism
+  - Change the config processing logic
+  - Add a protected method widget in the class Yod_Controller
+  - Add a abstract class Yod_Widget which is derived from Yod_Controller
+  - Break up for the class Yod_Model and Yod_DbModel
+  - Compatible with ThinkPHP extended libraries
+  - Written in C and build as PHP extension
+  - Add the class Yod_DbPdo to the Yod extension
+	
+version 1.1.0:
+
+  - Add constants YOD_CHARSET, YOD_PATHVAR
+  - Delete the constant YOD_DEBUG
+  - Change the constant YOD_PATH to YOD_EXTPATH
+  - Change the constant APP_PATH to YOD_RUNPATH
+  - Add a auto running mechanism
+  - Add the multiple entry mode
+  - fixed a issues (database drivers bug)
+
+version 1.0.2:
+
+  - Change the configuration directory to 'configs'
+  - Add a public method errorAction in the class Yod_Request
+  - Add a protected property _action in the class Yod_Controller
+  - Add a abstract class Yod_Action which is derived from Yod_Controller
+
+version 1.0.1:
+
+ - initial public release.
