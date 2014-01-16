@@ -9,7 +9,7 @@
 <body>
 <h1>yodphp <sup>[ Yod Framework for PHP ]</sup></h1>
 <hr>
-<p>It is a simple PHP framework</p>
+<p>It is a simple PHP framework which is written in C and build as PHP extension.</p>
 <p><h2>Requirement</h2></p>
 <p><ul><li>PHP 5.2 +</li></ul></p>
 <p><h2>Download</h2></p>
