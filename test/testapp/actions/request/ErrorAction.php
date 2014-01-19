@@ -8,7 +8,6 @@ class ErrorAction extends Yod_Action
 
 	public function run()
 	{
-
 		$this->display('erroraction');
 	}
 
