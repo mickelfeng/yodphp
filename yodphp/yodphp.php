@@ -625,7 +625,6 @@ abstract class Yod_Controller
 			if (is_file($classpath)) {
 				require $classpath;
 				$action = new $classname($this->_request);
-				$action->run($this->_request->params);
 			} elseif (method_exists($this, 'errorAction')) {
 				$this->errorAction($this->_request->params);
 			} else {
