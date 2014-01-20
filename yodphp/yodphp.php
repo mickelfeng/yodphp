@@ -200,7 +200,7 @@ final class Yod_Application
 	{
 		if (YOD_RUNMODE & 1) {
 			if (defined('YOD_RUNPATH')) {
-				Yod_Application::app();
+				Yod_Application::app()->run();
 			} else {
 				define('YOD_RUNPATH', dirname(__FILE__));
 			}
