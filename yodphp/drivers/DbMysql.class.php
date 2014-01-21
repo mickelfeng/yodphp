@@ -156,6 +156,19 @@ class Yod_DbMysql extends Yod_Database
 	}
 
 	/**
+	 * count
+	 * @access public
+	 * @return mixed
+	 */
+	public function count($result = null)
+	{
+		if (is_null($result)) {
+			$result = $this->_result;
+		}
+		return $result ? mysql_num_rows($result) : false;
+	}
+
+	/**
 	 * fetch
 	 * @access public
 	 * @return mixed

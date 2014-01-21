@@ -20,7 +20,7 @@ defined('YOD_PATHVAR') or define('YOD_PATHVAR', '');
 defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__));
 
 // yodphp autorun
-Yod_Application::autorun();
+register_shutdown_function(array('Yod_Application', 'autorun'));
 
 /**
  * Yod_Application
@@ -1879,6 +1879,14 @@ abstract class Yod_Database
 	 * @return mixed
 	 */
 	abstract public function query($query, $params = array());
+	
+	/**
+	 * count
+	 * @access public
+	 * @param mixed $result
+	 * @return mixed
+	 */
+	abstract public function count($result = null);
 
 	/**
 	 * fetch
@@ -2102,6 +2110,23 @@ class Yod_DbPdo extends Yod_Database
 			}
 		}
 
+		return false;
+	}
+
+	/**
+	 * count
+	 * @access public
+	 * @param mixed $result
+	 * @return mixed
+	 */
+	public function count($result = null)
+	{
+		if (is_null($result)) {
+			$result = $this->_result;
+		}
+		if (is_object($result)) {
+			return $result->rowCount();
+		}
 		return false;
 	}
 

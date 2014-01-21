@@ -204,6 +204,22 @@ class Yod_DbMysqli extends Yod_Database
 	}
 
 	/**
+	 * count
+	 * @access public
+	 * @return mixed
+	 */
+	public function count($result = null)
+	{
+		if (is_null($result)) {
+			$result = $this->_result;
+		}
+		if ($result instanceof mysqli_result) {
+			return $result->num_rows;
+		}
+		return false;
+	}
+
+	/**
 	 * fetch
 	 * @access public
 	 * @return mixed
