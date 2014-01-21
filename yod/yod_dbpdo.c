@@ -519,7 +519,7 @@ int yod_dbpdo_query(yod_dbpdo_t *object, zval *query, zval *params, zval *retval
 /** {{{ int yod_dbpdo_count(yod_dbpdo_t *object, zval *result, zval *retval TSRMLS_DC)
 */
 int yod_dbpdo_count(yod_dbpdo_t *object, zval *result, zval *retval TSRMLS_DC) {
-	zval assoc, *pzval;
+	zval *pzval;
 
 #if PHP_YOD_DEBUG
 	yod_debugf("yod_dbpdo_count()");

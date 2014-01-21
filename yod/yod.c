@@ -400,9 +400,7 @@ char *yod_extpath(TSRMLS_D) {
 /** {{{ char *yod_logpath(TSRMLS_D)
 */
 char *yod_logpath(TSRMLS_D) {
-	zval logpath, **ppval;
-	uint logpath_len;
-	HashTable *_SERVER;
+	zval logpath;
 
 	if (!YOD_G(logpath)) {
 		if (zend_get_constant(ZEND_STRL("YOD_LOGPATH"), &logpath TSRMLS_CC)) {
