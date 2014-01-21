@@ -118,6 +118,10 @@ ZEND_BEGIN_ARG_INFO_EX(yod_database_query_arginfo, 0, 0, 1)
 	ZEND_ARG_INFO(0, params)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(yod_database_count_arginfo, 0, 0, 0)
+	ZEND_ARG_INFO(0, result)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(yod_database_fetch_arginfo, 0, 0, 0)
 	ZEND_ARG_INFO(0, result)
 ZEND_END_ARG_INFO()
@@ -1119,6 +1123,7 @@ zend_function_entry yod_database_methods[] = {
 	ZEND_ABSTRACT_ME(yod_database, fields,		yod_database_fields_arginfo)
 	ZEND_ABSTRACT_ME(yod_database, execute,		yod_database_execute_arginfo)
 	ZEND_ABSTRACT_ME(yod_database, query,		yod_database_query_arginfo)
+	ZEND_ABSTRACT_ME(yod_database, count,		yod_database_count_arginfo)
 	ZEND_ABSTRACT_ME(yod_database, fetch,		yod_database_fetch_arginfo)
 	ZEND_ABSTRACT_ME(yod_database, fetchAll,	yod_database_fetchall_arginfo)
 	ZEND_ABSTRACT_ME(yod_database, transaction,	yod_database_transaction_arginfo)

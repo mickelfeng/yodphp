@@ -8,6 +8,8 @@ version 1.2.2:
   - Add a public method select in the class Yod_Model
   - Add a public method field in the class Yod_DbModel
   - Change the method select of class Yod_DbModel
+  - Add an abstract method count in the class Yod_Database
+  - Add a public method count in the class Yod_DbPdo
 	
 version 1.2.1:
 
