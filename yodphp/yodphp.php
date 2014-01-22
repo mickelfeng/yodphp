@@ -31,9 +31,9 @@ final class Yod_Application
 	protected static $_app;
 	protected static $_config = array();
 	protected static $_imports = array();
+	protected static $_running = false;
 
 	protected $_request = null;
-	protected $_running = false;
 
 	/**
 	 * __construct
@@ -113,11 +113,11 @@ final class Yod_Application
 	 */
 	public function run()
 	{
-		if ($this->_running) {
+		if (self::$_running) {
 			trigger_error('An application instance already running', E_USER_WARNING);
 			return;
 		}
-		$this->_running = true;
+		self::$_running = true;
 
 		// dispatch
 		$this->_request->dispatch();
@@ -198,6 +198,9 @@ final class Yod_Application
 	 */
 	public static function autorun()
 	{
+		if (self::$_running) {
+			return;
+		}
 		if (YOD_RUNMODE & 1) {
 			if (defined('YOD_RUNPATH')) {
 				Yod_Application::app()->run();
@@ -307,9 +310,7 @@ final class Yod_Application
 	 */
 	public function __destruct()
 	{
-		if (!$this->_running) {
-			$this->run();
-		}
+
 	}
 
 }
@@ -1026,6 +1027,9 @@ class Yod_Model
 	 */
 	public function find($where = '', $params = array(), $select = '*')
 	{
+		if (is_numeric($where)) {
+			$where = 'id = '. $where;
+		}
 		if ($result = $this->_db->select($select, $this->_table, $where, $params, "LIMIT 1")) {
 			$data = $this->_db->fetch($result);
 			$this->_db->free($result);
@@ -1044,6 +1048,9 @@ class Yod_Model
 	 */
 	public function select($where = '', $params = array(), $select = '*')
 	{
+		if (is_numeric($where)) {
+			$where = 'id = '. $where;
+		}
 		if ($result = $this->_db->select($select, $this->_table, $where, $params)) {
 			$data = $this->_db->fetchAll($result);
 			$this->_db->free($result);
@@ -1233,6 +1240,9 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public function find($where = '', $params = array(), $select = '*')
 	{
+		if (is_numeric($where)) {
+			$where = 'id = '. $where;
+		}
 		$query = $this->field($select)->where($where, $params)->limit('1')->parseQuery();
 		if ($result = $this->_db->query($query, $this->_params)) {
 			$data = $this->_db->fetch($result);
@@ -1254,6 +1264,9 @@ class Yod_DbModel extends Yod_Model
 	 */
 	public function select($where = '', $params = array(), $select = '*')
 	{
+		if (is_numeric($where)) {
+			$where = 'id = '. $where;
+		}
 		$query = $this->field($select)->where($where, $params)->parseQuery();
 		if ($result = $this->_db->query($query, $this->_params)) {
 			$data = $this->_db->fetchAll($result);
