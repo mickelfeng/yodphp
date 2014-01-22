@@ -193,9 +193,7 @@ int yod_model_construct(yod_model_t *object, char *name, uint name_len, zval *co
 	yod_debugf("yod_model_init()");
 #endif
 
-	if (zend_hash_exists(&(Z_OBJCE_P(object)->function_table), ZEND_STRS("init"))) {
-		zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "init", NULL);
-	}
+	zend_call_method_with_0_params(&object, Z_OBJCE_P(object), NULL, "init", NULL);
 
 	return 1;
 }
