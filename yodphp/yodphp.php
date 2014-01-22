@@ -1717,7 +1717,11 @@ abstract class Yod_Database
 	{
 		if (empty($fields) || empty($table)) return false;
 		foreach ($fields as $key => $value) {
-			$fields[$key] = $key . ' ' . $value;
+			if (is_string($key)) {
+				$fields[$key] = $key . ' ' . $value;
+			} else {
+				$fields[$key] = $value;
+			}
 		}
 		$query = 'CREATE TABLE ' . $this->_prefix . $table . ' (' . implode(', ', $fields) . ')' . $extend;
 		return $this->execute($query);
