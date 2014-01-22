@@ -356,23 +356,23 @@ PHP_METHOD(yod_model, getInstance) {
 }
 /* }}} */
 
-/** {{{ proto public Yod_Model::find($where = '', $params = array(), $select = '*')
+/** {{{ proto public Yod_Model::find($where = null, $params = array(), $select = '*')
 */
 PHP_METHOD(yod_model, find) {
 	yod_database_t *yoddb;
 	yod_model_t *object;
 	zval *table, *result, *retval;
-	zval *params = NULL, *select = NULL;
-	char *where = NULL;
-	uint where_len = 0;
+	zval *where = NULL, *params = NULL, *select = NULL;
+	char *where1 = NULL;
+	uint where1_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|szz!", &where, &where_len, &params, &select) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|zzz!", &where, &params, &select) == FAILURE) {
 		return;
 	}
 
 #if PHP_YOD_DEBUG
 	yod_debugl(1 TSRMLS_CC);
-	yod_debugf("yod_model_find(%s)", where ? where : "");
+	yod_debugf("yod_model_find()");
 #endif
 
 	object = getThis();
@@ -386,9 +386,22 @@ PHP_METHOD(yod_model, find) {
 	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 1 TSRMLS_CC);
 	if (table) {
 		convert_to_string(table);
-
+		if (where) {
+			if (Z_TYPE_P(where) == IS_STRING) {
+				if (is_numeric_string(Z_STRVAL_P(where), Z_STRLEN_P(where), NULL, NULL, 0)) {
+					where1_len = spprintf(&where1, 0, "id = %s", Z_LVAL_P(where));
+				} else {
+					where1_len = spprintf(&where1, 0, "%s", Z_STRVAL_P(where));
+				}
+			} else if (Z_TYPE_P(where) == IS_LONG) {
+				where1_len = spprintf(&where1, 0, "id = %ld", Z_LVAL_P(where));
+			}
+		}
 		MAKE_STD_ZVAL(result);
-		yod_database_select(yoddb, select, Z_STRVAL_P(table), Z_STRLEN_P(table), where, where_len, params, ZEND_STRL("LIMIT 1"), result TSRMLS_CC);
+		yod_database_select(yoddb, select, Z_STRVAL_P(table), Z_STRLEN_P(table), where1, where1_len, params, ZEND_STRL("LIMIT 1"), result TSRMLS_CC);
+		if (where1) {
+			efree(where1);
+		}
 		if (result) {
 			zend_call_method_with_1_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "fetch", &retval, result);
 			zend_call_method_with_0_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "free", NULL);
@@ -403,23 +416,23 @@ PHP_METHOD(yod_model, find) {
 }
 /* }}} */
 
-/** {{{ proto public Yod_Model::select($where = '', $params = array(), $select = '*')
+/** {{{ proto public Yod_Model::select($where = null, $params = array(), $select = '*')
 */
 PHP_METHOD(yod_model, select) {
 	yod_database_t *yoddb;
 	yod_model_t *object;
 	zval *table, *result, *retval;
-	zval *params = NULL, *select = NULL;
-	char *where = NULL;
-	uint where_len = 0;
+	zval *where = NULL, *params = NULL, *select = NULL;
+	char *where1 = NULL;
+	uint where1_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|szz!", &where, &where_len, &params, &select) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|zzz!", &where, &params, &select) == FAILURE) {
 		return;
 	}
 
 #if PHP_YOD_DEBUG
 	yod_debugl(1 TSRMLS_CC);
-	yod_debugf("yod_model_select(%s)", where ? where : "");
+	yod_debugf("yod_model_select()");
 #endif
 
 	object = getThis();
@@ -433,9 +446,22 @@ PHP_METHOD(yod_model, select) {
 	table = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_table"), 1 TSRMLS_CC);
 	if (table) {
 		convert_to_string(table);
-
+		if (where) {
+			if (Z_TYPE_P(where) == IS_STRING) {
+				if (is_numeric_string(Z_STRVAL_P(where), Z_STRLEN_P(where), NULL, NULL, 0)) {
+					where1_len = spprintf(&where1, 0, "id = %s", Z_LVAL_P(where));
+				} else {
+					where1_len = spprintf(&where1, 0, "%s", Z_STRVAL_P(where));
+				}
+			} else if (Z_TYPE_P(where) == IS_LONG) {
+				where1_len = spprintf(&where1, 0, "id = %ld", Z_LVAL_P(where));
+			}
+		}
 		MAKE_STD_ZVAL(result);
-		yod_database_select(yoddb, select, Z_STRVAL_P(table), Z_STRLEN_P(table), where, where_len, params, ZEND_STRL(""), result TSRMLS_CC);
+		yod_database_select(yoddb, select, Z_STRVAL_P(table), Z_STRLEN_P(table), where1, where1_len, params, ZEND_STRL(""), result TSRMLS_CC);
+		if (where1) {
+			efree(where1);
+		}
 		if (result) {
 			zend_call_method_with_1_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "fetchall", &retval, result);
 			zend_call_method_with_0_params(&yoddb, Z_OBJCE_P(yoddb), NULL, "free", NULL);

@@ -26,7 +26,7 @@ class ModelController extends Yod_Controller
 
 		$model = $this->model('Test');
 
-		$this->assign('data', $model->find());
+		$this->assign('data', $model->find(1));
 
 		$this->display('find', array('model' => $model));
 	}

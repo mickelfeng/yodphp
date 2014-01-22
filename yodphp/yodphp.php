@@ -1020,12 +1020,12 @@ class Yod_Model
 	/**
 	 * find
 	 * @access public
-	 * @param string	$where
+	 * @param mixed		$where
 	 * @param array		$params
 	 * @param mixed		$select
 	 * @return mixed
 	 */
-	public function find($where = '', $params = array(), $select = '*')
+	public function find($where = null, $params = array(), $select = '*')
 	{
 		if (is_numeric($where)) {
 			$where = 'id = '. $where;
@@ -1041,12 +1041,12 @@ class Yod_Model
 	/**
 	 * select
 	 * @access public
-	 * @param string	$where
+	 * @param mixed		$where
 	 * @param array		$params
 	 * @param mixed		$select
 	 * @return mixed
 	 */
-	public function select($where = '', $params = array(), $select = '*')
+	public function select($where = null, $params = array(), $select = '*')
 	{
 		if (is_numeric($where)) {
 			$where = 'id = '. $where;
@@ -1062,12 +1062,12 @@ class Yod_Model
 	/**
 	 * findAll
 	 * @access public
-	 * @param string	$where
+	 * @param mixed		$where
 	 * @param array		$params
 	 * @param mixed		$select
 	 * @return mixed
 	 */
-	public function findAll($where = '', $params = array(), $select = '*')
+	public function findAll($where = null, $params = array(), $select = '*')
 	{
 		return $this->select($where, $params, $select);
 	}
@@ -1233,12 +1233,12 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * find
 	 * @access public
-	 * @param string	$where
+	 * @param mixed		$where
 	 * @param array		$params
 	 * @param mixed		$select
 	 * @return mixed
 	 */
-	public function find($where = '', $params = array(), $select = '*')
+	public function find($where = null, $params = array(), $select = '*')
 	{
 		if (is_numeric($where)) {
 			$where = 'id = '. $where;
@@ -1257,12 +1257,12 @@ class Yod_DbModel extends Yod_Model
 	/**
 	 * select
 	 * @access public
-	 * @param string	$where
+	 * @param mixed		$where
 	 * @param array		$params
 	 * @param mixed		$select
 	 * @return mixed
 	 */
-	public function select($where = '', $params = array(), $select = '*')
+	public function select($where = null, $params = array(), $select = '*')
 	{
 		if (is_numeric($where)) {
 			$where = 'id = '. $where;

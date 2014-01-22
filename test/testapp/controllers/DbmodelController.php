@@ -41,7 +41,7 @@ class DbModelController extends Yod_Controller
 
 		$model = $this->dbmodel('Test');
 
-		$this->assign('data', $model->find());
+		$this->assign('data', $model->find(1));
 
 		$this->display('find', array('model' => $model));
 	}
