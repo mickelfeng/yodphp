@@ -262,7 +262,7 @@ void yod_application_run(TSRMLS_D) {
 
 	YOD_G(running) = 1;
 
-	zend_update_property_bool(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_running"), 1 TSRMLS_CC);
+	zend_update_static_property_bool(yod_application_ce, ZEND_STRL("_running"), 1 TSRMLS_CC);
 
 	request = zend_read_property(yod_application_ce, YOD_G(yodapp), ZEND_STRL("_request"), 1 TSRMLS_CC);
 	yod_request_dispatch(request TSRMLS_CC);
@@ -741,8 +741,8 @@ PHP_MINIT_FUNCTION(yod_application) {
 	zend_declare_property_null(yod_application_ce, ZEND_STRL("_app"), ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
 	zend_declare_property_null(yod_application_ce, ZEND_STRL("_config"), ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
 	zend_declare_property_null(yod_application_ce, ZEND_STRL("_imports"), ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
+	zend_declare_property_bool(yod_application_ce, ZEND_STRL("_running"), 0, ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
 	zend_declare_property_null(yod_application_ce, ZEND_STRL("_request"), ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_bool(yod_application_ce, ZEND_STRL("_running"), 0, ZEND_ACC_PROTECTED TSRMLS_CC);
 
 	return SUCCESS;
 }
