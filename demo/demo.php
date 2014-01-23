@@ -92,7 +92,7 @@ class DemoController extends Yod_Controller
 		$model = $this->model();
 		print_r($model);
 		echo '<br>find:'; print_r($model->find());
-		//echo '<br>findAll:'; print_r($model->findAll());
+		//echo '<br>select:'; print_r($model->select());
 		//echo '<br>count:'; print_r($model->count());
 		$data = array(
 			'title' => 'Demo',
@@ -112,7 +112,7 @@ class DemoController extends Yod_Controller
 		$dbm = $this->model(true);
 		$dbm->table('demo');
 		//echo '<br>find:'; print_r($dbm->find());
-		//echo '<br>findAll:'; print_r($dbm->findAll());
+		//echo '<br>select:'; print_r($dbm->select());
 		//echo '<br>count:'; print_r($dbm->count());
 		$data = array(
 			'title' => 'Demo',
@@ -143,7 +143,7 @@ class DemoController extends Yod_Controller
 
 		echo '<br>find:'; print_r($duser->find());
 
-		echo '<br>findAll:'; print_r($duser->select($select)->from($table)->findAll());
+		echo '<br>select:'; print_r($duser->select($select)->from($table)->select());
 
 		echo '<br>count:'; print_r($duser->select($select)->from($table)->count());
 
