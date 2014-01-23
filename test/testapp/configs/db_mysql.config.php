@@ -1,7 +1,7 @@
 <?php
 return array(
 	'type' => 'mysql',
-	'dsn'  => 'mysql:host=localhost;port=3306;dbname=test',
+	'pdsn'  => 'mysql:host=localhost;port=3306;dbname=test',
 	'host' => 'localhost',
 	'user' => 'root',
 	'pass' => '123456',

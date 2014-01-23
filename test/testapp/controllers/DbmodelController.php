@@ -87,7 +87,7 @@ class DbModelController extends Yod_Controller
 		);
 		$this->assign('resilt', $model->save($data, 'id = :id', array(':id' => 1)));
 
-		$this->assign('data', $model->findAll());
+		$this->assign('data', $model->select());
 
 		$this->display('save', array('model' => $model));
 	}
@@ -102,7 +102,7 @@ class DbModelController extends Yod_Controller
 
 		$this->assign('resilt', $model->remove('id = :id', array(':id' => 1)));
 
-		$this->assign('data', $model->findAll());
+		$this->assign('data', $model->select());
 
 		$this->display('remove', array('model' => $model));
 	}
