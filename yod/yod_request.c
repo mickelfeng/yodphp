@@ -123,7 +123,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 			method = zend_read_property(yod_request_ce, object, ZEND_STRL("method"), 1 TSRMLS_CC);
 			if (method && Z_TYPE_P(method) == IS_STRING) {
 				if (strncasecmp(Z_STRVAL_P(method), "cli", 3) == 0 || strncasecmp(Z_STRVAL_P(method), "unknown", 7) == 0) {
-					php_body_write(ctr.line, ctr.line_len TSRMLS_CC);
+					PHPWRITE(ctr.line, ctr.line_len);
 				} else {
 					yod_request_err404_html(TSRMLS_C);
 				}
@@ -131,7 +131,7 @@ void yod_request_error404(yod_request_t *object, zval *html TSRMLS_DC) {
 				yod_request_err404_html(TSRMLS_C);
 			}
 		} else {
-			php_body_write(ctr.line, ctr.line_len TSRMLS_CC);
+			PHPWRITE(ctr.line, ctr.line_len);
 		}
 	}
 
