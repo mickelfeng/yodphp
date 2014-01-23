@@ -46,19 +46,6 @@ class DbModelController extends Yod_Controller
 		$this->display('find', array('model' => $model));
 	}
 
-	public function findallAction()
-	{
-		$this->assign('title', 'Yod_DbModel::findAll()');
-
-		$this->model('Test');
-
-		$model = $this->dbmodel('Test');
-
-		$this->assign('data', $model->findAll());
-
-		$this->display('findall', array('model' => $model));
-	}
-
 	public function selectAction()
 	{
 		$this->assign('title', 'Yod_DbModel::select()');
