@@ -415,9 +415,9 @@ void yod_application_app(zval *config TSRMLS_DC) {
 }
 /* }}} */
 
-/** {{{ static void yod_application_autorun(TSRMLS_D)
+/** {{{ void yod_application_autorun(TSRMLS_D)
 */
-static void yod_application_autorun(TSRMLS_D) {
+void yod_application_autorun(TSRMLS_D) {
 	zval runpath;
 
 	if (YOD_G(running) || YOD_G(exited) || (yod_runmode(TSRMLS_C) & 1) == 0) {
