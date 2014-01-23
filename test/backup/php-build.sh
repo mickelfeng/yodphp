@@ -58,7 +58,7 @@ cd php-$1
 --enable-fpm \
 --enable-debug
 
-make && make install
+make clean && make && make install
 
 ./configure \
 --prefix=/usr/local/php/$1 \
