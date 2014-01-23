@@ -537,10 +537,9 @@ static zend_op_array *yod_init_compile_file(zend_file_handle *file_handle, int t
 	zend_compile_file = yod_orig_compile_file;
 
 	op_array = zend_compile_file(file_handle, type TSRMLS_CC);
-	zend_destroy_file_handle(&file_handle TSRMLS_CC);
 
 	if (op_array) {
-		EG(return_value_ptr_ptr) = retval;
+		EG(return_value_ptr_ptr) = &retval;
 		EG(active_op_array) 	 = op_array;
 
 #if ((PHP_MAJOR_VERSION == 5) && (PHP_MINOR_VERSION > 2)) || (PHP_MAJOR_VERSION > 5)
