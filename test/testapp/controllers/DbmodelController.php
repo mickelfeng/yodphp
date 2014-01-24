@@ -46,19 +46,6 @@ class DbModelController extends Yod_Controller
 		$this->display('find', array('model' => $model));
 	}
 
-	public function findallAction()
-	{
-		$this->assign('title', 'Yod_DbModel::findAll()');
-
-		$this->model('Test');
-
-		$model = $this->dbmodel('Test');
-
-		$this->assign('data', $model->findAll());
-
-		$this->display('findall', array('model' => $model));
-	}
-
 	public function selectAction()
 	{
 		$this->assign('title', 'Yod_DbModel::select()');
@@ -100,7 +87,7 @@ class DbModelController extends Yod_Controller
 		);
 		$this->assign('resilt', $model->save($data, 'id = :id', array(':id' => 1)));
 
-		$this->assign('data', $model->findAll());
+		$this->assign('data', $model->select());
 
 		$this->display('save', array('model' => $model));
 	}
@@ -115,7 +102,7 @@ class DbModelController extends Yod_Controller
 
 		$this->assign('resilt', $model->remove('id = :id', array(':id' => 1)));
 
-		$this->assign('data', $model->findAll());
+		$this->assign('data', $model->select());
 
 		$this->display('remove', array('model' => $model));
 	}

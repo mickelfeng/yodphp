@@ -10,7 +10,7 @@
 <pre>
 <b>$model->save($data, 'id = :id', array(':id' => 1)):</b> <?php var_dump($resilt); ?>
 <br />
-<b>$model->findAll():</b><br />
+<b>$model->select():</b><br />
 <?php print_r($data); ?>
 <br />
 <b>$model:</b><br />

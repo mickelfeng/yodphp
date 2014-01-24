@@ -28,7 +28,7 @@ class TestModel extends Yod_Model
 
 	public function test()
 	{
-		return $this->model()->findAll();
+		return $this->model()->select();
 	}
 
 	public function __destruct()

@@ -59,7 +59,7 @@ class IndexController extends Yod_Controller
 	public function indexAction()
 	{
 		$model = $this->model('Manual');
-		$rows = $model->findAll();
+		$rows = $model->select();
 		$this->_data['content'] = '<ul>';
 		foreach ($rows as $data) {
 			$this->_data['content'] .= '<li><p><a href="'. APP_WEBROOT .'/'. $data['node'] .'">'. $data['title'] .'</a></p></li>';
@@ -119,14 +119,14 @@ class ManualWidget extends Yod_Widget
  */
 class ManualModel extends Yod_DbModel
 {
-	public function findAll($where = '', $params = array(), $select = '*')
+	public function select($where = '', $params = array(), $select = '*')
 	{
 		if (defined('APP_MANDATA') && is_file(APP_MANDATA)) {
 			$data = include APP_MANDATA;
 			return $data;
 		}
 
-		return parent::findAll($where, $params, $select);
+		return parent::select($where, $params, $select);
 	}
 
 	public function findByNode($node, $fields = null)

@@ -28,7 +28,7 @@ class DbTestModel extends Yod_DbModel
 
 	public function test()
 	{
-		return $this->model()->findAll();
+		return $this->model()->select();
 	}
 
 	public function __destruct()
