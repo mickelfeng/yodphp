@@ -1094,6 +1094,9 @@ class Yod_Model
 	/**
 	 * save
 	 * @access public
+	 * @param array		$data
+	 * @param string	$where
+	 * @param array		$params
 	 * @return integer
 	 */
 	public function save($data, $where = '', $params = array())
@@ -1106,8 +1109,23 @@ class Yod_Model
 	}
 
 	/**
+	 * update
+	 * @access public
+	 * @param array		$data
+	 * @param string	$where
+	 * @param array		$params
+	 * @return integer
+	 */
+	public function update($data, $where = '', $params = array())
+	{
+		return $this->_db->update($data, $this->_table, $where, $params);
+	}
+
+	/**
 	 * remove
 	 * @access public
+	 * @param string	$where
+	 * @param array		$params
 	 * @return integer
 	 */
 	public function remove($where, $params = array())
@@ -1321,6 +1339,26 @@ class Yod_DbModel extends Yod_Model
 		} else {
 			$result = $this->_db->update($data, $this->_table, $this->_query['WHERE'], $this->_params);
 		}
+		$this->initQuery();
+		return $result;
+	}
+
+	/**
+	 * update
+	 * @access public
+	 * @param array		$data
+	 * @param string	$where
+	 * @param array		$params
+	 * @return integer
+	 */
+	public function update($data, $where = '', $params = array())
+	{
+		if (empty($this->_table)) {
+			trigger_error('You have an error in your SQL syntax: table name is empty', E_USER_WARNING);
+			return false;
+		}
+		$this->where($where, $params);
+		$result = $this->_db->update($data, $this->_table, $this->_query['WHERE'], $this->_params);
 		$this->initQuery();
 		return $result;
 	}
