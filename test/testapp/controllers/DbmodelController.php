@@ -92,6 +92,26 @@ class DbModelController extends Yod_Controller
 		$this->display('save', array('model' => $model));
 	}
 
+	public function updateAction()
+	{
+		$this->assign('title', 'Yod_DbModel::update()');
+
+		$this->model('Test');
+
+		$model = $this->dbmodel('Test');
+
+		$data = array(
+			'title' => 'Yodtest',
+			'content' => 'Yod PHP Framework!',
+			'updated' => time(),
+		);
+		$this->assign('resilt', $model->update($data, 'id = :id', array(':id' => 1)));
+
+		$this->assign('data', $model->select());
+
+		$this->display('update', array('model' => $model));
+	}
+
 	public function removeAction()
 	{
 		$this->assign('title', 'Yod_DbModel::remove()');

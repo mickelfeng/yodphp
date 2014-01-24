@@ -5,7 +5,7 @@
 <body>
 <?php $this->widget('public/header'); ?>
 <ul>
-	<li>Yod_Model::count()</li>
+	<li>Yod_DbModel::count()</li>
 </ul>
 <pre>
 <b>$model->count():</b> <?php var_dump($count); ?>

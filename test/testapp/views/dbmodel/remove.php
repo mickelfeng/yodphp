@@ -5,7 +5,7 @@
 <body>
 <?php $this->widget('public/header'); ?>
 <ul>
-	<li>Yod_Model::remove()</li>
+	<li>Yod_DbModel::remove()</li>
 </ul>
 <pre>
 <b>$model->remove('id = :id', array(':id' => 1)):</b> <?php var_dump($resilt); ?>

@@ -11,6 +11,7 @@
 	<li><a href="<?php echo $WEBROOT; ?>/model/select" target="_blank">select</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/model/count" target="_blank">count</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/model/save" target="_blank">save</a></li>
+	<li><a href="<?php echo $WEBROOT; ?>/model/update" target="_blank">update</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/model/remove" target="_blank">remove</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/model/lastquery" target="_blank">lastQuery</a></li>
 	<li><a href="<?php echo $WEBROOT; ?>/model/config" target="_blank">config</a></li>

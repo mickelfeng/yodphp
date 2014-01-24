@@ -5,10 +5,10 @@
 <body>
 <?php $this->widget('public/header'); ?>
 <ul>
-	<li>Yod_DbModel::save()</li>
+	<li>Yod_Model::update()</li>
 </ul>
 <pre>
-<b>$model->save($data, 'id = :id', array(':id' => 1)):</b> <?php var_dump($resilt); ?>
+<b>$model->update($data, 'id = :id', array(':id' => 1)):</b> <?php var_dump($resilt); ?>
 <br />
 <b>$model->select():</b><br />
 <?php print_r($data); ?>
