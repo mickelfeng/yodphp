@@ -1173,10 +1173,10 @@ static int yod_dbmodel_update(yod_dbmodel_t *object, zval *data, char *where, ui
 			return 0;
 		}
 
+		params1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), 1 TSRMLS_CC);
 		if (!ppval || Z_TYPE_PP(ppval) != IS_STRING || Z_STRLEN_PP(ppval) == 0) {
 			yod_database_update(yoddb, data, Z_STRVAL_P(table), Z_STRLEN_P(table), NULL, 0, params1, retval TSRMLS_CC);
 		} else {
-			params1 = zend_read_property(Z_OBJCE_P(object), object, ZEND_STRL("_params"), 1 TSRMLS_CC);
 			yod_database_update(yoddb, data, Z_STRVAL_P(table), Z_STRLEN_P(table), Z_STRVAL_PP(ppval), Z_STRLEN_PP(ppval), params1, retval TSRMLS_CC);
 		}
 
