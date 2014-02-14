@@ -5,7 +5,7 @@ date_default_timezone_set('Asia/Shanghai');
 
 defined('YOD_VIEWEXT') or define('YOD_VIEWEXT', '.tpl');
 defined('YOD_RUNPATH') or define('YOD_RUNPATH', dirname(__FILE__));
-defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__) . '/../master/yodphp');
+defined('YOD_EXTPATH') or define('YOD_EXTPATH', dirname(__FILE__) . '/../yodphp');
 
 class_exists('Yod_Application', false) or require YOD_EXTPATH . '/yodphp.php';
 
